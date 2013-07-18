@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="32" height="24" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="opengameart" tilewidth="32" tileheight="32">
+  <image source="../tilesets/opengameart.png" width="320" height="512"/>
+ </tileset>
+ <layer name="layer1" width="32" height="24">
+  <data encoding="base64" compression="zlib">
+   eJyllt2OhCAMRvuacKu3couPv7MJJx67jDO6TQhaSv9oP6gRsY2xvkZ7jf01yph/x6IZmTpk2tjbx3odsm2sd+3t0rVJ/r/Ux7x+IWPCF9bxuclXfLTffdiq2htjjX9yukzsN82sbxO5kH/2OdOW1ma2HCu8fcIrSafz43VyYNmc/yqe7cMj38jetY+M41m0tkve9s1jb67DT+dATXxLNY6awNYiP6sG/tNv8Phf49w71Cu9t2nfp54oF+tZ9gmBJ1Wze8PYscaRD+oL/1w7jg08QqYMXj6vK9+uCPtXeaQOnUv3tTGyxd/+y7GRH+ukV8Bd9PY44wnfnNdVfNSJsWePo77w6Qlhn/Pu8pXaLXHGwFmNGVtaHDVBH8FDHzq/uVeIHfvkb4ujjhz/3X4P6aE/8ZfY7vSfMZAcgHdV35ad5SFjKP1n3Il4f/Z3asJYl7H+HT7lnuMcSloHP0qc+8R3s+1DzqPv7nyP5XrMd7X7N8eR+9D3oM+/S57cG/OIpUp21i9ZZ77PHb/z+ATXXT/8v8MZvy/yWyNjN35zV6CXnIDr+U3A/io9zpUxxvad6yeErTvkOgMHwTJjjt/Ku/h+gxIvcaCHmKv+l8Sn138A2rurnQ==
+  </data>
+ </layer>
+ <objectgroup name="objects" width="32" height="24">
+  <object name="playerSpawn" x="752" y="112"/>
+ </objectgroup>
+</map>

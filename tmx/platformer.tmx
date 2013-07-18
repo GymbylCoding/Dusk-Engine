@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="64" height="24" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="8-bit" tilewidth="32" tileheight="32">
+  <image source="../tilesets/8-bit_mario.png" width="1024" height="1024"/>
+  <tile id="908">
+   <properties>
+    <property name="collisionType" value="platform"/>
+    <property name="physics:bounce" value="0"/>
+    <property name="physics:enabled" value="true"/>
+    <property name="physics:shape" value="!json![-16,-16,16,-16]"/>
+   </properties>
+  </tile>
+  <tile id="909">
+   <properties>
+    <property name="collisionType" value="platform"/>
+    <property name="physics:bounce" value="0"/>
+    <property name="physics:enabled" value="true"/>
+    <property name="physics:shape" value="!json![-16,-16,16,-16]"/>
+   </properties>
+  </tile>
+  <tile id="910">
+   <properties>
+    <property name="collisionType" value="platform"/>
+    <property name="physics:bounce" value="0"/>
+    <property name="physics:enabled" value="true"/>
+    <property name="physics:shape" value="!json![-16,-16,16,-16]"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="layer_1" width="64" height="24">
+  <data encoding="base64" compression="zlib">
+   eJztllEOwyAIhul6693B7UDrTtLuLnMPJoaA+20x1ioJL8YKH/5QiYa1ZG4mejB/zrWzur5JdZdqr+3LuafXRLR4f0/2HC3Y6rk3758K/KH2S8U7QPhLaSTE3hI5WMZ2Qm8g/KU0gvCX1ufg38fvDP6JOfzxrEB6Ae2bVu5//bNvb8498UuayJn/kv5y5/P9hnvIL45xhB9d086S6n9EG+j9I/u0s6/Mn9KeBT/X3dn4U7E1VqmXkTNa4v/NDo1fOmvwY28PSSu1+LmO4zlgzc91cAZ+vhZ/X5qfv0V740/FHvy68X7tzXnNevMvDAwQfg==
+  </data>
+ </layer>
+ <layer name="overlay" width="64" height="24">
+  <data encoding="base64" compression="zlib">
+   eJzt1rENACAMA8Eo+y8Im0AFHSNEIncT2N1HAADQzciImdUr6qz7fTf+DwDwM62rdXkO2L4HXQ==
+  </data>
+ </layer>
+ <objectgroup name="objects" width="64" height="24">
+  <properties>
+   <property name="objects:_type" value="ground"/>
+   <property name="objects:collisionType" value="platform"/>
+   <property name="physics:bounce" value="0"/>
+   <property name="physics:enabled" value="true"/>
+   <property name="physics:friction" value="1.5"/>
+  </properties>
+  <object name="playerSpawn" x="64" y="672"/>
+  <object x="32" y="320" width="64" height="64">
+   <properties>
+    <property name="collisionType" value="solid"/>
+    <property name="physics:bounce" value="0"/>
+    <property name="physics:enabled" value="true"/>
+   </properties>
+  </object>
+  <object name="pipe1" type="pipe" x="32" y="320" width="64">
+   <properties>
+    <property name="destination" value="pipe2"/>
+   </properties>
+  </object>
+  <object x="0" y="704" width="2048"/>
+  <object x="1600" y="608" width="128"/>
+  <object x="1696" y="352" width="96"/>
+  <object x="1472" y="352" width="160"/>
+  <object x="1408" y="448" width="96"/>
+  <object x="1408" y="32" width="192"/>
+  <object x="1632" y="256" width="128"/>
+  <object x="1472" y="160" width="96"/>
+  <object x="1184" y="96" width="96"/>
+  <object x="1056" y="480" width="160"/>
+  <object x="1024" y="352" width="96"/>
+  <object x="1024" y="192" width="96"/>
+  <object x="864" y="288" width="96"/>
+  <object x="832" y="512" width="32" height="192">
+   <properties>
+    <property name="collisionType" value="solid"/>
+   </properties>
+  </object>
+  <object x="608" y="576" width="192"/>
+  <object x="640" y="448" width="96"/>
+  <object x="448" y="384" width="64"/>
+  <object x="512" y="384" width="32"/>
+  <object x="480" y="288" width="128"/>
+  <object x="416" y="192" width="96"/>
+  <object x="128" y="160" width="160"/>
+  <object x="32" y="384" width="352" height="32">
+   <properties>
+    <property name="collisionType" value="solid"/>
+   </properties>
+  </object>
+  <object x="640" y="96" width="256"/>
+  <object x="320" y="96" width="224"/>
+  <object name="pipe2" type="pipe" x="1920" y="640" width="64">
+   <properties>
+    <property name="destination" value="pipe1"/>
+   </properties>
+  </object>
+  <object x="1920" y="640" width="64" height="64">
+   <properties>
+    <property name="collisionType" value="solid"/>
+    <property name="physics:bounce" value="0"/>
+    <property name="physics:enabled" value="true"/>
+   </properties>
+  </object>
+  <object x="2048" y="0" height="768">
+   <properties>
+    <property name="collisionType" value="solid"/>
+    <property name="physics:bounce" value="0.5"/>
+    <property name="physics:friction" value="0"/>
+   </properties>
+  </object>
+  <object x="0" y="0" height="768">
+   <properties>
+    <property name="collisionType" value="solid"/>
+    <property name="physics:bounce" value="0.5"/>
+    <property name="physics:friction" value="0"/>
+   </properties>
+  </object>
+  <object x="1472" y="544" width="96"/>
+ </objectgroup>
+</map>

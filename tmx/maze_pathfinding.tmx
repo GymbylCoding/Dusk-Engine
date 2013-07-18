@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="32" height="24" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" source="../tileset.tsx"/>
+ <layer name="layer1" width="32" height="24">
+  <properties>
+   <property name="playerSpawn" value="!json! [31, 2]"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJzFVtsKxSAM0/n//3y2h4GUNE16BhZkMGtz8TrHGNehNu+2xrlYG/7DReXc6av0qz6wPNfLXb/qwwR5s1kD4Xei66GiP+r9R3/MQ/hRQ9aPtH6hf9eg4EcfkD9xf7D5736RthhobKXL8YHV6c4/4+58sz7EN5s7B29fB2ws+4fCXQ8ZJwXf8UE5FxAvxZNsrJqT7UkVH52J1T6vuDGs6jx9+1ndjJtz/1QeozuB5aO6ylpz7pPIS71/OqGeXWxcNVfOW8R5w0X8E7FGT/dX7cH+AVvXA4o=
+  </data>
+ </layer>
+</map>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="100" height="100" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="opengameart" tilewidth="32" tileheight="32">
+  <image source="../tilesets/opengameart.png" width="320" height="512"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="100" height="100">
+  <data encoding="base64" compression="zlib">
+   eJzt0zERgEAAA8E3By34VwMucsUWmTWQu84597+LCZ9/LzOu/0B9lF3/gfoou/4D9VF2/Qfqo+z6D9RH2fUfqI+y6z9QH2XXf6A+yq7/QH2UXf+B+ii7/gP1UXb9B+qj7PoP1EfZ9R+oj7LrP1AfZdd/oD7Krv9AfZRd/4H6KLv+A/VRdv0H6qPs+g/UR9n1H6iPsus/UB9l13+gPsqu/0B9lF3/gfoou/4D9VF2/Qfqo+z6D9RH2fUfqI+y6z9QH2XXf6A+yq7/QH2UXf+B+ii7/gP1UXb9B+qj7PoP1EfZ9R+oj7LrP1AfZdd/oD7Krv9AfZRd/4H6KLv+A/VRdv0H6qPs+g/UR9n1H6iPsus/UB9l13+gPsqu/0B9lP0AlRJezg==
+  </data>
+ </layer>
+</map>
