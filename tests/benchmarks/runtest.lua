@@ -19,9 +19,7 @@ local function commas(n) local n = tostring(n) local left, num, right = n:match(
 local function runtest(name)
 	local startTime = system_getTimer()
 
-	local map = dusk.buildMap("tests/test_benchmarks/" .. name .. ".json")
-
-	require("Plugins.lettermap").register(map)
+	local map = dusk.buildMap("tests/benchmarks/" .. name .. ".json")
 	
 	local buildTime = system_getTimer() - startTime; buildTime = string_format("%.03f", buildTime)
 	local numTiles = commas(map.data.mapWidth * map.data.mapHeight)

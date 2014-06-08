@@ -15,12 +15,12 @@ local function getMem()
 end
 
 -- Runtest
-local function runtest(name)
+local function runtest()
 	local dusk = require("Dusk.Dusk")
 
 	-- Build and destroy a map
 	local function iterate()
-		local map = dusk.buildMap("tests/test_memleaks/map.json")
+		local map = dusk.buildMap("tests/memleaks/map.json")
 		map.destroy()
 		map = nil
 	end

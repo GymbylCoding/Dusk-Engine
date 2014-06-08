@@ -13,15 +13,13 @@ local lib_camera = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local getSetting = lib_settings.get
-local tprint_add = tprint.add
-local tprint_remove = tprint.remove
-local tprint_assert = tprint.assert
+local verby_assert = verby.assert
 local getXY = lib_functions.getXY
 local clamp = lib_functions.clamp
 local display_contentWidth = display.contentWidth
@@ -37,8 +35,6 @@ local type = type
 -- Add Camera Control to a Map
 --------------------------------------------------------------------------------
 function lib_camera.addControl(map)
-	tprint_add("Set Up Camera")
-
 	local camera
 	camera = {
 		trackingLevel = getSetting("defaultCameraTrackingLevel"),
@@ -212,10 +208,8 @@ function lib_camera.addControl(map)
 	-- Set/Get Viewpoint
 	------------------------------------------------------------------------------
 	function map.setViewpoint(x, y)
-		tprint_add("Set Camera Viewpoint")
 		local x, y = getXY(x, y)
 		camera.viewX, camera.viewY = x, y
-		tprint_remove()
 	end
 
 	function map.getViewpoint()
@@ -226,11 +220,9 @@ function lib_camera.addControl(map)
 	-- Position Camera
 	------------------------------------------------------------------------------
 	function map.positionCamera(x, y)
-		tprint_add("Position Camera")
 		local x, y = getXY(x, y)
 		map.setViewpoint(x, y)
 		map.snapCamera() -- This isn't defined here, but we'll have it if control ever reaches here
-		tprint_remove()
 	end
 
 	------------------------------------------------------------------------------
@@ -248,12 +240,9 @@ function lib_camera.addControl(map)
 	-- Set Focus
 	------------------------------------------------------------------------------
 	function map.setCameraFocus(f, noSnapCamera)
-		tprint_add("Set Camera Focus")
-		
-		tprint_assert(f ~= nil and f.x ~= nil and f.y ~= nil, "Invalid focus object passed.")
+		if not (f ~= nil and f.x ~= nil and f.y ~= nil) then verby_error("Invalid focus object passed to `map.setCameraFocus()`") end
 
 		camera.getFocusXY = function()
-			tprint_assert(f ~= nil and f.x ~= nil and f.y ~= nil, "Focus object invalid.")
 			return f.x, f.y
 		end
 
@@ -264,8 +253,6 @@ function lib_camera.addControl(map)
 		else
 			map.snapCamera() -- Center on object to start out; this function is not defined in this library, but we know we'll get it when lib_update processes the map
 		end
-
-		tprint_remove()
 	end
 
 	------------------------------------------------------------------------------
@@ -292,15 +279,15 @@ function lib_camera.addControl(map)
 	------------------------------------------------------------------------------
 	-- Set tracking level (in tracking level format)	
 	function map.setTrackingLevel(t)
-		tprint_assert(t ~= nil, "Missing argument to set tracking level.")
-		tprint_assert(t > 0, "Invalid argument passed to set tracking level: expected [t] > 0 but got " .. t .. " instead")
+		if not (t ~= nil) then verby_error("Missing argument to `map.setTrackingLevel()`") end
+		if not (t > 0) then verby_error("Invalid argument passed to `map.setTrackingLevel()`: expected [t] > 0 but got " .. t .. " instead") end
 		camera.trackingLevel = t
 	end
 
 	-- Set tracking level (in damping format)
 	function map.setDamping(d)
-		tprint_assert(d ~= nil, "Missing argument to set damping.")
-		tprint_assert(d ~= 0, "Invalid argument passed to set damping: expected t ≠ 0 but got 0 instead.")
+		if not (d ~= nil) then verby_error("Missing argument to `map.setDamping()`") end
+		if not (d ~= 0) then verby_error("Invalid argument passed to `map.setDamping()`: expected t ~= 0 but got 0 instead.") end
 		return map.setTrackingLevel(1 / d)
 	end
 
@@ -314,8 +301,6 @@ function lib_camera.addControl(map)
 		return 1 / camera.trackingLevel
 	end
 
-
-	tprint_remove()
 	return camera
 end
 

@@ -13,7 +13,7 @@ local lib_update = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 
@@ -22,14 +22,11 @@ local getSetting = lib_settings.get
 local lib_camera; if getSetting("enableCamera") then lib_camera = require("Dusk.dusk_core.run.camera") end
 local lib_tileculling; if getSetting("enableTileCulling") then lib_tileculling = require("Dusk.dusk_core.run.tileculling") end
 
-local tprint_add = tprint.add
-local tprint_remove = tprint.remove
 
 --------------------------------------------------------------------------------
 -- Register Tile Culling and Camera
 --------------------------------------------------------------------------------
 function lib_update.register(map)
-	tprint_add("Register Tile Culling and Camera")
 	local enableCamera, enableTileCulling = getSetting("enableCamera"), getSetting("enableTileCulling")
 	local mapLayers = #map.layer
 
@@ -140,7 +137,6 @@ function lib_update.register(map)
 		map.updateView = function() end
 	end
 
-	tprint_remove()
 	return update
 end
 

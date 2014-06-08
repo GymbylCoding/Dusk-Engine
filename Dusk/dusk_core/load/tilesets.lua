@@ -11,7 +11,7 @@ local lib_tileset = {}
 --------------------------------------------------------------------------------
 -- Localize
 --------------------------------------------------------------------------------
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
@@ -22,9 +22,7 @@ local table_insert = table.insert
 local table_concat = table.concat
 local tostring = tostring
 local string_len = string.len
-local tprint_add = tprint.add
-local tprint_error = tprint.error
-local tprint_remove = tprint.remove
+local verby_error = verby.error
 local getProperties = lib_functions.getProperties
 local getDirectory = lib_functions.getDirectory
 
@@ -45,7 +43,6 @@ function lib_tileset.get(data, dirTree)
 	-- Iterate Through Tilesets
 	------------------------------------------------------------------------------
 	for i = 1, #data.tilesets do
-		tprint_add("Tileset #" .. i .. " - \"" .. data.tilesets[i].name .. "\"")
 		local gid = 0									-- The GID for this tileset
 		local tilesetProperties = {}	-- Element to add to the tileProperties table for this tileset
 		local options									-- Data table for this tileset
@@ -60,6 +57,8 @@ function lib_tileset.get(data, dirTree)
 				frames = {},
 				sheetContentWidth = data.tilesets[i].imagewidth,
 				sheetContentHeight = data.tilesets[i].imageheight,
+				width = data.tilesets[i].tilewidth,
+				height = data.tilesets[i].tileheight,
 				start = 1,
 				count = 0
 			},
@@ -67,10 +66,10 @@ function lib_tileset.get(data, dirTree)
 			image = directoryPath .. "/" .. filename,
 			margin = data.tilesets[i].margin,
 			spacing = data.tilesets[i].spacing,
-			tileheight = data.tilesets[i].tileheight,
 			tilewidth = data.tilesets[i].tilewidth,
+			tileheight = data.tilesets[i].tileheight,
 			tilesetWidth = 0,
-			tilesetHeight = 0,
+			tilesetHeight = 0
 		}
 
 		-- Remove opening slash, if existent
@@ -83,13 +82,11 @@ function lib_tileset.get(data, dirTree)
 		-- Iterate throught the tileset
 		for y = 1, options.tilesetHeight do
 			for x = 1, options.tilesetWidth do
-				tprint_add("Generate Tile Array")
-
 				local element = {
 					-- X and Y of the tile on the sheet
 					x = (x - 1) * (options.tilewidth + options.spacing) + options.margin,
 					y = (y - 1) * (options.tileheight + options.spacing) + options.margin,
-					-- Must be supplied for Corona's sprite library (which we make tiles out of)
+					-- Width of tile
 					width = options.tilewidth,
 					height = options.tileheight
 				}
@@ -99,17 +96,11 @@ function lib_tileset.get(data, dirTree)
 				table_insert(options.config.frames, gid, element) -- Add to the frames of the sheet
 				tileIndex[c] = {tilesetIndex = i, gid = gid}
 
-				-- For JSON
 				local strGID = tostring(gid - 1) -- Tile properties start at 0, so we must subtract 1. Because of the sparse table that tileset properties usually are, they're encoded into JSON with string keys, thus we must tostring() the GID first
 			
 				if data.tilesets[i].tileproperties[strGID] then
 					tilesetProperties[gid] = getProperties(data.tilesets[i].tileproperties[strGID], "tile", false)
 				end
-
-				-- For Lua
-				-- Not implemented.
-			
-				tprint_remove()
 			end
 		end
 
@@ -120,12 +111,10 @@ function lib_tileset.get(data, dirTree)
 
 		options.config.count = gid
 
-		if not imageSheets[i] then tprint_error("Tileset image (\"" .. options.image .. "\") not found.") end
+		if not imageSheets[i] then verby_error("Tileset image (\"" .. options.image .. "\") not found.") end
 
 		imageSheetConfig[i] = options.config
 		tileProperties[i] = tilesetProperties
-
-		tprint_remove()
 	end
 
 	data.highestGID = c

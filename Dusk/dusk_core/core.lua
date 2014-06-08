@@ -13,7 +13,7 @@ local core = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_data = require("Dusk.dusk_core.load.data")
 local lib_stats = require("Dusk.dusk_core.load.stats")
@@ -32,11 +32,7 @@ local math_ceil = math.ceil
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
-local tprint_add = tprint.add
-local tprint_remove = tprint.remove
-local tprint_clear = tprint.clear
-local tprint_assert = tprint.assert
-local fnn = lib_functions.fnn
+local verby_assert = verby.assert
 local getXY = lib_functions.getXY
 
 --------------------------------------------------------------------------------
@@ -48,8 +44,8 @@ function core.loadMap(filename, base)
 	local dirTree = {}; for dir in filename:sub(1, f1):gmatch("(.-)/") do table_insert(dirTree, dir) end
 
 	-- Load other things
-	tprint_add("Load Data"); local data = lib_data.get(filename, base); tprint_remove()
-	tprint_add("Load Stats"); local stats = lib_stats.get(data); tprint_remove(); data.stats = stats
+	local data = lib_data.get(filename, base)
+	local stats = lib_stats.get(data); data.stats = stats
 
 	data._dusk = {}
 	data._dusk.dirTree = dirTree
@@ -61,7 +57,7 @@ end
 -- Build Map
 --------------------------------------------------------------------------------
 function core.buildMap(data)
-	tprint_add("Load Tilesets"); local imageSheets, imageSheetConfig, tileProperties, tileIndex = lib_tilesets.get(data, data._dusk.dirTree); tprint_remove()
+	local imageSheets, imageSheetConfig, tileProperties, tileIndex = lib_tilesets.get(data, data._dusk.dirTree)
 
 	setVariable("mapWidth", data.stats.mapWidth)
 	setVariable("mapHeight", data.stats.mapHeight)
@@ -96,8 +92,6 @@ function core.buildMap(data)
 	------------------------------------------------------------------------------
 	-- Create Layers
 	------------------------------------------------------------------------------
-	tprint_add("Create Layers")
-
 	local enableTileCulling = getSetting("enableTileCulling")
 	local layerIndex = 0 -- Use a separate variable so that we can keep track of !inactive! layers
 	local numLayers = 0
@@ -117,8 +111,6 @@ function core.buildMap(data)
 	}
 
 	for i = 1, #data.layers do
-		tprint_add("Layer #" .. i .. " - \"" .. data.layers[i].name .. "\"")
-
 		if (data.layers[i].properties or {})["!inactive!"] ~= "true" then
 			local layer
 
@@ -128,7 +120,7 @@ function core.buildMap(data)
 				layer._type = "tile"
 				
 				-- Tile layer-specific code
-				layer.tileCullingEnabled = fnn(layer.tileCullingEnabled, true)
+				layer.tileCullingEnabled = (layer.tileCullingEnabled ~= nil and layer.tileCullingEnabled) or true
 			elseif data.layers[i].type == "objectgroup" then
 				layer = lib_objectlayer.createLayer(data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig)				
 				layer._type = "object"
@@ -142,9 +134,9 @@ function core.buildMap(data)
 			end
 
 			layer._name = (data.layers[i].name ~= "" and data.layers[i].name) or "layer" .. layerIndex
-			layer.cameraTrackingEnabled = fnn(layer.cameraTrackingEnabled, true)
-			layer.xParallax = fnn(layer.xParallax, 1)
-			layer.yParallax = fnn(layer.yParallax, 1)
+			layer.cameraTrackingEnabled = (layer.cameraTrackingEnabled ~= nil and layer.cameraTrackingEnabled) or true
+			layer.xParallax = (layer.xParallax ~= nil and layer.xParallax) or 1
+			layer.yParallax = (layer.yParallax ~= nil and layer.yParallax) or 1
 			layer.isVisible = data.layers[i].visible
 
 			--------------------------------------------------------------------------
@@ -157,8 +149,6 @@ function core.buildMap(data)
 
 			layerIndex = layerIndex + 1
 		end
-
-		tprint_remove()
 	end
 
 	-- Now we add each layer to the layer list, for quick layer iteration of a specific type
@@ -172,8 +162,6 @@ function core.buildMap(data)
 		end
 	end
 
-	tprint_remove()
-
 	------------------------------------------------------------------------------
 	-- Map Methods
 	------------------------------------------------------------------------------
@@ -182,14 +170,12 @@ function core.buildMap(data)
 	-- Tiles/Pixel Conversion
 	------------------------------------------------------------------------------
 	function map.tilesToPixels(x, y)
-		tprint_add("Convert Tiles to Pixels")
 		local x, y = getXY(x, y)
 
-		tprint_assert((x ~= nil) and (y ~= nil), "Missing argument(s).")
+		if not (x ~= nil and y ~= nil) then verby_error("Missing argument(s) to `map.tilesToPixels()`") end
 
 		x, y = x - 0.5, y - 0.5
-		
-		tprint_remove()
+
 		return (x * map.data.tileWidth), (y * map.data.tileHeight)
 	end
 
@@ -204,13 +190,11 @@ function core.buildMap(data)
 	-- Pixels/Tiles Conversion
 	------------------------------------------------------------------------------
 	function map.pixelsToTiles(x, y)
-		tprint_add("Convert Pixels to Tiles")
 		local x, y = getXY(x, y)
 
-		tprint_assert((x ~= nil) and (y ~= nil), "Missing argument(s).")
+		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s) to `map.pixelsToTiles()`") end
 
 		x, y = map:contentToLocal(x, y)
-		tprint_remove()
 		return math_ceil(x / map.data.tileWidth), math_ceil(y / map.data.tileHeight)
 	end
 
@@ -218,12 +202,10 @@ function core.buildMap(data)
 	-- Is Tile in Map
 	------------------------------------------------------------------------------
 	function map.tileWithinMap(x, y)
-		tprint_add("Tile Within Map")
 		local x, y = getXY(x, y)
 
-		tprint_assert((x ~= nil) and (y ~= nil), "Missing argument(s).")
+		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s) to `map.tileWithinMap()`") end
 
-		tprint_remove()
 		return (x >= 1 and x <= map.data.mapWidth) and (y >= 1 and y <= map.data.mapHeight)
 	end
 
@@ -270,8 +252,6 @@ function core.buildMap(data)
 	-- Destroy Map
 	------------------------------------------------------------------------------
 	function map.destroy()
-		tprint_clear()
-
 		update.destroy()
 
 		for i = 1, #map.layer do

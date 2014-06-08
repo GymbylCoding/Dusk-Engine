@@ -1,6 +1,6 @@
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 --[[
-Dusk Engine
+Dusk Engine Test File
 --]]
 --------------------------------------------------------------------------------
 
@@ -12,11 +12,11 @@ display.setDefault("magTextureFilter", textureFilter)
 
 require("physics")
 physics.start()
+physics.setDrawMode("hybrid")
 
 local dusk = require("Dusk.Dusk")
-require("Plugins.mapcutter")
 
-local map = dusk.buildMapFromLayers("everything.json", {1,2})
+local map = dusk.buildMap("everything.json")
 
 map.setTrackingLevel(0.3)
 
@@ -40,4 +40,4 @@ end
 map:addEventListener("touch", map.drag)
 Runtime:addEventListener("enterFrame", map.updateView)
 
---native.showAlert("Dusk", "Welcome to the Dusk Engine. Check out the demos inside the Demos/ folder. The map loaded on the screen is a very basic map to test various Dusk capabilities.", {"Got it!"})
+native.showAlert("Dusk", "Welcome to the Dusk Engine. You have several options...\n\n- Do the demos in the Demos/ directory\n- Try the TOAD tool to tweak tilesets\n- Examine the example environment 'everything.json'", {"Got it!"})

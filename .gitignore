@@ -5,4 +5,9 @@ spatialhash.lua
 spatialhash_js.js
 culling.lua
 culling.qc
-Dusk/dusk_core/external/moonbeam.lua
+TOAD/autoinstall
+culling_algorithms.txt
+platformer.lua
+b2separator
+test.tmx
+parsers/

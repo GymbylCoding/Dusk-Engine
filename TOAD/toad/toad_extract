@@ -1,0 +1,116 @@
+#!/bin/bash
+
+################################################################################
+# TOAD Extract
+#
+# Extracts tiles from a tileset into a directory
+################################################################################
+
+[ "$MAGICK_CONVERT" = "none" ] && echo "This utility is not available without ImageMagick's convert utility" && exit 1
+
+src=$1
+out="tileset"
+tw=32
+th=32
+margin=0
+spacing=0
+imgw=0
+imgh=0
+
+# Collect arguments
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-src|-tileset)
+			shift
+			src=$1
+			;;
+		-tw|-tilewidth)
+			shift
+			tw=$1
+			;;
+		-th|-tileheight)
+			shift
+			th=$1
+			;;
+		-size|-tilesize)
+			shift
+			size="${1}x"
+			tw=`echo "$size" | cut -dx -f1`
+			th=`echo "$size" | cut -dx -f2`
+			;;
+		-m|-margin)
+			shift
+			margin=$1
+			;;
+		-s|-spacing)
+			shift
+			spacing=$1
+			;;
+		-f|-folder|-out)
+			shift
+			out=$1
+			;;
+		-*)
+			echo "Unknown option '${1}' (ignoring)"
+			shift
+			;;
+		*)
+			[ "$1" != "" ] && out=$1
+			;;
+	esac
+	shift
+done
+
+# Do error checks
+if [ "$src" = "" ]; then
+	echo "No source image provided"
+	exit 1
+fi
+
+if [ `test -e $src` ]; then
+	echo "No file $src"
+	exit 1
+fi
+
+# Calculate stuff
+size=`$MAGICK_CONVERT $src -ping -format "%wx%h" info: 2>>$TOAD_ERROR_LOG`
+imgw=`echo "$size" | cut -dx -f1`
+imgh=`echo "$size" | cut -dx -f2`
+fitw=$(($tw+$spacing))
+fith=$(($th+$spacing))
+ntx=$(($imgw/$fitw))
+nty=$(($imgh/$fith))
+srcname=${src##*/}
+srcext=${src##*.}
+
+# Log info
+# echo "Output Directory: $out"
+# echo "Source Image: $src"
+# echo "Tile Dimensions: ${tw}x${th}"
+# echo "Margin: $margin"
+# echo "Spacing: $spacing"
+
+mkdir $out 2>>$TOAD_ERROR_LOG
+
+if [ "$margin" != "0" ]; then
+	$MAGICK_CONVERT $src -crop $(($imgw-$margin*2))x$(($imgh-$margin*2))+$margin+$margin tmp_extract_$srcname 2>>$TOAD_ERROR_LOG
+else
+	$MAGICK_CONVERT $src tmp_extract_$srcname 2>>$TOAD_ERROR_LOG
+fi
+
+$TOAD_LOG "Extracting..."
+gid=1
+
+# Extract Tiles
+for (( y=1; y<=${nty}; y++ )); do
+	for (( x=1; x<=${ntx}; x++ )); do
+		pixelx=$(((x-1)*$fitw+$margin))
+		pixely=$(((y-1)*$fith+$margin))
+		$MAGICK_CONVERT tmp_extract_$srcname -crop ${tw}x${th}+${pixelx}+${pixely} $out/tile${gid}.${srcext} 2>>$TOAD_ERROR_LOG
+		gid=$(($gid+1))
+	done
+done
+
+$TOAD_LOG "Extracted $((gid-1)) tiles"
+
+rm -f tmp_extract_$srcname

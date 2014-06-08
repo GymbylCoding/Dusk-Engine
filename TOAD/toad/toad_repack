@@ -1,0 +1,100 @@
+#!/bin/bash
+
+################################################################################
+# TOAD Repack
+# 
+# Repacks a tileset; useful for changing margin or spacing (metatask)
+################################################################################
+
+src=$1
+out=$2
+tw=32
+th=32
+margin=0
+spacing=0
+ntw=32
+nth=32
+nmargin=0
+nspacing=0
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-src|-tileset)
+			shift
+			src=$1
+			;;
+		-o|-out|-new)
+			shift
+			out=$1
+			;;
+		-oldtw|-old-tilewidth)
+			shift
+			tw=$1
+			;;
+		-oldth|-old-tileheight)
+			shift
+			th=$1
+			;;
+		-oldsize|-old-tilesize)
+			shift
+			size="${1}x"
+			tw=`echo "$size" | cut -dx -f1`
+			th=`echo "$size" | cut -dx -f2`
+			;;
+		-oldm|-old-margin)
+			shift
+			margin=$1
+			;;
+		-olds|-old-spacing)
+			shift
+			spacing=$1
+			;;
+		-tw|-tilewidth)
+			shift
+			tw=$1
+			;;
+		-th|-tileheight)
+			shift
+			th=$1
+			;;
+		-size|-tilesize)
+			shift
+			size="${1}x"
+			tw=`echo "$size" | cut -dx -f1`
+			th=`echo "$size" | cut -dx -f2`
+			;;
+		-m|-margin)
+			shift
+			nmargin=$1
+			;;
+		-s|-spacing)
+			shift
+			nspacing=$1
+			;;
+		-*)
+			echo "Unknown option '${1}' (ignoring)"
+			shift
+			;;
+		*)
+			[ "$1" != "" ] && out=$1
+			;;
+	esac
+	shift
+done
+
+srcname=${src##*/}
+srcname=${srcname%%.*}
+
+size=`$MAGICK_CONVERT $src -ping -format "%wx%h" info: 2>>$TOAD_ERROR_LOG`
+imgw=`echo "$size" | cut -dx -f1`
+imgh=`echo "$size" | cut -dx -f2`
+fitw=$(($tw+$spacing))
+fith=$(($th+$spacing))
+ntx=$(($imgw/$fitw))
+nty=$(($imgh/$fith))
+
+$TOAD_EXTRACT $src tmp_extracted_repack_$srcname -size ${tw}x${th} -m $margin -s $spacing
+$TOAD_PACK tmp_extracted_repack_$srcname $out -size ${ntw}x${nth} -m $nmargin -s $nspacing
+
+rm -f tmp_extracted_repack_$srcname/*
+rmdir tmp_extracted_repack_$srcname

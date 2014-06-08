@@ -1,0 +1,132 @@
+#!/bin/bash
+
+################################################################################
+# TOAD Pack
+# 
+# Packs tiles from a directory into a single image
+################################################################################
+
+# Make sure we have ImageMagick dependencies
+[ "$MAGICK_COMPOSITE" = "none" ] && echo "This utility is not available without ImageMagick's composite utility" && exit 1
+[ "$MAGICK_CONVERT" = "none" ] && echo "This utility is not available without ImageMagick's convert utility" && exit 1
+
+src=$1
+out=$2
+tw=32
+th=32
+nrows=4
+ncols=7
+spacing=0
+margin=0
+
+# Collect arguments
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-src|-folder)
+			shift
+			src=$1
+			;;
+		-out|-tileset)
+			shift
+			out=$1
+			;;
+		-tw|-tilewidth)
+			shift
+			tw=$1
+			;;
+		-th|-tileheight)
+			shift
+			th=$1
+			;;
+		-size|-tilesize)
+			shift
+			size="${1}x"
+			tw=`echo "$size" | cut -dx -f1`
+			th=`echo "$size" | cut -dx -f2`
+			;;
+		-c|-cols|-columns)
+			shift
+			ncols=$1
+			;;
+		-r|-rows)
+			shift
+			nrows=$1
+			;;
+		-d|-dimensions)
+			shift
+			dims="${1}x"
+			ncols=`echo "$dims" | cut -dx -f1`
+			nrows=`echo "$dims" | cut -dx -f2`
+			;;
+		-m|-margin)
+			shift
+			margin=$1
+			;;
+		-s|-spacing)
+			shift
+			spacing=$1
+			;;
+		-*)
+			echo "Unknown option '${1}' (ignoring)"
+			shift
+			;;
+		*)
+			[ "$1" != "" ] && out=$1
+			;;
+	esac
+	shift
+done
+
+# Do error checks
+if [ "$src" = "" ]; then
+	echo "No source folder provided"
+	exit 1
+fi
+
+if [ "$out" = "" ]; then
+	echo "No composite image name provided"
+	exit 1
+fi
+
+if [ "$nrows" = "0" ] || [ "$ncols" = "0" ]; then
+	echo "No tileset dimensions provided"
+	exit 1
+fi
+
+# Calculate stuff
+fitw=$(($tw+$spacing))
+fith=$(($th+$spacing))
+outext=${out##*.}
+imgw=$(($fitw*$ncols+$margin*2-$spacing))
+imgh=$(($fith*$nrows+$margin*2-$spacing))
+
+# Log info
+# echo "Tileset Name: $out"
+# echo "Pack Folder: $src"
+# echo "Tile Dimensions: ${tw}x${th}"
+# echo "Tileset Dimensions: ${nrows}x${ncols} ($(($nrows*$ncols)) tiles)"
+
+# Make blank canvas
+$MAGICK_CONVERT -size ${imgw}x${imgh} canvas:none $out 2>>$TOAD_ERROR_LOG
+
+$TOAD_LOG "Packing..."
+gid=1
+
+# Pack tiles
+for (( y=1; y<=$nrows; y++ )); do
+	for (( x=1; x<=$ncols; x++ )); do
+		pixelx=$(((x-1)*$fitw+$margin))
+		pixely=$(((y-1)*$fith+$margin))
+		tilename=$src/tile${gid}.${outext}
+
+		if [ `test -e $tilename` ]; then
+			echo "Warning: No tile $tilename (for tile $x,$y)"
+		else
+			$MAGICK_COMPOSITE -geometry ${tw}x${th}+${pixelx}+${pixely} $tilename $out $out 2>>$TOAD_ERROR_LOG
+		fi
+		
+		gid=$(($gid+1))
+	done
+done
+
+$TOAD_LOG "Packed $(($gid-1)) tiles into $out"

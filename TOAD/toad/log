@@ -1,0 +1,12 @@
+TOAD Error Log
+--------------
+
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset@2x.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset@2x.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset@2x.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset@2x.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset@2x.png' @ warning/png.c/MagickPNGWarningHandler/1832.
+convert: iCCP: known incorrect sRGB profile `Demos/bob/graphics/tileset@2x.png' @ warning/png.c/MagickPNGWarningHandler/1832.

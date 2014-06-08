@@ -13,7 +13,7 @@ local objectlayer = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
@@ -32,12 +32,9 @@ local table_insert = table.insert
 local table_maxn = table.maxn
 local type = type
 local unpack = unpack
-local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() tprint_error("Physics library was not found on Dusk Engine startup") end end
+local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
 local getSetting = lib_settings.get
-local tprint_add = tprint.add
-local tprint_remove = tprint.remove
-local tprint_assert = tprint.assert
-local fnn = lib_functions.fnn
+local verby_assert = verby.assert
 local spliceTable = lib_functions.spliceTable
 local isPolyClockwise = lib_functions.isPolyClockwise
 local reversePolygon = lib_functions.reversePolygon
@@ -51,8 +48,7 @@ local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = t
 function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
 	local props = getProperties(data.properties or {}, "objects", true)
 	local ellipseRadiusMode = getSetting("ellipseRadiusMode")
-	local layerName = "Layer #" .. dataIndex .. " - \"" .. data.name .. "\""
-
+	
 	local layer = display_newGroup()
 	layer.props = {}
 
@@ -62,13 +58,12 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 	-- Create Objects
 	------------------------------------------------------------------------------
 	for i = 1, #data.objects do
-		tprint_add("Create Object #" .. i .. " - \"" .. data.objects[i].name .. "\"")
 		local o = data.objects[i]
-		tprint_assert(o ~= nil, "Object data missing at index " .. i .. ".")
+		if not (o ~= nil) then verby_error("Object data missing at index " .. i) end
 
 		local obj
 		local objProps = getProperties(o.properties or {}, "object", false)
-		local physicsExistent = fnn(objProps.options.physicsExistent, props.options.physicsExistent)
+		local physicsExistent = (objProps.options.physicsExistent ~= nil and objProps.options.physicsExistent) or props.options.physicsExistent
 
 		----------------------------------------------------------------------------
 		-- Ellipse Object
@@ -172,7 +167,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 		if physicsExistent then
 			local physicsParameters = {}
 			local physicsBodyCount = props.options.physicsBodyCount
-			local tpPhysicsBodyCount = fnn(objProps.options.physicsBodyCount, physicsBodyCount)
+			local tpPhysicsBodyCount = (objProps.options.physicsBodyCount ~= nil and objProps.options.physicsBodyCount) or physicsBodyCount
 
 			physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
 
@@ -212,78 +207,83 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 		layer.object[obj._name] = obj
 		table_insert(layer.object, obj)
 		layer:insert(obj)
-
-		tprint_remove()
 	end
 
 	------------------------------------------------------------------------------
 	-- Object Iterator Template
 	------------------------------------------------------------------------------
-	function layer._newIterator(condition)
-		local objects = {}
+	function layer._newIterator(condition, inTable)
+		if not inTable then
+			local objects = {}
 
-		for i = 1, table_maxn(layer.object) do
-			if layer.object[i] and condition(layer.object[i]) then
-				table_insert(objects, {index = i})
+			for i = 1, table_maxn(layer.object) do
+				if layer.object[i] and condition(layer.object[i]) then
+					table_insert(objects, {index = i})
+				end
 			end
-		end
 
-		local index = 0
-		
-		return function()
-			index = index + 1
-			if objects[index] then
-				return layer.object[objects[index].index]
-			else
-				tprint_remove()
-				return nil
+			local index = 0
+			
+			return function()
+				index = index + 1
+				if objects[index] then
+					return layer.object[objects[index].index]
+				else
+					return nil
+				end
 			end
+		elseif inTable then
+			local objects = {}
+
+			for i = 1, table_maxn(layer.object) do
+				if layer.object[i] and condition(layer.object[i]) then
+					table_insert(objects, layer.object[i])
+				end
+			end
+
+			return objects
 		end
 	end
 
 	------------------------------------------------------------------------------
 	-- Iterator: _literal()
 	------------------------------------------------------------------------------
-	function layer._literal(n, checkFor)
-		tprint_add("Iterator - " .. "(" .. layerName .. ")")
-
-		tprint_assert(n ~= nil, "Nothing was passed to constructor.")
+	function layer._literal(n, checkFor, inTable)
+		if not (n ~= nil) then verby_error("Nothing was passed to constructor of literal-match iterator") end
 
 		local n = n
 		local checkFor = checkFor or "type"
 
-		return layer._newIterator(function(obj) return obj[checkFor] == n end)
+		return layer._newIterator(function(obj) return obj[checkFor] == n end, inTable)
 	end
 
 	------------------------------------------------------------------------------
 	-- Iterator: _match()
 	------------------------------------------------------------------------------
-	function layer._match(n, checkFor)
-		tprint_add("Iterator - " .. "(" .. layerName .. ")")
-
-		tprint_assert(n ~= nil, "Nothing was passed to constructor.")
+	function layer._match(n, checkFor, inTable)
+		if not (n ~= nil) then verby_error("Nothing was passed to constructor of pattern-based iterator") end
 
 		local n = n
 		local checkFor = checkFor or "type"
 
-		return layer._newIterator(function(obj) return obj[checkFor]:match(n) ~= nil end)
+		return layer._newIterator(function(obj) return obj[checkFor]:match(n) ~= nil end, inTable)
 	end
 
 	------------------------------------------------------------------------------
 	-- Iterators
 	------------------------------------------------------------------------------
 	-- nameIs()
-	function layer.nameIs(n) return layer._literal(n, "_name") end
+	function layer.nameIs(n, inTable) return layer._literal(n, "_name", inTable) end
 	-- nameMatches()
-	function layer.nameMatches(n) return layer._match(n, "_name") end
+	function layer.nameMatches(n, inTable) return layer._match(n, "_name", inTable) end
 	-- typeIs()
-	function layer.typeIs(n) return layer._literal(n, "_type") end
+	function layer.typeIs(n, inTable) return layer._literal(n, "_type", inTable) end
 	-- typeMatches()
-	function layer.typeMatches(n) return layer._match(n, "_type") end
+	function layer.typeMatches(n, inTable) return layer._match(n, "_type", inTable) end
 	-- objTypeIs()
-	function layer.objTypeIs(n) return layer._literal(n, "_objType") end
+	function layer.objTypeIs(n, inTable) return layer._literal(n, "_objType", inTable) end
 	-- objects()
-	function layer.objects() tprint_add("Objects Iterator - " .. "(" .. layerName .. ")") return layer._newIterator(function() return true end) end
+	function layer.objects(inTable) return layer._newIterator(function() return true end, inTable) end
 
 	------------------------------------------------------------------------------
 	-- Destroy Layer

@@ -1,6 +1,5 @@
 Things left to be done:
 
-
 - TMX files
 	Support for the TMX map format.
 
@@ -13,22 +12,12 @@ Things left to be done:
 	Right now, the map can be scaled, but the camera system doesn't work so well with independent layers being scaled.
 
 
-- TPrint "accounts"
-	Multiple maps may make TPrint have issues with the traceback. If a way to create a single "account" for TPrint could be made, people could debug multiple maps with impunity.
-
-
-- "Pro" version of Dusk
-	TPrint could potentially slow down maps a bit; a version with no debugging calls could be a trifle faster. This could be implemented as a separate "build" step which doth create a new version of Dusk with no error messages (harder for development because of no meaningful error messages, but adding a slight speed boost).
-
-
 - Make polygon objects using display.newPolygon
 	Currently not done because of *unexpected* behaviour with Corona's polygon objects (looking into the problem, no worries).
 
 
 - Demos
-	Right now we only have one "full" demo (Bob). More demos to showcase different features are needed.
-		- Physics without Box2D (via tile properties); perchance port one of the several LÖVE Lua physics engines to Corona
-		- Platformer (with or without Box2D, preferably without, though we should probably have two versions)
+	Needs more demos/samples
 
 
 - Polygon triangulation/convex partitioning
@@ -37,13 +26,6 @@ Things left to be done:
 
 - Instant update for scaling
 	Without an onUpdate() transition parameter, transition.to() with scaling makes the map jitter when tile culling is turned on. A temporary solution could be a metatable with __newindex for scaling, or perchance a temporary transition library with onUpdate() included
-
-
-- Arithmetic evaluation
-	It would be simply thrilling if, within properties, you could prefix a value and have Dusk evaluate arithmetic automatically. Then a preset "variable table" could be created (with generic values such as screen width, height, map width, etcetera) that could be used in the evaluation. Like so:
-	As layer properties, to make the layer fill the screen perfectly:
-		xScale    = !eval! screen_width / layer_width
-		yScale    = !eval! screen_height / layer_height
 
 
 - TSX tileset files

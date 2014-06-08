@@ -1,0 +1,280 @@
+#!/bin/bash
+
+################################################################################
+# TOAD
+# 
+# Public interface for TOAD
+################################################################################
+
+# Export variables
+export TOAD_FULL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export TOAD_VERSION=`cat $TOAD_FULL_DIR/version`
+export TOAD_CALL_DIR=${0%%/*}
+export TOAD_ERROR_LOG=$TOAD_FULL_DIR/log # Errors will get reported here instead of coughed up on the terminal window
+export TOAD_VERBOSE="no"
+
+export MAGICK_CONVERT=`which convert || which $TOAD_FULL_DIR/convert || echo "none"` # ImageMagick convert utility
+export MAGICK_COMPOSITE=`which composite || which $TOAD_FULL_DIR/composite || echo "none"` # ImageMagick composite utility
+
+# Make sure we have ImageMagick
+if [ "$MAGICK_CONVERT" = "none" ]; then
+	echo "Warning: ImageMagick's convert tool was not found; some features of TOAD may not be available"
+	echo "Open INSTALL.md for installation instructions"
+fi
+
+if [ "$MAGICK_COMPOSITE" = "none" ]; then
+	echo "Warning: ImageMagick's composite tool was not found; some features of TOAD may not be available"
+	echo "Open INSTALL.md for installation instructions"
+fi
+
+export TOAD_EXTRACT=$TOAD_FULL_DIR/toad_extract
+export TOAD_PACK=$TOAD_FULL_DIR/toad_pack
+export TOAD_EXTRUDEIMG=$TOAD_FULL_DIR/toad_extrudeimg
+export TOAD_EXTRUDE=$TOAD_FULL_DIR/toad_extrude
+export TOAD_REPACK=$TOAD_FULL_DIR/toad_repack
+export TOAD_LOG=$TOAD_FULL_DIR/toad_log
+export TOAD_TESTS=$TOAD_FULL_DIR/toad_tests
+
+# Clear the error log file
+echo "TOAD Error Log" 1>$TOAD_ERROR_LOG
+echo "--------------" 1>>$TOAD_ERROR_LOG
+echo "" 1>>$TOAD_ERROR_LOG
+
+toadshell=false
+
+toadtask() {
+	# Start up the requested utility
+	case "$1" in
+		version)
+			echo "TOAD $TOAD_VERSION"
+			;;
+		info)
+			echo "TOAD: Tileset Operations and Doodads"
+			echo "Written by Caleb Place of Gymbyl Coding, for the Dusk Engine."
+			echo "$TOAD_VERSION"
+			;;
+		verbose)
+			if [ "$TOAD_VERBOSE" = "on" ]; then
+				TOAD_VERBOSE="off"
+			else
+				TOAD_VERBOSE="on"
+			fi
+			echo "Verbose mode is $TOAD_VERBOSE"
+			;;
+		exit)
+			exit 0
+			;;
+		extract)
+			shift
+			$TOAD_LOG "TOAD Extract"
+			$TOAD_LOG "-------------------------"
+			$TOAD_EXTRACT $*
+			;;
+		pack)
+			shift
+			$TOAD_LOG "TOAD Pack"
+			$TOAD_LOG "-------------------------"
+			$TOAD_PACK $*
+			;;
+		extrude)
+			shift
+			$TOAD_LOG "TOAD Extrude"
+			$TOAD_LOG "-------------------------"
+			$TOAD_EXTRUDE $*
+			;;
+		repack)
+			shift
+			$TOAD_LOG "TOAD Repack"
+			$TOAD_LOG "-------------------------"
+			$TOAD_REPACK $*
+			;;
+		tests)
+			shift
+			$TOAD_LOG "TOAD Tests"
+			$TOAD_LOG "-------------------------"
+			$TOAD_TESTS
+			;;
+		help)
+			shift
+			if [ "$1" = "" ]; then
+				if "$toadshell"; then
+					echo "TOAD Shell"
+					echo ""
+					echo "* Type 'extract', 'pack', 'extrude', or 'repack' to manipulate tilesets"
+					echo "* Type 'exit' to exit"
+					echo "* Type 'info' for info"
+					echo "* Type 'verbose' to toggle verbose mode"
+					echo "* Type 'tests' to run tests"
+					echo "* Type 'help [utility name]' for help with a utility"
+					echo "* Type 'help defaults' to list default values"
+				else
+					echo "TOAD"
+					echo ""
+					echo "* Use 'extract', 'pack', 'extrude', or 'repack' to manipulate tilesets"
+					echo "* Invoke TOAD with no arguments to enter interactive shell"
+					echo "* Use 'info' for info"
+					echo "* Use 'tests' to run tests"
+					echo "* Use 'help [utility name]' for help with a utility"
+					echo "* Use 'help defaults' to list default values"
+				fi
+			else
+				case "$1" in
+					extract)
+						echo "TOAD Extract"
+						echo ""
+						echo "Extracts tiles from a tileset image and saves them to a folder."
+						echo ""
+						echo "Arguments:"
+						echo "  -src, -tileset           : Tileset image to extract tiles from"
+						echo "  -f, -folder, -out        : Folder to save extracted tiles in"
+						echo "  -tw, -tilewidth          : Width of each tile"
+						echo "  -th, -tileheight         : Height of each tile"
+						echo "  -size, -tilesize         : Size of each tile in the form of WxH; overwrites tile width and height"
+						echo "  -m, -margin              : Margin around tileset"
+						echo "  -s, -spacing             : Spacing between tiles"
+						echo ""
+						echo "Examples:"
+						echo "  [toad] extract tileset.png tileset/"
+						echo "    -> Extract tiles from tileset.png into tileset/, using tile size 32x32 px, margin = 0, and spacing = 0"
+						echo "  [toad] extract tileset.png -size 16x16 -margin 5 tileset/"
+						echo "    -> Extract tiles from tileset.png into tileset/, using tile size 16x16 px, margin = 5, and spacing = 0"
+						echo "  [toad] extract tileset.png -spacing 5 -margin 1 -folder tileset/"
+						echo "    -> Extract tiles from tileset.png into (explicitly named) tileset/, using tile size 32x32 px, margin = 1, and spacing = 5"
+						echo ""
+						echo "TOAD Extract saves tiles in the form of [tile1, tile2, tile3, ...]. Tiles are extracted from left to right, top to bottom; tile1 is the top-left tile in the tileset, and tile[n] is the bottom-right tile in the tileset."
+						;;
+					pack)
+						echo "TOAD Pack"
+						echo ""
+						echo "Packs tiles from a folder into a tileset."
+						echo ""
+						echo "Arguments:"
+						echo "  -src, -folder            : Source folder to retrieve tiles from"
+						echo "  -out, -tileset           : Tileset image to pack tiles into"
+						echo "  -tw, -tilewidth          : Width of each tile"
+						echo "  -th, -tileheight         : Height of each tile"
+						echo "  -size, -tilesize         : Size of each tile in the form of WxH; overwrites tile width and height"
+						echo "  -c, -cols, -columns      : Width in tiles of the packed tileset"
+						echo "  -r, -rows                : Height in tiles of the packed tileset"
+						echo "  -d, -dimensions          : Size in tiles of the packed tileset in the form of CxR; overwrites rows and columns"
+						echo "  -m, -margin              : Margin around tileset"
+						echo "  -s, -spacing             : Spacing between tiles"
+						echo ""
+						echo "Examples:"
+						echo "  [toad] pack tileset/ tileset_packed.png -d 7x4"
+						echo "    -> Pack tiles from tileset/ into tileset_packed.png with dimensions of 7x4"
+						echo "  [toad] pack tileset/ -margin 10 -spacing 5 -d 7x4 tileset_packed.png"
+						echo "    -> Pack tiles from tileset/ into tileset_packed.png with dimensions of 7x4, margin = 10, and spacing = 5"
+						echo "  [toad] pack tileset/ tileset_packed.png -tilesize 64x64"
+						echo "    -> Pack tiles from tileset/ into tileset_packed.png with tile size 64x64 px"
+						echo ""
+						echo "TOAD Pack looks for tiles as [tile1, tile2, tile3, ...]. Tiles are packed by index from left to right, top to bottom; tile1 will be placed in the top-left corner, and tile[n] will be placed in the bottom-right corner."
+						echo ""
+						echo "If a tile is not found for an X,Y position in the tileset, a warning is issued and TOAD Pack skips it."
+						;;
+					extrude)
+						echo "TOAD Extrude"
+						echo ""
+						echo "Extrudes a tileset by a certain amount to fix flickering border issues."
+						echo ""
+						echo "Arguments:"
+						echo "  -src, -tileset           : Tileset image to extrude"
+						echo "  -o, -out                 : Name of extruded tileset"
+						echo "  -b, -border              : Size of extruded border"
+						echo "  -tw, -tilewidth          : Width of each tile"
+						echo "  -th, -tileheight         : Height of each tile"
+						echo "  -size, -tilesize         : Size of each tile in the form of WxH; overwrites tile width and height"
+						echo "  -m, -margin              : Margin around tileset"
+						echo "  -s, -spacing             : Spacing between tiles"
+						echo ""
+						echo "Examples:"
+						echo "  [toad] extrude tileset.png tileset_extruded.png"
+						echo "    -> Extrude a tileset by 2px (default)"
+						echo "  [toad] extrude tileset.png -border 4 tileset_extruded.png"
+						echo "    -> Extrude a tileset by 4px"
+						echo "  [toad] extrude tileset.png -margin 10 -spacing 1 tileset_extruded.png"
+						echo "    -> Extrude a tileset with margin = 10 and spacing = 1 by 2px"
+						echo ""
+						echo "TOAD Extrude is a metatask based on TOAD Extract, TOAD PACK, and TOAD ExtrudeImg (a core extrusion utility). The extruded tileset will have dimensions of (W+border)x(H+border). For example, if your original tile size is 32x32, and you extrude it with border = 2, your new tile size will be 34x34."
+						echo ""
+						echo "To use an extruded tileset, create a map in Tiled with your normal tile dimensions, then add a new tileset with the new tile dimensions. Create your maps using the new tileset, and TOAD Extrude should have solved the flickering border lines issue."
+						;;
+					repack)
+						echo "TOAD Repack"
+						echo ""
+						echo "Repacks a tileset, adjusting spacing, margin, and tile size, if specified."
+						echo ""
+						echo "Arguments:"
+						echo "  -src, -tileset           : Tileset image to repack"
+						echo "  -o, -out, -new           : Name of repacked tileset"
+						echo "  -oldtw, -old-tilewidth   : Width of tiles in tileset"
+						echo "  -oldth, -old-tileheight  : Height of tiles in tileset"
+						echo "  -oldsize, -old-tilesize  : Size of each tile in tileset in the form of WxH; overwrites tile width and height"
+						echo "  -oldm, -old-margin       : Margin around tileset"
+						echo "  -olds, -old-spacing      : Spacing between tiles in tileset"
+						echo "  -tw, -tilewidth          : Tile width to repack tileset with"
+						echo "  -th, -tileheight         : Tile height to repack tileset with"
+						echo "  -size, -tilesize         : Size of each tile to repack tileset with in the form of WxH; overwrites tile width and height"
+						echo "  -m, -margin              : Margin to repack tileset with"
+						echo "  -s, -spacing             : Spacing to repack tileset with"
+						echo ""
+						echo "Examples:"
+						echo "  [toad] repack tileset.png -margin 4 tileset_repacked.png"
+						echo "    -> Repack a tileset with margin = 0 to margin = 4"
+						echo "  [toad] repack tileset.png -oldmargin 4 -margin 0 tileset_repacked.png"
+						echo "    -> Repack a tileset with margin = 4 to margin = 0"
+						echo "  [toad] repack tileset.png -oldspacing 5 -spacing 0 -oldmargin 10 -margin 1 tileset_repacked.png"
+						echo "    -> Repack a tileset with margin = 10 and spacing = 5 to margin = 1 and spacing = 0"
+						echo ""
+						echo "TOAD Repack is a metatask based on TOAD Extract and TOAD Pack. It is useful for resizing tiles and changing margin or spacing. TOAD Repack uses the dimensions of the original tileset to position the new tiles, so you don't have to specify row and column count."
+						;;
+					defaults)
+						echo "TOAD Defaults"
+						echo ""
+						echo "Command Line Switch    Default    Used in Utilities"
+						echo "--------------------   ---------   -------------------------------"
+						echo "-tw, -tilewidth      : 32        : extract, pack, extrude, repack"
+						echo "-th, -tileheight     : 32        : extract, pack, extrude, repack"
+						echo "-m, -margin          : 0         : extract, pack, extrude, repack"
+						echo "-s, -spacing         : 0         : extract, pack, extrude, repack"
+						echo "-b, -border          : 2         : extrude"
+						echo "-c, -cols, -columns  : 7         : pack"
+						echo "-r, -rows            : 4         : pack"
+						;;
+					*)
+						;;
+				esac
+			fi
+			;;
+		*)
+			echo "Unknown task '${1}'"
+			shift
+			;;
+	esac
+	shift
+}
+
+if [ $# -gt 0 ]; then
+	toadtask $*
+else
+	echo "TOAD: Tileset Operations and Doodads"
+	echo "$TOAD_VERSION"
+	echo ""
+	echo "TOAD Shell"
+	echo ""
+	echo "* Type 'extract', 'pack', 'extrude', or 'repack' to manipulate tilesets"
+	echo "* Type 'exit' to exit"
+	echo "* Type 'info' for info"
+	echo "* Type 'verbose' to toggle verbose mode"
+	echo "* Type 'tests' to run tests"
+	echo "* Type 'help [utility name]' for help with a utility"
+	echo "* Type 'help defaults' to list default values"
+	toadshell=true
+	while :; do
+		echo -n '-> '
+		read task args
+		if [ "$task" != "" ]; then
+			toadtask $task $args
+		fi
+	done
+fi

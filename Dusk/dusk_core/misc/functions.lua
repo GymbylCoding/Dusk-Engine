@@ -18,6 +18,7 @@ local lib_settings = require("Dusk.dusk_core.misc.settings")
 local dot = require("Dusk.dusk_core.external.dot")
 local syfer = require("Dusk.dusk_core.external.syfer")
 
+local tonumber = tonumber
 local type = type
 local pairs = pairs
 local table_concat = table.concat
@@ -28,17 +29,15 @@ local getSetting = lib_settings.get
 -- Mini Functions
 --------------------------------------------------------------------------------
 -- String to value
-local stringToValue = function(value, vars) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json.decode(value:sub(7)) elseif value:match("!eval!") then v = syfer.solve(value:sub(7), getSetting("evalVariables")) else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
--- First not nil
-local fnn = function(...) for i = 1, #arg do if arg[i] ~= nil then return arg[i] end end end
+local function stringToValue(value, vars) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json.decode(value:sub(7)) elseif value:match("!eval!") then v = syfer.solve(value:sub(7), getSetting("evalVariables")) else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
 -- Splice table
-local spliceTable = function(elements, primary, secondary) local newTable = {} for k, v in pairs(elements) do newTable[k] = fnn(primary[k], secondary[k]) end return newTable end
+local function spliceTable(elements, primary, secondary) local newTable = {} for k, v in pairs(elements) do newTable[k] = (primary[k] ~= nil and primary[k]) or secondary[k] end return newTable end
 -- Is polygon clockwise
 local function isPolyClockwise(pointList) local area = 0 for i = 1, #pointList - 2, 2 do local pointStart = {x = pointList[i] - pointList[1], y = pointList[i + 1]-pointList[2]} local pointEnd = {x = pointList[i + 2]-pointList[1], y = pointList[i + 3]-pointList[2]} area = area + (pointStart.x*-pointEnd.y)-(pointEnd.x*-pointStart.y) end return (area < 0) end
 -- Reverse polygon (in form of [x,y, x,y, x,y], not [[x,y], [x,y]])
 local function reversePolygon(t) local nt = {} for i = 1, #t, 2 do nt[#nt + 1] = t[#t - i] nt[#nt + 1] = t[#t - i + 1] end return nt end
 -- Get X/Y (either number[x] and number[y], table[x] with .x,.y, or table[x] with [1],[2])
-local function getXY(x, y) local x, y = x, y if type(x) == "table" then if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else tprint_error("Missing X- or Y-argument.") end end
+local function getXY(x, y) local x, y = x, y if type(x) == "table" then if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else verby_error("Missing X- or Y-argument.") end end
 -- Clamp value to a range
 local function clamp(v, l, h) return (v < l and l) or (v > h and h) or v end
 -- Reverse table ([1, 2, 3] -> [3, 2, 1])
@@ -50,7 +49,7 @@ local function getDirectory(dirTree, path) local path = path local numDirs = #di
 -- Has bit
 local function hasBit(x, p) return x % (p + p) >= p end
 -- Set bit
-local function setBit(x, p) return hasbit(x, p) and x or x + p end
+local function setBit(x, p) return hasBit(x, p) and x or x + p end
 -- Clear bit
 local function clearBit(x, p) return x - p end
 
@@ -71,17 +70,19 @@ local function getProperties(data, objPrefix, isLayer)
 	local insertionTable
 	local objPrefix = objPrefix or "tiles" -- This goes in front of the properties meant for each object in the layer
 	local objPrefixLen = objPrefix:len() + 2 -- +2 because +1 is required for the colon after the prefix, and +1 is required to start at the character after that
+	local objPrefixMatch = "^" .. objPrefix .. ":"
 
 	for key, value in pairs(data) do
 		local k, v
 
-		local dotMode = "default"
+		local dotMode
+
 		if key:match("^!nodot!") then
 			key = key:sub((getSetting("spaceAfterEscapedPrefix") and 9) or 8)
-			dotMode = "0"
+			dotMode = false
 		elseif key:match("^!dot!") then
 			key = key:sub((getSetting("spaceAfterEscapedPrefix") and 7) or 6)
-			dotMode = "1"
+			dotMode = true
 		end
 
 		if key:match("^physics:") then
@@ -98,7 +99,7 @@ local function getProperties(data, objPrefix, isLayer)
 			k = key:sub(6)
 		else
 			if isLayer then
-				if key:match("^" .. objPrefix .. ":") then
+				if key:match(objPrefixMatch) then
 					insertionTable = p.object
 					k = key:sub(objPrefixLen)
 				else
@@ -120,7 +121,7 @@ local function getProperties(data, objPrefix, isLayer)
 				p.options.physicsExistent = false
 			end
 		else
-			if dotMode == "1" then p.options.usedot[k] = true elseif dotMode == "0" then p.options.nodot[k] = true end
+			if dotMode == true then p.options.usedot[k] = true elseif dotMode == false then p.options.nodot[k] = true end
 			insertionTable[k] = v
 		end
 	end
@@ -140,7 +141,6 @@ end
 -- Add Functions to Public Library
 --------------------------------------------------------------------------------
 functions.stringToValue = stringToValue
-functions.fnn = fnn
 functions.spliceTable = spliceTable
 functions.isPolyClockwise = isPolyClockwise
 functions.reversePolygon = reversePolygon

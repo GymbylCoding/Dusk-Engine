@@ -13,11 +13,10 @@ local tilelayer = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
-local lib_twindex = require("Dusk.dusk_core.external.twindex")
 
 local display_remove = display.remove
 local display_newSprite = display.newSprite
@@ -32,15 +31,11 @@ local tonumber = tonumber
 local pairs = pairs
 local unpack = unpack
 local type = type
-local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() tprint_error("Physics library was not found on Dusk Engine startup") end end
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
-local tprint_add = tprint.add
-local tprint_error = tprint.error
-local tprint_assert = tprint.assert
-local tprint_remove = tprint.remove
-local fnn = lib_functions.fnn
+local verby_error = verby.error
+local verby_assert = verby.assert
 local spliceTable = lib_functions.spliceTable
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
@@ -49,6 +44,7 @@ local hasBit = lib_functions.hasBit
 local setBit = lib_functions.setBit
 local clearBit = lib_functions.clearBit
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
+local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
 
 local flipX = tonumber("80000000", 16)
 local flipY = tonumber("40000000", 16)
@@ -59,12 +55,8 @@ local flipD = tonumber("20000000", 16)
 --------------------------------------------------------------------------------
 function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 	local props = getProperties(data.properties or {}, "tiles", true)
-	
-	local layerName = "Layer #" .. dataIndex .. " - \"" .. data.name .. "\""
 
 	local layer = display_newGroup()
-	local twindex = lib_twindex.buildTwindex(getSetting("enableTwindex"))
-	twindex.loadMatrix(mapData.width, mapData.height, data.data)
 
 	layer.props = {}
 	local layerTiles = {}
@@ -78,8 +70,6 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	function layer._drawTile(x, y)
 		if locked[x] and locked[x][y] == "e" then return false end
 
-		tprint_add("Draw Tile (" .. layerName .. ")")
-		
 		if layer.tile(x, y) == nil then
 			local id = ((y - 1) * mapData.width) + x
 			local gid = data.data[id]
@@ -96,7 +86,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			if hasBit(gid, flipY) then flippedY = true gid = clearBit(gid, flipY) end
 			if hasBit(gid, flipD) then rotated = true gid = clearBit(gid, flipD) end
 
-			tprint_assert(gid <= mapData.highestGID and gid >= 0, "Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.")
+			if not (gid <= mapData.highestGID and gid >= 0) then verby_error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
 
 			local tileData = tileIndex[gid]
 			local sheetIndex = tileData.tilesetIndex
@@ -106,9 +96,11 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 				tile:setFrame(tileGID)
 				tile.x, tile.y = mapData.stats.tileWidth * (x - 0.5), mapData.stats.tileHeight * (y - 0.5)
 				tile.xScale, tile.yScale = screen.zoomX, screen.zoomY
+				
 				tile.GID = gid
 				tile.tilesetGID = tileGID
 				tile.tileset = sheetIndex
+				tile.layerIndex = dataIndex
 
 				if flippedX then tile.xScale = -tile.xScale end
 				if flippedY then tile.yScale = -tile.yScale end
@@ -124,10 +116,10 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			--------------------------------------------------------------------------
 			-- Add Physics to Tile
 			--------------------------------------------------------------------------
-			if fnn(tileProps.options.physicsExistent, props.options.physicsExistent) then
+			if (tileProps.options.physicsExistent ~= nil and tileProps.options.physicsExistent) or props.options.physicsExistent then
 				local physicsParameters = {}
 				local physicsBodyCount = props.options.physicsBodyCount
-				local tpPhysicsBodyCount = fnn(tileProps.options.physicsBodyCount, physicsBodyCount)
+				local tpPhysicsBodyCount = (tileProps.options.physicsBodyCount ~= nil and tileProps.options.physicsBodyCount) or physicsBodyCount
 
 				physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
 
@@ -147,10 +139,6 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			--------------------------------------------------------------------------
 			tile.props = {}
 		
-			if tileGID == 100 then
-				print(tileProps.object.moose)
-			end
-
 			addProperties(props, "object", tile)
 			addProperties(tileProps, "object", tile)
 			addProperties(tileProps, "props", tile.props)
@@ -164,8 +152,6 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			layer._eraseTile(x, y)
 			layer._drawTile(x, y)
 		end
-
-		tprint_remove()
 	end
 
 	------------------------------------------------------------------------------
@@ -174,7 +160,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	function layer._eraseTile(x, y)
 		if locked[x] and locked[x][y] == "d" then return false end
 
-		if layer.tile(x, y) then
+		if layerTiles[x] and layerTiles[x][y] then
 			display_remove(layerTiles[x][y])
 			layerTiles[x][y] = nil
 
@@ -215,25 +201,15 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 		if x1 < 1 then x1 = 1 end; if y1 < 1 then y1 = 1 end
 		if x2 > mapData.stats.mapWidth then x2 = mapData.stats.mapWidth end; if y2 > mapData.stats.mapHeight then y2 = mapData.stats.mapHeight end
 
-		local distX = math_abs(x2 - x1)
-		local distY = math_abs(y2 - y1)
-		local func = "seekX"
-					
-		-- If the Y-distance is over the X-distance, seek in the Y-axis (the longer axis will have more speed gain with a Twindex)
-		if distY > distX then func = "seekY" end
-
 		-- Function associated with edit mode
-		local layerFunc = "_eraseTile" if mode == "d" then layerFunc = "_drawTile" elseif mode == "ld" then layerFunc = "_lockTileDrawn" elseif mode == "le" then layerFunc = "_lockTileErased" elseif mode == "u" then layerFunc = "_unlockTile" end
+		local layerFunc = "_eraseTile"
+		if mode == "d" then layerFunc = "_drawTile" elseif mode == "ld" then layerFunc = "_lockTileDrawn" elseif mode == "le" then layerFunc = "_lockTileErased" elseif mode == "u" then layerFunc = "_unlockTile" end
 
-		if func == "seekX" then
-			for x = x1, x2 do
-				twindex.seekY(x, y1, y2, layer[layerFunc])
-			end -- for x = x1, x2
-		elseif func == "seekY" then
+		for x = x1, x2 do
 			for y = y1, y2 do
-				twindex.seekX(y, x1, x2, layer[layerFunc])
+				layer[layerFunc](x, y)
 			end
-		end
+		end -- for x = x1, x2
 	end
 
 	------------------------------------------------------------------------------
@@ -267,15 +243,13 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Tiles to Pixels Conversion
 	------------------------------------------------------------------------------
 	function layer.tilesToPixels(x, y)
-		tprint_add("Convert Tiles to Pixels (" .. layerName .. ")")
 		local x, y = getXY(x, y)
 
-		tprint_assert((x ~= nil) and (y ~= nil), "Missing argument(s).")
+		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s).") end
 
 		x, y = x - 0.5, y - 0.5
 		x, y = (x * mapData.stats.tileWidth), (y * mapData.stats.tileHeight)
 
-		tprint_remove()
 		return x, y
 	end
 
@@ -283,12 +257,10 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Pixels to Tiles Conversion
 	------------------------------------------------------------------------------
 	function layer.pixelsToTiles(x, y)
-		tprint_add("Convert Pixels to Tiles (" .. layerName .. ")")
 		local x, y = getXY(x, y)
 
-		tprint_assert((x ~= nil) and (y ~= nil), "Missing argument(s).")
+		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s).") end
 		
-		tprint_remove()
 		return math_ceil(x / mapData.stats.tileWidth), math_ceil(y / mapData.stats.tileHeight)
 	end
 
@@ -321,9 +293,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Tile Iterators
 	------------------------------------------------------------------------------
 	function layer.tilesInRange(x, y, w, h)
-		tprint_add("Tiles in Range Iterator")
-		tprint_assert((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil), "Missing argument(s).")
-		tprint_remove()
+		if not ((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil)) then verby_error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x, y, w, h)
 		
@@ -335,9 +305,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	end
 
 	function layer.tilesInRect(x, y, w, h)
-		tprint_add("Tiles in Range Iterator")
-		tprint_assert((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil), "Missing argument(s).")
-		tprint_remove()
+		if not ((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil)) then verby_error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x - w, y - h, w * 2, h * 2)
 
@@ -352,7 +320,6 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Destroy Layer
 	------------------------------------------------------------------------------
 	function layer.destroy()
-		twindex = nil
 		display.remove(layer)
 		layer = nil
 	end

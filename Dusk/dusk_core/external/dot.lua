@@ -1,25 +1,14 @@
 --[[
 Dot Table Writer
-v1.0
-
-by Caleb Place of Gymbyl Coding
+v1.1
 
 Adds a value to a table by navigating through a string.
-Note: The root table may not have a __DOT_KEY attribute, nor may any existent sub-tables have either a __DOT_KEY or a __DOT_PARENT attribute.
-
-Example:
-
-local t = {}
-local keyString = "stuff.items.weapons.laserGun.ammo" -- If a given table exists, Dot uses that table, otherwise it creates a new one
-local value = "100" -- Strings are evaluated as they are in the Dusk Engine
-
-dot(t, keyString, value)
-print(t.stuff.items.weapons.laserGun.ammo) --> 100
 
 Originally for the Dusk Engine.
 
-Author:
+by Caleb Place of Gymbyl Coding
 www.github.com/GymbylCoding
+www.gymbyl.com
 --]]
 
 -- Localize
@@ -52,31 +41,14 @@ local function dot(t, str, v)
 				local K = toK(key)
 
 				if not write[K] then
-					write[K] = {__DOT_PARENT = write, __DOT_KEY = K} -- Give a parent and a key
-				else
-					write[K].__DOT_PARENT = write -- Add to existing table
-					write[K].__DOT_KEY = K
+					write[K] = {} -- Give a parent and a key
 				end
 
 				write = write[K] -- Change to next table
 			else -- End of list
 				local V = toV(v)
 				local K = toK(key)
-
 				write[K] = V -- Add the value
-
-				while (true) do -- Move back out of table
-					local currentKey = write.__DOT_KEY -- Store key for later
-
-					if currentKey then
-						write = write.__DOT_PARENT -- Move up one
-						write[currentKey].__DOT_KEY = nil -- Delete DOT_KEY
-						write[currentKey].__DOT_PARENT = nil -- Delete DOT_PARENT
-					else
-						break -- Move completed (base table has no __DOT_KEY attribute)
-					end
-				end
-
 				break
 			end
 		else

@@ -37,7 +37,7 @@ local toggleGameEnd
 -- Point in rect, using Corona objects rather than a list of coordinates
 local function pointInRect(point, rect) return (point.x <= rect.contentBounds.xMax) and (point.x >= rect.contentBounds.xMin) and (point.y <= rect.contentBounds.yMax) and (point.y >= rect.contentBounds.yMin) end
 
-levelNum = 1
+levelNum = 2
 gameEnded = false
 allowTouches = true
 spriteOptions = {

@@ -13,13 +13,12 @@ local settings = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 
 local type = type
-local tprint_add = tprint.add
-local tprint_assert = tprint.assert
-local tprint_error = tprint.error
+local verby_assert = verby.assert
+local verby_error = verby.error
 
 --------------------------------------------------------------------------------
 -- Data
@@ -29,7 +28,7 @@ local data = {
 	detectMapPath = true,
 	
 	redrawOnTileExistent = false, -- WARNING: Lowers performance by a large amount!
-	enableTwindex = true,
+	enableTwindex = false,
 	
 	ellipseRadiusMode = "min",
 	objTypeRectPointSquare = true,
@@ -82,22 +81,18 @@ local config = {
 -- Set Preference
 --------------------------------------------------------------------------------
 function settings.set(preferenceName, value)
-	tprint_add("Set Preference")
-
-	if not preferenceName or value == nil then tprint_error("Missing one or more arguments to set preference.") end
-	if not config[preferenceName] then tprint_error("Unrecognized setting \"" .. preferenceName .. "\".") end
-	--local value_type = type(value) if config[preferenceName] ~= value_type then tprint_error("Wrong type for setting \"" .. preferenceName .. "\" (expected " .. config[preferenceName] .. " but got " .. value_type .." instead)") end
+	if not preferenceName or value == nil then verby_error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
+	if not config[preferenceName] then verby_error("Unrecognized setting \"" .. preferenceName .. "\".") end
+	--local value_type = type(value) if config[preferenceName] ~= value_type then verby_error("Wrong type for setting \"" .. preferenceName .. "\" (expected " .. config[preferenceName] .. " but got " .. value_type .." instead)") end
 	
 	data[preferenceName] = value
-
-	tprint_remove()
 end
 
 --------------------------------------------------------------------------------
 -- Get Preference
 --------------------------------------------------------------------------------
 function settings.get(preferenceName)
-	tprint_assert(preferenceName ~= nil, "No argument passed to get setting.")
+	if not (preferenceName ~= nil) then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
 	return data[preferenceName] or nil
 end
 

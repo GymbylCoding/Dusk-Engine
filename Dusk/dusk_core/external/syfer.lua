@@ -8,6 +8,7 @@ Includes a full version of the Shunting-Yard Algorithm.
 
 by Caleb Place of Gymbyl Coding
 www.github.com/GymbylCoding
+www.gymbyl.com
 --]]
 --------------------------------------------------------------------------------
 

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [ "$TOAD_VERBOSE" = "on" ]; then
+	echo $*
+fi

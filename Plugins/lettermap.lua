@@ -12,7 +12,6 @@ local table_insert = table.insert
 local table_concat = table.concat
 
 lettermap.yes = function(tile) return "[#]" end
-
 lettermap.no = function(tile) return " - " end
 
 --------------------------------------------------------------------------------

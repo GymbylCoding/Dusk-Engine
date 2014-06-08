@@ -1,0 +1,151 @@
+#!/bin/bash
+
+################################################################################
+# TOAD ExtrudeImg
+#
+# Extrudes a single image (core utility)
+################################################################################
+
+[ "$MAGICK_CONVERT" = "none" ] && echo "This utility is not available without ImageMagick's convert utility" && exit 1
+
+size=""
+src=$1
+out=""
+border=2
+anchor="tl"
+
+# Collect arguments
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-src|-img|-image)
+			shift
+			src=$1
+			;;
+		-o|-out|-outfile|-extruded)
+			shift
+			out=$1
+			;;
+		-b|-border)
+			shift
+			border=$1
+			;;
+		-a|-anchor)
+			shift
+			anchor=$1
+			;;
+		-*)
+			echo "Unknown option '${1}' (ignoring)"
+			shift
+			;;
+	esac
+	shift
+done
+
+# Do error checks
+[ "$src" = "" ] && echo "No file provided." && exit 1;
+
+if [ "$out" = "" ]; then
+	echo "No out file provided; implicitly overwriting source file ($src)"
+	read -p "Type 'yes' to confirm overwrite (anything else will cancel): " confirm
+	if [ "$confirm" = 'yes' ]; then
+		echo "Overwrite confirmed."
+		out=$src
+	else
+		echo "Operation cancelled."
+		exit 0
+	fi
+fi
+
+readanchor="top left" # for debug printing
+offsetx=0
+offsety=0
+grav="Center"
+
+# Set anchor
+case "$anchor" in
+	tl|top-left|topleft)
+		offsetx=$((-border))
+		offsety=$((-border))
+		grav="NorthWest"
+		;;
+	t|top)
+		offset=0
+		offsety=$((-border))
+		grav="North"
+		readanchor="top"
+		;;
+	tr|top-right|topright)
+		offsetx=$((border))
+		offsety=$((-border))
+		grav="NorthEast"
+		readanchor="top right"
+		;;
+	l|left)
+		offsetx=$((-border))
+		offsety=0
+		grav="West"
+		readanchor="left"
+		;;
+	c|center)
+		# We've already specified center alignment above
+		readanchor="center"
+		;;
+	r|right)
+		offsetx=$((border))
+		offsety=0
+		grav="East"
+		readanchor="right"
+		;;
+	bl|bottom-left|bottomleft)
+		offsetx=$((-border))
+		offsety=$((border))
+		grav="SouthWest"
+		readanchor="bottom left"
+		;;
+	b|bottom)
+		offsetx=0
+		offsety=$((border))
+		grav="South"
+		readanchor="bottom"
+		;;
+	br|bottom-right|bottomright)
+		offsetx=$((border))
+		offsety=$((border))
+		grav="SouthEast"
+		readanchor="bottom right"
+		;;
+	*)
+		echo "Invalid anchor setting; using default (top left)"
+		;;
+esac
+
+srcname=${src##*/}
+srcname=${srcname%%.*}
+
+tmpA="./toad_extruded_$srcname.mpc"
+tmpB="./toad_extruded_$srcname.cache"
+trap "rm -f $tmpA $tmpB; exit 0" 0
+trap "rm -f $tmpA $tmpB; exit 1" 1 2 3 15
+
+$MAGICK_CONVERT -quiet -regard-warnings $src +repage $tmpA 2>>$TOAD_ERROR_LOG
+
+# Get image sizes
+size=`convert $tmpA -ping -format "%[fx:$border)]" info: 2>>$TOAD_ERROR_LOG`
+wsize=$size
+hsize=$size
+inwidth=`convert $src -ping -format "%w" info: 2>>$TOAD_ERROR_LOG`
+inheight=`convert $src -ping -format "%h" info: 2>>$TOAD_ERROR_LOG`
+outwidth=`convert xc: -format "%[fx:$inwidth+2*$wsize]" info: 2>>$TOAD_ERROR_LOG`
+outheight=`convert xc: -format "%[fx:$inheight+2*$hsize]" info: 2>>$TOAD_ERROR_LOG`
+
+# Process the image
+$MAGICK_CONVERT $tmpA \
+	\( -clone 0 \
+		-set option:distort:viewport ${outwidth}x${outheight}-${wsize}-${hsize} \
+		-virtual-pixel 'edge' \
+		-distort SRT "0,0 1 0 ${offsetx},${offsety}" 2>>$TOAD_ERROR_LOG \) \
+	\( -clone 0 \) \
+	-delete 0 -gravity $grav -compose over -composite +repage \
+	$out 2>>$TOAD_ERROR_LOG
+
+exit 0

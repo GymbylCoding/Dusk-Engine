@@ -1,0 +1,52 @@
+#!/bin/bash
+
+echo "Opening test output folder in your computer browser for viewing..."
+open ./tests
+
+continueprompt() {
+	echo -n "Press enter to run, or type 'exit' to exit: "
+	read cmd
+	[ "$cmd" = "exit" ] && exit 0
+}
+
+echo "Starting tests"
+
+echo ""
+
+echo "1. Extracting tiles from tileset into folder"
+echo "Command: extract tests/tileset.png tests/extracted_tiles/"
+continueprompt
+echo "Extracting..."
+$TOAD_EXTRACT tileset.png tests/extracted_tiles/
+echo "Finished"
+
+echo ""
+
+echo "2. Packing tiles from extracted folder into tileset with margin and spacing"
+echo "Command: pack tests/extracted_tiles/ tests/packed_tileset.png -margin 10 -spacing 2"
+continueprompt
+echo "Packing..."
+$TOAD_PACK tests/extracted_tiles/ tests/packed_tileset.png -margin 10 -spacing 2
+echo "Finished"
+
+echo ""
+
+echo "3. Removing margin and spacing from packed tileset with repack"
+echo "Command: repack tests/packed_tileset.png -old-margin 10 -old-spacing 2 -margin 0 -spacing 0 tests/packed_tileset.png"
+continueprompt
+echo "Repacking..."
+$TOAD_REPACK tests/packed_tileset.png -old-margin 10 -old-spacing 2 -margin 0 -spacing 0 tests/packed_tileset.png
+echo "Finished"
+
+echo ""
+
+echo "4. Extruding tileset by 4px"
+echo "Command: extrude tests/tileset.png tests/tileset_extruded.png -border 4"
+continueprompt
+echo "Extruding..."
+$TOAD_EXTRUDE tests/tileset.png tests/tileset_extruded.png -border 4
+echo "Finished"
+
+echo ""
+
+echo "TOAD Tests finished"

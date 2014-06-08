@@ -13,11 +13,11 @@ local lib_stats = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local tprint = require("Dusk.dusk_core.misc.tprint")
+local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 
 local math_floor = math.floor
-local tprint_error = tprint.error
+local verby_error = verby.error
 
 --------------------------------------------------------------------------------
 -- Get Stats
