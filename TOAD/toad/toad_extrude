@@ -52,6 +52,10 @@ while [ $# -gt 0 ]; do
 			shift
 			spacing=$1
 			;;
+		-a|-anchor)
+			shift
+			anchor=$1
+			;;
 		-*)
 			echo "Unknown option '${1}' (ignoring)"
 			shift
@@ -94,7 +98,7 @@ $TOAD_EXTRACT $src -f tmp_extracted_extrude_$srcname -tw $tw -th $th -m $margin 
 
 $TOAD_LOG "Extruding tiles..."
 for tileimg in tmp_extracted_extrude_$srcname/*; do
-	$TOAD_EXTRUDEIMG $tileimg -b $border -out $tileimg
+	$TOAD_EXTRUDEIMG $tileimg -b $border -out $tileimg -a $anchor
 done
 
 $TOAD_PACK tmp_extracted_extrude_$srcname $out -m $margin -s $spacing -tw $(($tw+$border*2)) -th $(($th+$border*2)) -d ${ntx}x${nty}

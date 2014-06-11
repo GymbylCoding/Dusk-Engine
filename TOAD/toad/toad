@@ -8,10 +8,13 @@
 
 # Export variables
 export TOAD_FULL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export TOAD_VERSION=`cat $TOAD_FULL_DIR/version`
 export TOAD_CALL_DIR=${0%%/*}
 export TOAD_ERROR_LOG=$TOAD_FULL_DIR/log # Errors will get reported here instead of coughed up on the terminal window
 export TOAD_VERBOSE="no"
+
+read toadvinfo <$TOAD_FULL_DIR/version
+export TOAD_VERSION=`echo "$toadvinfo" | cut -f1`
+export TOAD_CHANGES=`echo "$toadvinfo" | cut -f2`
 
 export MAGICK_CONVERT=`which convert || which $TOAD_FULL_DIR/convert || echo "none"` # ImageMagick convert utility
 export MAGICK_COMPOSITE=`which composite || which $TOAD_FULL_DIR/composite || echo "none"` # ImageMagick composite utility
@@ -47,6 +50,7 @@ toadtask() {
 	case "$1" in
 		version)
 			echo "TOAD $TOAD_VERSION"
+			echo "Info: $TOAD_CHANGES"
 			;;
 		info)
 			echo "TOAD: Tileset Operations and Doodads"

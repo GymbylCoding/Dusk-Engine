@@ -8,6 +8,8 @@
 
 src=$1
 out=$2
+otw=32
+oth=32
 tw=32
 th=32
 margin=0
@@ -51,17 +53,17 @@ while [ $# -gt 0 ]; do
 			;;
 		-tw|-tilewidth)
 			shift
-			tw=$1
+			ntw=$1
 			;;
 		-th|-tileheight)
 			shift
-			th=$1
+			nth=$1
 			;;
 		-size|-tilesize)
 			shift
 			size="${1}x"
-			tw=`echo "$size" | cut -dx -f1`
-			th=`echo "$size" | cut -dx -f2`
+			ntw=`echo "$size" | cut -dx -f1`
+			nth=`echo "$size" | cut -dx -f2`
 			;;
 		-m|-margin)
 			shift
@@ -94,7 +96,7 @@ ntx=$(($imgw/$fitw))
 nty=$(($imgh/$fith))
 
 $TOAD_EXTRACT $src tmp_extracted_repack_$srcname -size ${tw}x${th} -m $margin -s $spacing
-$TOAD_PACK tmp_extracted_repack_$srcname $out -size ${ntw}x${nth} -m $nmargin -s $nspacing
+$TOAD_PACK tmp_extracted_repack_$srcname $out -size ${ntw}x${nth} -m $nmargin -s $nspacing -dimensions ${ntx}x${nty}
 
 rm -f tmp_extracted_repack_$srcname/*
 rmdir tmp_extracted_repack_$srcname

@@ -9,7 +9,7 @@ It's written on a powerful base, but interfaced with simple, intuitive commands 
 
 ### New in this Version ###
 
-After a long delay - following the release of [my first game](http://forums.coronalabs.com/topic/47069-crystalline-deflection-made-by-a-14-year-old/) - if you don't want to pay the $0.99 my game costs, at least read my story `:)` -, a new version (v0.1.4) is finally out! It's just an upkeep release; various improvements to speed, code cleanup, etc.
+After a long delay - following the release of [my first game](http://forums.coronalabs.com/topic/47069-crystalline-deflection-made-by-a-14-year-old/); if you don't want to pay the $0.99 my game costs, at least read my story `:)` - a new version (v0.1.4) is finally out! It's just an upkeep release; various improvements to speed, code cleanup, etc.
 
 With this update, though, I've got something new (and super awesome!) to offer: TOAD: Tileset Operations and Doodads. TOAD is a command-line utility that makes it easy to extrude tilesets, pack them from a folder, and more, so you don't have to do tedious repetitive operations.
 
