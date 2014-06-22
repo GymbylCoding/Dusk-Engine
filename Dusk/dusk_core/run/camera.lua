@@ -101,14 +101,17 @@ function lib_camera.addControl(map)
 			-- Get/Set Methods
 			--------------------------------------------------------------------------
 			-- Set offset
-			map.layer[i].setOffset = function(x, y)
+			map.layer[i].setCameraOffset = function(x, y)
 				local x, y = getXY(x, y)
 				camera.layer[i].xOffset = x or camera.layer[i].xOffset
 				camera.layer[i].yOffset = y or camera.layer[i].yOffset
 			end
 
 			-- Get offset
-			map.layer[i].getOffset = function() return camera.layer[i].xOffset, camera.layer[i].yOffset end
+			map.layer[i].getCameraOffset = function() return camera.layer[i].xOffset, camera.layer[i].yOffset end
+			
+			map.layer[i].setOffset = map.layer[i].setCameraOffset
+			map.layer[i].getOffset = map.layer[i].getCameraOffset
 		end
 	end
 

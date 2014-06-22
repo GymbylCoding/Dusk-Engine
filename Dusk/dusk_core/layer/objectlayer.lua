@@ -32,9 +32,9 @@ local table_insert = table.insert
 local table_maxn = table.maxn
 local type = type
 local unpack = unpack
+local verby_error = verby.error
 local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
 local getSetting = lib_settings.get
-local verby_assert = verby.assert
 local spliceTable = lib_functions.spliceTable
 local isPolyClockwise = lib_functions.isPolyClockwise
 local reversePolygon = lib_functions.reversePolygon
