@@ -41,13 +41,6 @@ local dusk = require("Dusk.Dusk")
 
 You won't have to worry about any other files in the Dusk folder, unless you want to take a peek at the code. They're all used internally by the engine itself.
 
-[quickstart]: http://github.com/GymbylCoding/Dusk-Engine/wiki/Quickstart
-[corona]: http://www.coronalabs.com
-[tiled]: http://www.mapeditor.com
-[game]: http://bit.ly/1mpG2wD
-=======
-You won't have to worry about any other files in the Dusk folder, unless you want to take a peek at the code. They're all used internally by the engine itself
-
 ### License ###
 
 ```
@@ -69,3 +62,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
+
+[quickstart]: http://github.com/GymbylCoding/Dusk-Engine/wiki/Quickstart
+[corona]: http://www.coronalabs.com
+[tiled]: http://www.mapeditor.com
+[game]: http://bit.ly/1mpG2wD
