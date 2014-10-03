@@ -1,13 +1,11 @@
-TOAD: Tileset Operations and Doodads
---------------------------------------------------------------------------------
+## TOAD: Tileset Operations and Doodads ##
 
 This is the TOAD system, a friendly, open-source command-line utilities library for modifying tilesets. It's meant to be easily usable by anyone, even people who don't regularly use the terminal, or who don't like toads.
 
 TOAD was written for the Dusk engine by Caleb Place of Gymbyl Coding.
 
 
-Basic Usage (for non-terminal users)
---------------------------------------------------------------------------------
+## Usage (for terminal newbies) ##
 
 *Before you can use TOAD, you'll need to install TOAD's ImageMagick dependencies. The instructions for that are given in `INSTALL.md`, found in this folder.*
 
@@ -34,32 +32,29 @@ To use TOAD in your project, you can copy the `toad` folder (with `toad`, `toad_
 For a pseudo-tutorial, you can also run the tests by typing `tests` at the TOAD Shell, or by typing `toad/toad tests` at the terminal window when you're in the TOAD directory.
 
 
-Usage (for terminal nerds)
---------------------------------------------------------------------------------
+## Usage (for terminal nerds) ##
 
 *Before you can use TOAD, you'll need to install TOAD's ImageMagick dependencies. Basic instructions for that are given in `INSTALL.md`, found in this folder. If you want, you can also just install ImageMagick as you would a normal tool - TOAD works with that, too.*
 
-`cd` to the TOAD directory and open up the interactive shell with `toad/toad`. You can optionally put TOAD somewhere in your $PATH to use it anywhere.
+`cd` to the TOAD directory and open up the interactive shell with `toad/toad`. You can optionally put TOAD somewhere in your `PATH` to use it anywhere.
 
-If you're a terminal nerd (and I assume you are, or you wouldn't be using this), you can figure TOAD out yourself. It's not hard. To get started, just call `toad/toad help`.
+If you're a terminal nerd (and I assume you are, or you wouldn't be in this section), you can figure TOAD out yourself. It's not hard. To get started, just call `toad/toad help`.
 
 
-Troubleshooting
---------------------------------------------------------------------------------
+## Troubleshooting ##
 
-#### I'm getting `toad/toad: No such file or directory` when I try to run TOAD
+#### I'm getting `toad/toad: No such file or directory` when I try to run TOAD ####
 You're not in this directory. Follow the instructions above to change directories.
 
-#### I'm getting `Warning: ImageMagick's convert/composite tool was not found; some features of TOAD may not be available` when I try to run TOAD
+#### I'm getting `Warning: ImageMagick's convert/composite tool was not found; some features of TOAD may not be available` when I try to run TOAD ####
 Do what it says - open up INSTALL.md and read the installation instructions.
 
-#### I'm getting `toad/toad: /bin/bash: bad interpreter: No such file or directory` when I try to run TOAD
+#### I'm getting `toad/toad: /bin/bash: bad interpreter: No such file or directory` when I try to run TOAD ####
 You don't have the language TOAD is written in installed on your system. Do a web search for `install bash on [your platform name]`.
 
 I hope someday to rewrite TOAD in C++ or similar for portability (it would also remove the need to install ImageMagick), but currently, you'll have to install Bash.
 
 
-Errors
---------------------------------------------------------------------------------
+## Errors ##
 
 By default, any errors are written to `toad/log`. You can usually ignore most of them.

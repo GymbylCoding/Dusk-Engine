@@ -18,20 +18,23 @@
    <property name="abc" value="123"/>
    <property name="def" value="!json! {&quot;a&quot; : 1}"/>
    <property name="ghi" value="jkl"/>
+   <property name="innerTable.woozle" value="true"/>
    <property name="objects:bodyType" value="static"/>
    <property name="physics:enabled" value="true"/>
    <property name="xParallax" value="0.75"/>
    <property name="yParallax" value="0.75"/>
   </properties>
-  <object x="32" y="32" width="960" height="704"/>
-  <object x="64" y="64" width="896" height="640"/>
-  <object x="96" y="96">
+  <object x="224" y="128" width="736" height="32"/>
+  <object x="64" y="128">
    <polygon points="0,0 0,576 64,512 64,64"/>
   </object>
   <object x="192" y="192">
    <polyline points="0,0 0,384 256,384 32,352 32,32 256,0 32,0 -64,-96"/>
   </object>
   <object x="224" y="224" width="320" height="320">
+   <properties>
+    <property name="physics:enabled" value="false"/>
+   </properties>
    <ellipse/>
   </object>
  </objectgroup>

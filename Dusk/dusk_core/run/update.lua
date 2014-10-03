@@ -22,7 +22,6 @@ local getSetting = lib_settings.get
 local lib_camera; if getSetting("enableCamera") then lib_camera = require("Dusk.dusk_core.run.camera") end
 local lib_tileculling; if getSetting("enableTileCulling") then lib_tileculling = require("Dusk.dusk_core.run.tileculling") end
 
-
 --------------------------------------------------------------------------------
 -- Register Tile Culling and Camera
 --------------------------------------------------------------------------------
@@ -32,7 +31,7 @@ function lib_update.register(map)
 
 	local update = {}
 	local camera, culling
-	
+
 	------------------------------------------------------------------------------
 	-- Add Camera and Tile Culling to Map
 	------------------------------------------------------------------------------
@@ -70,7 +69,7 @@ function lib_update.register(map)
 	local function updateTileCulling()
 		for i = 1, #culling.layer do
 			culling.layer[i].update()
-		end 
+		end
 	end
 
 	------------------------------------------------------------------------------
@@ -96,7 +95,7 @@ function lib_update.register(map)
 			if camera.layer[i] then
 				camera.layer[i].update()
 			end
-			
+
 			if culling.layer[i] then
 				culling.layer[i].update()
 			end

@@ -4,4 +4,4 @@ The files in this folder are for Dusk memory leak checking. This is to make sure
 
 #### Result ####
 
-These tests were last run for version 0.1 of Dusk. No memory leaks were detected.
+These tests were last run successfully for version 0.1.4 of Dusk.

@@ -19,8 +19,8 @@ local function runtest()
 	local dusk = require("Dusk.Dusk")
 
 	-- Build and destroy a map
-	local function iterate()
-		local map = dusk.buildMap("tests/memleaks/map.json")
+	local function cycle()
+		local map = dusk.buildMap("tests/memory_leaks/map.json")
 		map.destroy()
 		map = nil
 	end
@@ -31,7 +31,7 @@ local function runtest()
 	local texText = display.newText("00", 512, 404, "Menlo", 32)
 
 	timer.performWithDelay(1, function()
-		iterate()
+		cycle()
 		sys, tex = getMem()
 		sysText.text = sys
 		texText.text = tex

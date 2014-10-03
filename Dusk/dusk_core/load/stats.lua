@@ -16,9 +16,6 @@ local require = require
 local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 
-local math_floor = math.floor
-local verby_error = verby.error
-
 --------------------------------------------------------------------------------
 -- Get Stats
 --------------------------------------------------------------------------------

@@ -23,6 +23,7 @@ local display_newCircle = display.newCircle
 local display_newRect = display.newRect
 local display_newLine = display.newLine
 local display_newSprite = display.newSprite
+local display_remove = display.remove
 local string_len = string.len
 local math_max = math.max
 local math_min = math.min
@@ -39,16 +40,24 @@ local spliceTable = lib_functions.spliceTable
 local isPolyClockwise = lib_functions.isPolyClockwise
 local reversePolygon = lib_functions.reversePolygon
 local getProperties = lib_functions.getProperties
-local addProperties = lib_functions.addProperties
+local setProperty = lib_functions.setProperty
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
 
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
 function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
-	local props = getProperties(data.properties or {}, "objects", true)
+	local dotImpliesTable = getSetting("dotImpliesTable")
 	local ellipseRadiusMode = getSetting("ellipseRadiusMode")
-	
+	local onObj = getSetting("onObj")
+	local onEllipse = getSetting("onEllipse")
+	local onPointBased = getSetting("onPointBased")
+	local onImageObj = getSetting("onImageObj")
+	local onRect = getSetting("onRect")
+	local autoGenerateObjectShapes = getSetting("autoGenerateObjectShapes")
+
+	local layerProps = getProperties(data.properties or {}, "objects", true)
+
 	local layer = display_newGroup()
 	layer.props = {}
 
@@ -63,14 +72,14 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 
 		local obj
 		local objProps = getProperties(o.properties or {}, "object", false)
-		local physicsExistent = (objProps.options.physicsExistent ~= nil and objProps.options.physicsExistent) or props.options.physicsExistent
+		local physicsExistent = objProps.options.physicsExistent; if physicsExistent == nil then physicsExistent = layerProps.options.physicsExistent end
 
 		----------------------------------------------------------------------------
 		-- Ellipse Object
 		----------------------------------------------------------------------------
 		if o.ellipse then
 			local zx, zy, zw, zh = o.x * screen.zoomX, o.y * screen.zoomY, o.width * screen.zoomX, o.height * screen.zoomY
-			
+
 			if zw > zh then
 				obj = display_newCircle(layer, 0, 0, zw * 0.5); obj.yScale = zh / zw
 			else
@@ -80,7 +89,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 			obj.x, obj.y = zx + (obj.contentWidth * 0.5), zy + (obj.contentHeight * 0.5)
 
 			-- Generate shape
-			if getSetting("autoGenerateObjectShapes") and physicsExistent then
+			if autoGenerateObjectShapes and physicsExistent then
 				if ellipseRadiusMode == "min" then
 					objProps.physics[1].radius = math_min(zw * 0.5, zh * 0.5) -- Min radius
 				elseif ellipseRadiusMode == "max" then
@@ -91,7 +100,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 			end
 
 			obj._objType = "ellipse"
-			getSetting("onEllipse")(obj)
+			onEllipse(obj)
 
 		----------------------------------------------------------------------------
 		-- Polygon or Polyline Object
@@ -106,9 +115,9 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 
 			if o.polygon then obj:append(points[1].x, points[1].y) end
 			obj.x, obj.y = o.x, o.y
-		
+
 			-- Generate physics shape
-			if getSetting("autoGenerateObjectShapes") and physicsExistent then
+			if autoGenerateObjectShapes and physicsExistent then
 				local physicsShape = {}
 
 				for i = 1, math_min(#points, 8) do
@@ -116,7 +125,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 					table_insert(physicsShape, points[i].y)
 				end
 
-				-- Reverse shape if not clockwise since Corona only allows clockwise physics shapes
+				-- Reverse shape if not clockwise (Corona only allows clockwise physics shapes)
 				if not isPolyClockwise(physicsShape) then
 					physicsShape = reversePolygon(physicsShape)
 				end
@@ -125,7 +134,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 			end
 
 			obj._objType = (o.polygon and "polygon") or "polyline"
-			getSetting("onPointBased")(obj)
+			onPointBased(obj)
 
 		----------------------------------------------------------------------------
 		-- Image Object
@@ -141,7 +150,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 				obj.xScale, obj.yScale = screen.zoomX, screen.zoomY
 
 			obj._objType = "image"
-			getSetting("onImageObj")(obj)
+			onImageObj(obj)
 
 			-- No need to generate shape because it automatically fits to rectangle shapes
 
@@ -156,7 +165,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 			-- Create point or square special type for objects
 			if getSetting("objTypeRectPointSquare") then if obj.width == 0 and obj.height == 0 then obj.objType = "point" elseif obj.width == obj.height then obj.objType = "square" end end
 
-			getSetting("onRect")(obj)
+			onRect(obj)
 
 			-- No need to generate shape because it automatically fits to rectangle shapes
 		end
@@ -166,13 +175,13 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 		----------------------------------------------------------------------------
 		if physicsExistent then
 			local physicsParameters = {}
-			local physicsBodyCount = props.options.physicsBodyCount
-			local tpPhysicsBodyCount = (objProps.options.physicsBodyCount ~= nil and objProps.options.physicsBodyCount) or physicsBodyCount
+			local physicsBodyCount = layerProps.options.physicsBodyCount
+			local tpPhysicsBodyCount = objProps.options.physicsBodyCount; if tpPhysicsBodyCount == nil then tpPhysicsBodyCount = physicsBodyCount end
 
 			physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
 
 			for i = 1, physicsBodyCount do
-				physicsParameters[i] = spliceTable(physicsKeys, objProps.physics[i] or {}, props.physics[i] or {})
+				physicsParameters[i] = spliceTable(physicsKeys, objProps.physics[i] or {}, layerProps.physics[i] or {})
 			end
 
 			if physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
@@ -186,17 +195,17 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 		-- Add Properties
 		----------------------------------------------------------------------------
 		-- Apply onObj function to object
-		getSetting("onObj")(obj)
+		onObj(obj)
 
 		-- Add object properties
 		obj.props = {}
-		
-		addProperties(props, "object", obj)
-		addProperties(objProps, "object", obj)
-		addProperties(objProps, "props", obj.props)
+
+		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end
+		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end
+		for k, v in pairs(objProps.props) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(obj.props, k, v) else obj.props[k] = v end end
 
 		if obj._objType ~= "image" then
-			obj.isVisible = getSetting("virtualObjectsVisible") 
+			obj.isVisible = getSetting("virtualObjectsVisible")
 		end
 
 		----------------------------------------------------------------------------
@@ -223,7 +232,7 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 			end
 
 			local index = 0
-			
+
 			return function()
 				index = index + 1
 				if objects[index] then
@@ -289,15 +298,15 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 	-- Destroy Layer
 	------------------------------------------------------------------------------
 	function layer.destroy()
-		display.remove(layer)
+		display_remove(layer)
 		layer = nil
 	end
 
 	------------------------------------------------------------------------------
 	-- Finish Up
 	------------------------------------------------------------------------------
-	addProperties(props, "props", layer.props)
-	addProperties(props, "layer", layer)
+	for k, v in pairs(layerProps.props) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(layer.props, k, v) else layer.props[k] = v end end
+	for k, v in pairs(layerProps.layer) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(layer, k, v) else layer[k] = v end end
 
 	return layer
 end

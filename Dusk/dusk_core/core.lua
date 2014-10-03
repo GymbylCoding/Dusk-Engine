@@ -32,7 +32,8 @@ local math_ceil = math.ceil
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
-local verby_assert = verby.assert
+local verby_error = verby.error
+local verby_alert = verby.alert
 local getXY = lib_functions.getXY
 
 --------------------------------------------------------------------------------
@@ -69,13 +70,13 @@ function core.buildMap(data)
 	setVariable("rawTileHeight", data.stats.rawTileHeight)
 	setVariable("scaledTileWidth", data.stats.tileWidth)
 	setVariable("scaledTileHeight", data.stats.tileHeight)
-	
+
 	------------------------------------------------------------------------------
 	-- Map Object
 	------------------------------------------------------------------------------
 	local map = display_newGroup()
 	local update
-	
+
 	-- Make sure map appears in same position for all devices
 	--map:setReferencePoint(display.TopLeftReferencePoint) -- For older versions of Corona, just uncomment it to use
 	map.anchorX, map.anchorY = 0, 0
@@ -97,7 +98,7 @@ function core.buildMap(data)
 	local numLayers = 0
 
 	for i = 1, #data.layers do
-		if (data.layers[i].properties or {})["!inactive!"] ~= "true" then	
+		if (data.layers[i].properties or {})["!inactive!"] ~= "true" then
 			numLayers = numLayers + 1
 		end
 	end
@@ -118,25 +119,25 @@ function core.buildMap(data)
 			if data.layers[i].type == "tilelayer" then
 				layer = lib_tilelayer.createLayer(data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 				layer._type = "tile"
-				
+
 				-- Tile layer-specific code
-				layer.tileCullingEnabled = (layer.tileCullingEnabled ~= nil and layer.tileCullingEnabled) or true
+				if layer.tileCullingEnabled == nil then layer.tileCullingEnabled = true end
 			elseif data.layers[i].type == "objectgroup" then
-				layer = lib_objectlayer.createLayer(data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig)				
+				layer = lib_objectlayer.createLayer(data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig)
 				layer._type = "object"
 
-				-- Object layer-specific code
+				-- Any object layer-specific code
 			elseif data.layers[i].type == "imagelayer" then
 				layer = lib_imagelayer.createLayer(data.layers[i], data._dusk.dirTree)
 				layer._type = "image"
-				
-				-- Image layer-specific code
+
+				-- Any image layer-specific code could go here
 			end
 
-			layer._name = (data.layers[i].name ~= "" and data.layers[i].name) or "layer" .. layerIndex
-			layer.cameraTrackingEnabled = (layer.cameraTrackingEnabled ~= nil and layer.cameraTrackingEnabled) or true
-			layer.xParallax = (layer.xParallax ~= nil and layer.xParallax) or 1
-			layer.yParallax = (layer.yParallax ~= nil and layer.yParallax) or 1
+			layer._name = data.layers[i].name ~= "" and data.layers[i].name or "layer" .. layerIndex
+			if layer.cameraTrackingEnabled == nil then layer.cameraTrackingEnabled = true end
+			if layer.xParallax == nil then layer.xParallax = 1 end
+			if layer.yParallax == nil then layer.yParallax = 1 end
 			layer.isVisible = data.layers[i].visible
 
 			--------------------------------------------------------------------------
@@ -192,7 +193,7 @@ function core.buildMap(data)
 	function map.pixelsToTiles(x, y)
 		local x, y = getXY(x, y)
 
-		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s) to `map.pixelsToTiles()`") end
+		if x == nil or y == nil then verby_error("Missing argument(s) to `map.pixelsToTiles()`") end
 
 		x, y = map:contentToLocal(x, y)
 		return math_ceil(x / map.data.tileWidth), math_ceil(y / map.data.tileHeight)
@@ -201,13 +202,15 @@ function core.buildMap(data)
 	------------------------------------------------------------------------------
 	-- Is Tile in Map
 	------------------------------------------------------------------------------
-	function map.tileWithinMap(x, y)
+	function map.isTileWithinMap(x, y)
 		local x, y = getXY(x, y)
 
-		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s) to `map.tileWithinMap()`") end
+		if x == nil or y == nil then verby_error("Missing argument(s) to `map.isTileWithinMap()`") end
 
 		return (x >= 1 and x <= map.data.mapWidth) and (y >= 1 and y <= map.data.mapHeight)
 	end
+
+	map.tileWithinMap = function(x, y) verby_alert("Warning: `map.tileWithinMap()` is deprecated in favor of `map.isTileWithinMap()`.") return map.isTileWithinMap(x, y) end
 
 	------------------------------------------------------------------------------
 	-- Iterators

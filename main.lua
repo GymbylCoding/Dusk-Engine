@@ -1,11 +1,12 @@
 ------------------------------------------------------------------------------
 --[[
-Dusk Engine Test File
+Dusk Engine Startup File
 --]]
 --------------------------------------------------------------------------------
 
 display.setStatusBar(display.HiddenStatusBar)
 
+-- Minimize border flicker
 local textureFilter = "nearest"
 display.setDefault("minTextureFilter", textureFilter)
 display.setDefault("magTextureFilter", textureFilter)
@@ -17,8 +18,7 @@ physics.setDrawMode("hybrid")
 local dusk = require("Dusk.Dusk")
 
 local map = dusk.buildMap("everything.json")
-
-map.setTrackingLevel(0.3)
+map.setTrackingLevel(0.3) -- "Fluidity" of the camera movement
 
 function map.drag(event)
 	local viewX, viewY = map.getViewpoint()
@@ -40,4 +40,4 @@ end
 map:addEventListener("touch", map.drag)
 Runtime:addEventListener("enterFrame", map.updateView)
 
-native.showAlert("Dusk", "Welcome to the Dusk Engine. You have several options...\n\n- Do the demos in the Demos/ directory\n- Try the TOAD tool to tweak tilesets\n- Examine the example environment 'everything.json'", {"Got it!"})
+native.showAlert("Dusk", "Welcome to the Dusk Engine. You have several (alliterative) options...\n\n- Do the demos in the Demos/ directory\n- Try the TOAD tool to tweak tilesets\n- Examine the example environment 'everything.json'", {"Got it!"})

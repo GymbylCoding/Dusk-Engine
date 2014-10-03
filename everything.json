@@ -22,7 +22,7 @@
          "name":"Object Layer 1",
          "objects":[
                 {
-                 "height":704,
+                 "height":32,
                  "name":"",
                  "properties":
                     {
@@ -30,22 +30,9 @@
                     },
                  "type":"",
                  "visible":true,
-                 "width":960,
-                 "x":32,
-                 "y":32
-                }, 
-                {
-                 "height":640,
-                 "name":"",
-                 "properties":
-                    {
-
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":896,
-                 "x":64,
-                 "y":64
+                 "width":736,
+                 "x":224,
+                 "y":128
                 }, 
                 {
                  "height":0,
@@ -74,8 +61,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":96,
-                 "y":96
+                 "x":64,
+                 "y":128
                 }, 
                 {
                  "height":0,
@@ -129,7 +116,7 @@
                  "name":"",
                  "properties":
                     {
-
+                     "physics:enabled":"false"
                     },
                  "type":"",
                  "visible":true,
@@ -143,6 +130,7 @@
              "abc":"123",
              "def":"!json! {\"a\" : 1}",
              "ghi":"jkl",
+             "innerTable.woozle":"true",
              "objects:bodyType":"static",
              "physics:enabled":"true",
              "xParallax":"0.75",

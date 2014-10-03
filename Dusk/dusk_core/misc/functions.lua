@@ -15,7 +15,6 @@ local require = require
 
 local json = require("json")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
-local dot = require("Dusk.dusk_core.external.dot")
 local syfer = require("Dusk.dusk_core.external.syfer")
 local verby = require("Dusk.dusk_core.external.verby")
 
@@ -23,39 +22,59 @@ local tonumber = tonumber
 local type = type
 local pairs = pairs
 local table_concat = table.concat
+local table_insert = table.insert
+local string_gmatch = string.gmatch
 local string_len = string.len
 local json_decode = json.decode
 local syfer_solve = syfer.solve
 local verby_error = verby.error
 local getSetting = lib_settings.get
+local keyPattern = "([%w_%-%+\"\'!@#$%^&*%(%)]+)%."
+
+local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp, reverseTable, addProperties, getDirectory, setProperty
 
 --------------------------------------------------------------------------------
 -- Mini Functions
 --------------------------------------------------------------------------------
 -- String to value
-local function stringToValue(value) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json_decode(value:sub(7)) elseif value:match("^!eval!") then v = syfer_solve(value:sub(7), getSetting("evalVariables")) elseif value:match("^!tags!") then value = value:sub(7) local t = {} for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end local str = value:match("[^,%s]+$") if str then t[str] = true end v = t else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
+function stringToValue(value) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json_decode(value:sub(7)) elseif value:match("^!eval!") then v = syfer_solve(value:sub(7), getSetting("evalVariables")) elseif value:match("^!tags!") then value = value:sub(7) local t = {} for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end local str = value:match("[^,%s]+$") if str then t[str] = true end v = t else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
 -- Splice table
-local function spliceTable(elements, primary, secondary) local newTable = {} for k, v in pairs(elements) do newTable[k] = (primary[k] ~= nil and primary[k]) or secondary[k] end return newTable end
+function spliceTable(elements, primary, secondary) local newTable = {} for k, v in pairs(elements) do newTable[k] = primary[k]; if newTable[k] == nil then newTable[k] = secondary[k] end end return newTable end
 -- Is polygon clockwise
-local function isPolyClockwise(pointList) local area = 0 for i = 1, #pointList - 2, 2 do local pointStart = {x = pointList[i] - pointList[1], y = pointList[i + 1]-pointList[2]} local pointEnd = {x = pointList[i + 2]-pointList[1], y = pointList[i + 3]-pointList[2]} area = area + (pointStart.x*-pointEnd.y)-(pointEnd.x*-pointStart.y) end return (area < 0) end
+function isPolyClockwise(pointList) local area = 0 for i = 1, #pointList - 2, 2 do local pointStart = {x = pointList[i] - pointList[1], y = pointList[i + 1]-pointList[2]} local pointEnd = {x = pointList[i + 2]-pointList[1], y = pointList[i + 3]-pointList[2]} area = area + (pointStart.x*-pointEnd.y)-(pointEnd.x*-pointStart.y) end return (area < 0) end
 -- Reverse polygon (in form of [x,y, x,y, x,y], not [[x,y], [x,y]])
-local function reversePolygon(t) local nt = {} for i = 1, #t, 2 do nt[#nt + 1] = t[#t - i] nt[#nt + 1] = t[#t - i + 1] end return nt end
+function reversePolygon(t) local nt = {} for i = 1, #t, 2 do nt[#nt + 1] = t[#t - i] nt[#nt + 1] = t[#t - i + 1] end return nt end
 -- Get X/Y (either number[x] and number[y], table[x] with .x,.y, or table[x] with [1],[2])
-local function getXY(x, y) local x, y = x, y if type(x) == "table" then if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else verby_error("Missing X- or Y-argument.") end end
+function getXY(x, y) local x, y = x, y if type(x) == "table" then if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else verby_error("Missing X- or Y-argument.") end end
 -- Clamp value to a range
-local function clamp(v, l, h) return (v < l and l) or (v > h and h) or v end
+function clamp(v, l, h) return (v < l and l) or (v > h and h) or v end
 -- Reverse table ([1, 2, 3] -> [3, 2, 1])
-local function reverseTable(t) local new = {} for i = 1, #t do new[#t - (i - 1)] = t[i] end return new end
+function reverseTable(t) local new = {} for i = 1, #t do new[#t - (i - 1)] = t[i] end return new end
 -- Add properties
-local function addProperties(props, propName, obj) for k, v in pairs(props[propName]) do if (getSetting("dotImpliesTable") or props.options.usedot[k]) and not props.options.nodot[k] then dot(obj, k, v) else obj[k] = v end end end
+function addProperties(props, propName, obj) for k, v in pairs(props[propName]) do if (getSetting("dotImpliesTable") or props.options.usedot[k]) and not props.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end end
 -- Get directory
-local function getDirectory(dirTree, path) local path = path local numDirs = #dirTree local _i = 1 while path:sub(_i, _i + 2) == "../" do _i = _i + 3 numDirs = numDirs - 1 end local filename = path:sub(_i) local dirPath = table_concat(dirTree, "/", 1, numDirs) return dirPath, filename end
--- Has bit
-local function hasBit(x, p) return x % (p + p) >= p end
--- Set bit
-local function setBit(x, p) return hasBit(x, p) and x or x + p end
--- Clear bit
-local function clearBit(x, p) return x - p end
+function getDirectory(dirTree, path) local path = path local numDirs = #dirTree local _i = 1 while path:sub(_i, _i + 2) == "../" do _i = _i + 3 numDirs = numDirs - 1 end local filename = path:sub(_i) local dirPath = table_concat(dirTree, "/", 1, numDirs) return dirPath, filename end
+-- Set property
+function setProperty(t, str, value)
+	local write = t -- Table we edit
+	local path = {}
+
+	for pathElement in string_gmatch(str, keyPattern) do
+		table_insert(path, stringToValue(pathElement))
+	end
+
+	if #path == 0 then write[str] = value return end
+
+	table_insert(path, stringToValue(str:match("[%w_%-%+\"\'!@#$%^&*%(%)]+$")))
+
+	for i = 1, #path - 1 do
+		if write[path[i] ] == nil then write[path[i] ] = {} end
+		write = write[path[i] ]
+	end
+
+	write[path[#path] ] = value
+	t = write -- Clean up
+end
 
 --------------------------------------------------------------------------------
 -- Get Properties
@@ -70,7 +89,7 @@ local function getProperties(data, objPrefix, isLayer)
 	}
 
 	if not isLayer then p.layer = nil end
-	
+
 	local insertionTable
 	local objPrefix = objPrefix or "tiles" -- This goes in front of the properties meant for each object in the layer
 	local objPrefixLen = objPrefix:len() + 2 -- +2 because +1 is required for the colon after the prefix, and +1 is required to start at the character after that
@@ -154,8 +173,6 @@ functions.reverseTable = reverseTable
 functions.addProperties = addProperties
 functions.getProperties = getProperties
 functions.getDirectory = getDirectory
-functions.hasBit = hasBit
-functions.setBit = setBit
-functions.clearBit = clearBit
+functions.setProperty = setProperty
 
 return functions

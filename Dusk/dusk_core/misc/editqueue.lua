@@ -2,7 +2,7 @@
 --[[
 Dusk Engine Component: Edit Queue
 
-A small structure to queue edits for a later time, thereby allowing erase edits to go last.
+A small (and probably temporary) structure to queue edits for a later time, thereby allowing erase edits to go last.
 --]]
 --------------------------------------------------------------------------------
 

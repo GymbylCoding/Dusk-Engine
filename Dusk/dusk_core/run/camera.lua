@@ -19,7 +19,8 @@ local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local getSetting = lib_settings.get
-local verby_assert = verby.assert
+local verby_error = verby.error
+local verby_alert = verby.alert
 local getXY = lib_functions.getXY
 local clamp = lib_functions.clamp
 local display_contentWidth = display.contentWidth
@@ -36,13 +37,14 @@ local type = type
 --------------------------------------------------------------------------------
 function lib_camera.addControl(map)
 	local camera
+
 	camera = {
 		trackingLevel = getSetting("defaultCameraTrackingLevel"),
 		scaleBoundsToScreen = getSetting("scaleCameraBoundsToScreen"),
 		viewX = screen.centerX,
 		viewY = screen.centerY,
 		layer = {},
-		
+
 		xScale = 1,
 		yScale = 1,
 
@@ -55,7 +57,7 @@ function lib_camera.addControl(map)
 			xMax = math_huge,
 			yMax = math_huge
 		},
-		
+
 		scaledBounds = {
 			xMin = math_nhuge,
 			yMin = math_nhuge,
@@ -92,11 +94,11 @@ function lib_camera.addControl(map)
 
 				camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
 				camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
-				
+
 				layer.x = (layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset
 				layer.y = (layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset
 			end
-	
+
 			--------------------------------------------------------------------------
 			-- Get/Set Methods
 			--------------------------------------------------------------------------
@@ -109,9 +111,9 @@ function lib_camera.addControl(map)
 
 			-- Get offset
 			map.layer[i].getCameraOffset = function() return camera.layer[i].xOffset, camera.layer[i].yOffset end
-			
-			map.layer[i].setOffset = map.layer[i].setCameraOffset
-			map.layer[i].getOffset = map.layer[i].getCameraOffset
+
+			map.layer[i].setOffset = function(x, y) verby_alert("Warning: `layer.setOffset()` is deprecated in favor of `layer.setCameraOffset()`.") map.layer[i].setCameraOffset(x, y) end
+			map.layer[i].getOffset = function() verby_alert("Warning: `layer.getOffset()` is deprecated in favor of `layer.getCameraOffset()`.") return map.layer[i].getCameraOffset() end
 		end
 	end
 
@@ -280,7 +282,7 @@ function lib_camera.addControl(map)
 	------------------------------------------------------------------------------
 	-- Set/Get Tracking Level (damping)
 	------------------------------------------------------------------------------
-	-- Set tracking level (in tracking level format)	
+	-- Set tracking level (in tracking level format)
 	function map.setTrackingLevel(t)
 		if not (t ~= nil) then verby_error("Missing argument to `map.setTrackingLevel()`") end
 		if not (t > 0) then verby_error("Invalid argument passed to `map.setTrackingLevel()`: expected [t] > 0 but got " .. t .. " instead") end

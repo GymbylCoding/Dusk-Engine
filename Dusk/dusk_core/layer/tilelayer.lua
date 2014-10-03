@@ -39,10 +39,8 @@ local verby_assert = verby.assert
 local spliceTable = lib_functions.spliceTable
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
+local setProperty = lib_functions.setProperty
 local getXY = lib_functions.getXY
-local hasBit = lib_functions.hasBit
-local setBit = lib_functions.setBit
-local clearBit = lib_functions.clearBit
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
 local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
 
@@ -54,7 +52,7 @@ local flipD = tonumber("20000000", 16)
 -- Create Layer
 --------------------------------------------------------------------------------
 function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
-	local props = getProperties(data.properties or {}, "tiles", true)
+	local layerProps = getProperties(data.properties or {}, "tiles", true)
 
 	local layer = display_newGroup()
 
@@ -82,9 +80,9 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			local flippedX = false
 			local flippedY = false
 			local rotated = false
-			if hasBit(gid, flipX) then flippedX = true gid = clearBit(gid, flipX) end
-			if hasBit(gid, flipY) then flippedY = true gid = clearBit(gid, flipY) end
-			if hasBit(gid, flipD) then rotated = true gid = clearBit(gid, flipD) end
+			if gid % (gid + flipX) >= flipX then flippedX = true gid = gid - flipX end
+			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
+			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
 
 			if not (gid <= mapData.highestGID and gid >= 0) then verby_error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
 
@@ -96,8 +94,8 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 				tile:setFrame(tileGID)
 				tile.x, tile.y = mapData.stats.tileWidth * (x - 0.5), mapData.stats.tileHeight * (y - 0.5)
 				tile.xScale, tile.yScale = screen.zoomX, screen.zoomY
-				
-				tile.GID = gid
+
+				tile.gid = gid
 				tile.tilesetGID = tileGID
 				tile.tileset = sheetIndex
 				tile.layerIndex = dataIndex
@@ -116,15 +114,15 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			--------------------------------------------------------------------------
 			-- Add Physics to Tile
 			--------------------------------------------------------------------------
-			if (tileProps.options.physicsExistent ~= nil and tileProps.options.physicsExistent) or props.options.physicsExistent then
+			if (tileProps.options.physicsExistent ~= nil and tileProps.options.physicsExistent) or layerProps.options.physicsExistent then
 				local physicsParameters = {}
-				local physicsBodyCount = props.options.physicsBodyCount
-				local tpPhysicsBodyCount = (tileProps.options.physicsBodyCount ~= nil and tileProps.options.physicsBodyCount) or physicsBodyCount
+				local physicsBodyCount = layerProps.options.physicsBodyCount
+				local tpPhysicsBodyCount = tileProps.options.physicsBodyCount; if tpPhysicsBodyCount == nil then tpPhysicsBodyCount = physicsBodyCount end
 
 				physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
 
 				for i = 1, physicsBodyCount do
-					physicsParameters[i] = spliceTable(physicsKeys, tileProps.physics[i] or {}, props.physics[i] or {})
+					physicsParameters[i] = spliceTable(physicsKeys, tileProps.physics[i] or {}, layerProps.physics[i] or {})
 				end
 
 				if physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
@@ -138,10 +136,20 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			-- Add Properties and Add Tile to Layer
 			--------------------------------------------------------------------------
 			tile.props = {}
-		
-			addProperties(props, "object", tile)
-			addProperties(tileProps, "object", tile)
-			addProperties(tileProps, "props", tile.props)
+
+			local dotImpliesTable = getSetting("dotImpliesTable")
+
+			for k, v in pairs(layerProps.object) do
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+			end
+
+			for k, v in pairs(tileProps.object) do
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+			end
+
+			for k, v in pairs(tileProps.props) do
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
+			end
 
 			tile.tileX, tile.tileY = x, y
 			if not layerTiles[x] then layerTiles[x] = {} end
@@ -158,7 +166,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Erase a Single Tile from the Screen
 	------------------------------------------------------------------------------
 	function layer._eraseTile(x, y)
-		if locked[x] and locked[x][y] == "d" then return false end
+		if locked[x] and locked[x][y] == "d" then return end
 
 		if layerTiles[x] and layerTiles[x][y] then
 			display_remove(layerTiles[x][y])
@@ -213,21 +221,21 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	end
 
 	------------------------------------------------------------------------------
-	-- Draw Section (shortcut)
+	-- Draw Section (shortcut, shouldn't be used in speed-intensive places because it's just a tail call)
 	------------------------------------------------------------------------------
 	function layer.draw(x1, x2, y1, y2)
 		return layer._edit(x1, x2, y1, y2, "d")
 	end
 
 	------------------------------------------------------------------------------
-	-- Erase Section (shortcut)
+	-- Erase Section (shortcut, shouldn't be used in speed-intensive places because it's just a tail call)
 	------------------------------------------------------------------------------
 	function layer.erase(x1, x2, y1, y2)
 		return layer._edit(x1, x2, y1, y2, "e")
 	end
 
 	------------------------------------------------------------------------------
-	-- Lock Section (shortcut)
+	-- Lock Section (shortcut, shouldn't be used in speed-intensive places because it's just a tail call)
 	------------------------------------------------------------------------------
 	function layer.lock(x1, y1, x2, y2, mode)
 		if mode == "draw" or mode == "d" then
@@ -260,7 +268,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 		local x, y = getXY(x, y)
 
 		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s).") end
-		
+
 		return math_ceil(x / mapData.stats.tileWidth), math_ceil(y / mapData.stats.tileHeight)
 	end
 
@@ -296,7 +304,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 		if not ((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil)) then verby_error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x, y, w, h)
-		
+
 		local i = 0
 		return function()
 			i = i + 1
@@ -327,8 +335,13 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	------------------------------------------------------------------------------
 	-- Finish Up
 	------------------------------------------------------------------------------
-	addProperties(props, "props", layer.props)
-	addProperties(props, "layer", layer)
+	for k, v in pairs(layerProps.props) do
+		if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(layer.props, k, v) else layer.props[k] = v end
+	end
+
+	for k, v in pairs(layerProps.layer) do
+		if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(layer, k, v) else layer[k] = v end
+	end
 
 	return layer
 end

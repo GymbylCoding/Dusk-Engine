@@ -26,10 +26,10 @@ local verby_error = verby.error
 local data = {
 	dotImpliesTable = true,
 	detectMapPath = true,
-	
+
 	redrawOnTileExistent = false, -- WARNING: Lowers performance by a large amount!
 	enableTwindex = false,
-	
+
 	ellipseRadiusMode = "min",
 	objTypeRectPointSquare = true,
 
@@ -57,34 +57,13 @@ local data = {
 	}
 }
 
-local config = {
-	dotImpliesTable = "boolean",
-	detectMapPath = "boolean",
-	redrawOnTileExistent = "boolean",
-	enableTwindex = "boolean",
-	ellipseRadiusMode = "string",
-	objTypeRectPointSquare = "boolean",
-	spaceAfterEscapedPrefix = "boolean",
-	virtualObjectsVisible = "boolean",
-	enableCamera = "boolean",
-	defaultCameraTrackingLevel = "number",
-	scaleCameraBoundsToScreen = "boolean",
-	enableTileCulling = true,
-	onPointBased = "function",
-	onEllipse = "function",
-	onImageObj = "function",
-	onRect = "function",
-	onObj = "function"
-}
-
 --------------------------------------------------------------------------------
 -- Set Preference
 --------------------------------------------------------------------------------
 function settings.set(preferenceName, value)
 	if not preferenceName or value == nil then verby_error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
-	if not config[preferenceName] then verby_error("Unrecognized setting \"" .. preferenceName .. "\".") end
-	--local value_type = type(value) if config[preferenceName] ~= value_type then verby_error("Wrong type for setting \"" .. preferenceName .. "\" (expected " .. config[preferenceName] .. " but got " .. value_type .." instead)") end
-	
+	if data[preferenceName] == nil then verby_error("Unrecognized setting \"" .. preferenceName .. "\".") end
+
 	data[preferenceName] = value
 end
 
@@ -92,19 +71,14 @@ end
 -- Get Preference
 --------------------------------------------------------------------------------
 function settings.get(preferenceName)
-	if not (preferenceName ~= nil) then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
+	if preferenceName == nil then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
 	return data[preferenceName] or nil
 end
 
 --------------------------------------------------------------------------------
 -- Add/Remove Evaluation Variable
 --------------------------------------------------------------------------------
-function settings.setEvalVariable(varName, value)
-	data.evalVariables[varName] = value
-end
-
-function settings.removeEvalVariable(varName)
-	data.evalVariables[varName] = nil
-end
+function settings.setEvalVariable(varName, value) data.evalVariables[varName] = value end
+function settings.removeEvalVariable(varName) data.evalVariables[varName] = nil end
 
 return settings
