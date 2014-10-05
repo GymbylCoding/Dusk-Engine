@@ -117,12 +117,11 @@ function tileculling.addTileCulling(map)
 				b = math_ceil(b * divTileHeight) + 1
 
 				-- Update previous position to be equal to current position
-				-- Don't create a new table because overwriting the previous one is faster
 				layerCulling.prev.l = layerCulling.now.l
 				layerCulling.prev.r = layerCulling.now.r
 				layerCulling.prev.t = layerCulling.now.t
 				layerCulling.prev.b = layerCulling.now.b
-				
+
 				-- Reset current position
 				layerCulling.now.l = l
 				layerCulling.now.r = r

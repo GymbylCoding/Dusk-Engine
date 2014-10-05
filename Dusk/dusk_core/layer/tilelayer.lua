@@ -31,12 +31,11 @@ local tonumber = tonumber
 local pairs = pairs
 local unpack = unpack
 local type = type
+local display_remove = display.remove
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
 local verby_error = verby.error
-local verby_assert = verby.assert
-local spliceTable = lib_functions.spliceTable
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
 local setProperty = lib_functions.setProperty
@@ -53,6 +52,7 @@ local flipD = tonumber("20000000", 16)
 --------------------------------------------------------------------------------
 function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
+	local dotImpliesTable = getSetting("dotImpliesTable")
 
 	local layer = display_newGroup()
 
@@ -67,12 +67,11 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	------------------------------------------------------------------------------
 	function layer._drawTile(x, y)
 		if locked[x] and locked[x][y] == "e" then return false end
-
-		if layer.tile(x, y) == nil then
+		if not layerTiles[x] or not layerTiles[x][y] then
 			local id = ((y - 1) * mapData.width) + x
 			local gid = data.data[id]
 
-			if gid == 0 then return true end -- Don't draw if the GID is 0 (signifying an empty tile)
+			if gid == 0 then return true end
 
 			--------------------------------------------------------------------------
 			-- Create Tile
@@ -104,58 +103,69 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 				if flippedY then tile.yScale = -tile.yScale end
 
 			local tileProps
+			tile.props = {}
 
 			if tileProperties[sheetIndex][tileGID] then
 				tileProps = tileProperties[sheetIndex][tileGID]
-			else
-				tileProps = {options={nodot={},usedot={}},physics={},object={},props={}}
 			end
 
-			--------------------------------------------------------------------------
-			-- Add Physics to Tile
-			--------------------------------------------------------------------------
-			if (tileProps.options.physicsExistent ~= nil and tileProps.options.physicsExistent) or layerProps.options.physicsExistent then
-				local physicsParameters = {}
-				local physicsBodyCount = layerProps.options.physicsBodyCount
-				local tpPhysicsBodyCount = tileProps.options.physicsBodyCount; if tpPhysicsBodyCount == nil then tpPhysicsBodyCount = physicsBodyCount end
+			if tileProps then
+				------------------------------------------------------------------------
+				-- Add Physics to Tile
+				------------------------------------------------------------------------
+				local shouldAddPhysics = tileProps.options.physicsExistent
+				if shouldAddPhysics == nil then shouldAddPhysics = layerProps.options.physicsExistent end
+				if shouldAddPhysics then
+					local physicsParameters = {}
+					local physicsBodyCount = layerProps.options.physicsBodyCount
+					local tpPhysicsBodyCount = tileProps.options.physicsBodyCount; if tpPhysicsBodyCount == nil then tpPhysicsBodyCount = physicsBodyCount end
 
-				physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
+					physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
 
-				for i = 1, physicsBodyCount do
-					physicsParameters[i] = spliceTable(physicsKeys, tileProps.physics[i] or {}, layerProps.physics[i] or {})
+					for i = 1, physicsBodyCount do
+						physicsParameters[i] = {}
+						local tilePhysics = tileProps.physics[i]
+						local layerPhysics = layerProps.physics[i]
+
+						if tilePhysics and layerPhysics then
+							for k, v in pairs(physicsKeys) do
+								physicsParameters[i][k] = tilePhysics[k]
+								if physicsParameters[i][k] == nil then physicsParameters[i][k] = layerPhysics[k] end
+							end
+						elseif tilePhysics then
+							physicsParameters[i] = tilePhysics
+						elseif layerPhysics then
+							physicsParameters[i] = layerPhysics
+						end
+					end
+
+					if physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
+						physics_addBody(tile, physicsParameters[1])
+					else
+						physics_addBody(tile, unpack(physicsParameters))
+					end
 				end
 
-				if physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
-					physics_addBody(tile, physicsParameters[1])
-				else
-					physics_addBody(tile, unpack(physicsParameters))
+				------------------------------------------------------------------------
+				-- Add Other Properties
+				------------------------------------------------------------------------
+				for k, v in pairs(layerProps.object) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
 				end
-			end
 
-			--------------------------------------------------------------------------
-			-- Add Properties and Add Tile to Layer
-			--------------------------------------------------------------------------
-			tile.props = {}
+				for k, v in pairs(tileProps.object) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+				end
 
-			local dotImpliesTable = getSetting("dotImpliesTable")
-
-			for k, v in pairs(layerProps.object) do
-				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
-			end
-
-			for k, v in pairs(tileProps.object) do
-				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
-			end
-
-			for k, v in pairs(tileProps.props) do
-				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
+				for k, v in pairs(tileProps.props) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
+				end
 			end
 
 			tile.tileX, tile.tileY = x, y
 			if not layerTiles[x] then layerTiles[x] = {} end
 			layerTiles[x][y] = tile
 			layer:insert(tile)
-			tile:toBack()
 		elseif getSetting("redrawOnTileExistent") then
 			layer._eraseTile(x, y)
 			layer._drawTile(x, y)
@@ -172,9 +182,12 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			display_remove(layerTiles[x][y])
 			layerTiles[x][y] = nil
 
+			-- Commented out for possible speed gain - not sure, though
+			--[[
 			if table_maxn(layerTiles[x]) == 0 then
 				layerTiles[x] = nil -- Clear row if no tiles in the row
 			end
+			--]]
 		end
 	end
 
@@ -217,7 +230,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			for y = y1, y2 do
 				layer[layerFunc](x, y)
 			end
-		end -- for x = x1, x2
+		end
 	end
 
 	------------------------------------------------------------------------------
@@ -253,10 +266,9 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	function layer.tilesToPixels(x, y)
 		local x, y = getXY(x, y)
 
-		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s).") end
+		if x == nil or y == nil then verby_error("Missing argument(s).") end
 
-		x, y = x - 0.5, y - 0.5
-		x, y = (x * mapData.stats.tileWidth), (y * mapData.stats.tileHeight)
+		x, y = (x - 0.5) * mapData.stats.tileWidth, (y - 0.5) * mapData.stats.tileHeight
 
 		return x, y
 	end
@@ -267,7 +279,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	function layer.pixelsToTiles(x, y)
 		local x, y = getXY(x, y)
 
-		if not ((x ~= nil) and (y ~= nil)) then verby_error("Missing argument(s).") end
+		if x == nil or y == nil then verby_error("Missing argument(s).") end
 
 		return math_ceil(x / mapData.stats.tileWidth), math_ceil(y / mapData.stats.tileHeight)
 	end
@@ -301,7 +313,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Tile Iterators
 	------------------------------------------------------------------------------
 	function layer.tilesInRange(x, y, w, h)
-		if not ((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil)) then verby_error("Missing argument(s).") end
+		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x, y, w, h)
 
@@ -313,7 +325,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	end
 
 	function layer.tilesInRect(x, y, w, h)
-		if not ((x ~= nil) and (y ~= nil) and (w ~= nil) and (h ~= nil)) then verby_error("Missing argument(s).") end
+		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x - w, y - h, w * 2, h * 2)
 
@@ -328,7 +340,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	-- Destroy Layer
 	------------------------------------------------------------------------------
 	function layer.destroy()
-		display.remove(layer)
+		display_remove(layer)
 		layer = nil
 	end
 
