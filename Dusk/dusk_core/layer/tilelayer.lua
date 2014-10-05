@@ -19,8 +19,8 @@ local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local display_remove = display.remove
-local display_newSprite = display.newSprite
 local display_newGroup = display.newGroup
+local display_newImageRect = display.newImageRect
 local math_abs = math.abs
 local math_max = math.max
 local math_ceil = math.ceil
@@ -31,7 +31,6 @@ local tonumber = tonumber
 local pairs = pairs
 local unpack = unpack
 local type = type
-local display_remove = display.remove
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
@@ -53,6 +52,7 @@ local flipD = tonumber("20000000", 16)
 function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
 	local dotImpliesTable = getSetting("dotImpliesTable")
+	local redrawOnTileExistent = getSetting("redrawOnTileExistent")
 
 	local layer = display_newGroup()
 
@@ -67,6 +67,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 	------------------------------------------------------------------------------
 	function layer._drawTile(x, y)
 		if locked[x] and locked[x][y] == "e" then return false end
+
 		if not layerTiles[x] or not layerTiles[x][y] then
 			local id = ((y - 1) * mapData.width) + x
 			local gid = data.data[id]
@@ -83,14 +84,13 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
 			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
 
-			if not (gid <= mapData.highestGID and gid >= 0) then verby_error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
+			if gid > mapData.highestGID or gid < 0 then verby_error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
 
 			local tileData = tileIndex[gid]
 			local sheetIndex = tileData.tilesetIndex
 			local tileGID = tileData.gid
 
-			local tile = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
-				tile:setFrame(tileGID)
+			local tile = display_newImageRect(imageSheets[sheetIndex], gid, mapData.stats.tileWidth, mapData.stats.tileHeight)
 				tile.x, tile.y = mapData.stats.tileWidth * (x - 0.5), mapData.stats.tileHeight * (y - 0.5)
 				tile.xScale, tile.yScale = screen.zoomX, screen.zoomY
 
@@ -166,7 +166,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			if not layerTiles[x] then layerTiles[x] = {} end
 			layerTiles[x][y] = tile
 			layer:insert(tile)
-		elseif getSetting("redrawOnTileExistent") then
+		elseif redrawOnTileExistent then
 			layer._eraseTile(x, y)
 			layer._drawTile(x, y)
 		end

@@ -38,8 +38,10 @@ function tileculling.addTileCulling(map)
 			local layerCulling = {
 				prev = {l = 0, r = 0, t = 0, b = 0},
 				now = {l = 0, r = 0, t = 0, b = 0},
-				update = function() end -- Make simple placeholder to keep from rehashing - every little bit of speed gain counts!
+				update = function() end
 			}
+
+			local prev, now = layerCulling.prev, layerCulling.now
 
 			local layerEdits = newEditQueue()
 			layerEdits.setTarget(layer)
@@ -50,6 +52,8 @@ function tileculling.addTileCulling(map)
 			layerCulling.update = function()
 				local nl, nr, nt, nb = layerCulling.updatePositions()
 				local pl, pr, pt, pb = layerCulling.prev.l, layerCulling.prev.r, layerCulling.prev.t, layerCulling.prev.b
+
+				if nl == pl and nr == pr and nt == pt and nb == pb then return end
 
 				-- Difference between current positions and previous positions
 				-- This is used to tell which direction the layer has moved
@@ -117,16 +121,16 @@ function tileculling.addTileCulling(map)
 				b = math_ceil(b * divTileHeight) + 1
 
 				-- Update previous position to be equal to current position
-				layerCulling.prev.l = layerCulling.now.l
-				layerCulling.prev.r = layerCulling.now.r
-				layerCulling.prev.t = layerCulling.now.t
-				layerCulling.prev.b = layerCulling.now.b
+				prev.l = now.l
+				prev.r = now.r
+				prev.t = now.t
+				prev.b = now.b
 
 				-- Reset current position
-				layerCulling.now.l = l
-				layerCulling.now.r = r
-				layerCulling.now.t = t
-				layerCulling.now.b = b
+				now.l = l
+				now.r = r
+				now.t = t
+				now.b = b
 
 				return l, r, t, b
 			end

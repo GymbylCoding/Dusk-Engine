@@ -78,10 +78,8 @@ function lib_update.register(map)
 	local function updateCamera()
 		camera.processCameraViewpoint()
 
-		for i = 1, mapLayers do
-			if camera.layer[i] then
-				camera.layer[i].update()
-			end
+		for i = 1, #camera.layer do
+			camera.layer[i].update()
 		end
 	end
 
