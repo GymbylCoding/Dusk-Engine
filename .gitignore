@@ -3,3 +3,4 @@ toad/autoinstall
 dev/
 gitignore/
 prep-for-commit.sh
+docs/

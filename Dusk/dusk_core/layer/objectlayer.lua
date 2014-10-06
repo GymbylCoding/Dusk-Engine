@@ -41,6 +41,7 @@ local isPolyClockwise = lib_functions.isPolyClockwise
 local reversePolygon = lib_functions.reversePolygon
 local getProperties = lib_functions.getProperties
 local setProperty = lib_functions.setProperty
+local rotatePoint = lib_functions.rotatePoint
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
 
 --------------------------------------------------------------------------------
@@ -87,6 +88,12 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 			end
 
 			obj.x, obj.y = zx + (obj.contentWidth * 0.5), zy + (obj.contentHeight * 0.5)
+			if o.rotation ~= 0 then
+				local cornerX, cornerY = zx, zy
+				local rX, rY = rotatePoint(zw * 0.5, zh * 0.5, o.rotation or 0)
+				obj.x, obj.y = rX + cornerX, rY + cornerY
+				obj.rotation = o.rotation
+			end
 
 			-- Generate shape
 			if autoGenerateObjectShapes and physicsExistent then
@@ -160,6 +167,13 @@ function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheet
 		else
 			obj = display_newRect(o.x * screen.zoomX, o.y * screen.zoomY, o.width * screen.zoomX, o.height * screen.zoomY)
 			obj:translate(obj.width * 0.5, obj.height * 0.5)
+
+			if o.rotation ~= 0 then
+				local cornerX, cornerY = o.x, o.y
+				local rX, rY = rotatePoint(o.width * 0.5, o.height * 0.5, o.rotation or 0)
+				obj.x, obj.y = rX + cornerX, rY + cornerY
+				obj.rotation = o.rotation
+			end
 
 			obj._objType = "rectangle"
 			-- Create point or square special type for objects

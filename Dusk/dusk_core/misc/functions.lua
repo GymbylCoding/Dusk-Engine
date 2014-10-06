@@ -25,6 +25,9 @@ local table_concat = table.concat
 local table_insert = table.insert
 local string_gmatch = string.gmatch
 local string_len = string.len
+local math_sin = math.sin
+local math_cos = math.cos
+local math_rad = math.rad
 local json_decode = json.decode
 local syfer_solve = syfer.solve
 local verby_error = verby.error
@@ -75,6 +78,8 @@ function setProperty(t, str, value)
 	write[path[#path] ] = value
 	t = write -- Clean up
 end
+-- Rotate point
+local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
 
 --------------------------------------------------------------------------------
 -- Get Properties
@@ -174,5 +179,6 @@ functions.addProperties = addProperties
 functions.getProperties = getProperties
 functions.getDirectory = getDirectory
 functions.setProperty = setProperty
+functions.rotatePoint = rotatePoint
 
 return functions
