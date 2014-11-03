@@ -15,10 +15,14 @@ local require = require
 
 local editQueue = require("Dusk.dusk_core.misc.editqueue")
 local screen = require("Dusk.dusk_core.misc.screen")
+local lib_settings = require("Dusk.dusk_core.misc.settings")
 
+local getSetting = lib_settings.get
 local newEditQueue = editQueue.new
 local math_abs = math.abs
 local math_ceil = math.ceil
+local math_max = math.max
+local math_min = math.min
 
 --------------------------------------------------------------------------------
 -- Add Tile Culling to a Map
@@ -109,30 +113,63 @@ function tileculling.addTileCulling(map)
 			--------------------------------------------------------------------------
 			-- Update Positions
 			--------------------------------------------------------------------------
-			layerCulling.updatePositions = function()
-				local l, t = layer:contentToLocal(screen.left, screen.top)
-				local r, b = layer:contentToLocal(screen.right, screen.bottom)
+			if getSetting("enableRotatedMapCulling") then
+				layerCulling.updatePositions = function()
+					local tlX, tlY = layer:contentToLocal(screen.left, screen.top)
+					local trX, trY = layer:contentToLocal(screen.right, screen.top)
+					local blX, blY = layer:contentToLocal(screen.left, screen.bottom)
+					local brX, brY = layer:contentToLocal(screen.right, screen.bottom)
 
-				-- Calculate left/right/top/bottom to the nearest tile
-				-- We expand each position by one to hide the drawing and erasing
-				l = math_ceil(l * divTileWidth) - 1
-				r = math_ceil(r * divTileWidth) + 1
-				t = math_ceil(t * divTileHeight) - 1
-				b = math_ceil(b * divTileHeight) + 1
+					local l, r = math_min(tlX, blX, trX, brX), math_max(tlX, blX, trX, brX)
+					local t, b = math_min(tlY, blY, trY, brY), math_max(tlY, blY, trY, brY)
 
-				-- Update previous position to be equal to current position
-				prev.l = now.l
-				prev.r = now.r
-				prev.t = now.t
-				prev.b = now.b
+					-- Calculate left/right/top/bottom to the nearest tile
+					-- We expand each position by one to hide the drawing and erasing
+					l = math_ceil(l * divTileWidth) - 1
+					r = math_ceil(r * divTileWidth) + 1
+					t = math_ceil(t * divTileHeight) - 1
+					b = math_ceil(b * divTileHeight) + 1
 
-				-- Reset current position
-				now.l = l
-				now.r = r
-				now.t = t
-				now.b = b
+					-- Update previous position to be equal to current position
+					prev.l = now.l
+					prev.r = now.r
+					prev.t = now.t
+					prev.b = now.b
 
-				return l, r, t, b
+					-- Reset current position
+					now.l = l
+					now.r = r
+					now.t = t
+					now.b = b
+
+					return l, r, t, b
+				end
+			else
+				layerCulling.updatePositions = function()
+					local l, t = layer:contentToLocal(screen.left, screen.top)
+					local r, b = layer:contentToLocal(screen.right, screen.bottom)
+
+					-- Calculate left/right/top/bottom to the nearest tile
+					-- We expand each position by one to hide the drawing and erasing
+					l = math_ceil(l * divTileWidth) - 1
+					r = math_ceil(r * divTileWidth) + 1
+					t = math_ceil(t * divTileHeight) - 1
+					b = math_ceil(b * divTileHeight) + 1
+
+					-- Update previous position to be equal to current position
+					prev.l = now.l
+					prev.r = now.r
+					prev.t = now.t
+					prev.b = now.b
+
+					-- Reset current position
+					now.l = l
+					now.r = r
+					now.t = t
+					now.b = b
+
+					return l, r, t, b
+				end
 			end
 
 

@@ -36,15 +36,16 @@ dusk.loadMap = dusk_core.loadMap
 --------------------------------------------------------------------------------
 -- Build Map
 --------------------------------------------------------------------------------
-function dusk.buildMap(filename, base)
+function dusk.buildMap(data, base)
 	local map
-	
-	if type(filename) == "string" then
-		local data = dusk_core.loadMap(filename, base)
+
+	if type(data) == "string" then
+		local mapData = dusk_core.loadMap(data, base)
+		map = dusk_core.buildMap(mapData)
+	elseif type(data) == "table" then
 		map = dusk_core.buildMap(data)
-	elseif type(filename) == "table" then
-		map = dusk_core.buildMap(filename)
 	end
+
 	map.updateView()
 
 	return map

@@ -17,7 +17,7 @@ echo "1. Extracting tiles from tileset into folder"
 echo "Command: extract tests/tileset.png tests/extracted_tiles/"
 continueprompt
 echo "Extracting..."
-$TOAD_EXTRACT tileset.png tests/extracted_tiles/
+$TOAD_EXTRACT tests/tileset.png tests/extracted_tiles/
 echo "Finished"
 
 echo ""
