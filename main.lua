@@ -17,7 +17,7 @@ local dusk = require("Dusk.Dusk")
 dusk.setPreference("enableRotatedMapCulling", true)
 
 local map = dusk.buildMap("everything.json")
-map.setTrackingLevel(0.3) -- "Fluidity" of the camera movement
+map.setTrackingLevel(0.3) -- "Fluidity" of the camera movement; numbers closer to 0 mean more fluidly and slowly (but 0 itself will disable the camera!)
 
 function map:touch(event)
 	local viewX, viewY = map.getViewpoint()
@@ -39,7 +39,8 @@ end
 
 function map:tap(event)
 	if event.numTaps == 2 then
-		map:rotate(45)
+		map:rotate(10)
+		map.updateView()
 	end
 end
 
@@ -48,4 +49,4 @@ map:addEventListener("touch")
 map:addEventListener("tap")
 Runtime:addEventListener("enterFrame", map.updateView)
 
-native.showAlert("Dusk", "Welcome to the Dusk Engine. You have several (alliterative) options...\n\n- Do the demos in the Demos/ directory\n- Try the TOAD tool to tweak tilesets\n- Examine the example environment 'everything.json'", {"Got it!"})
+native.showAlert("Dusk", "Welcome to the Dusk Engine. You have several (alliterative) options...\n\n- Do the demos in the Demos/ directory\n- Try the TOAD tool to tweak tilesets\n- Examine the example environment 'everything.json'\n\nThis example map that's loaded on the screen demonstrates a bunch of Dusk's features - object layers, tile culling, parallax, rotated maps, etc. You can drag and drop it, or double-tap/click to rotate.", {"Got it!"})
