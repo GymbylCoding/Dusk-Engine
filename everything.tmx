@@ -17,6 +17,7 @@
   <properties>
    <property name="abc" value="123"/>
    <property name="def" value="!json! {&quot;a&quot; : 1}"/>
+   <property name="bangTest" value="!!! a:1"/>
    <property name="ghi" value="jkl"/>
    <property name="innerTable.woozle" value="true"/>
    <property name="objects:bodyType" value="static"/>

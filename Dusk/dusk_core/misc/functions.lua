@@ -15,6 +15,7 @@ local require = require
 
 local json = require("json")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
+local bang = require("Dusk.dusk_core.external.bang")
 local syfer = require("Dusk.dusk_core.external.syfer")
 local verby = require("Dusk.dusk_core.external.verby")
 
@@ -40,7 +41,7 @@ local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp,
 -- Mini Functions
 --------------------------------------------------------------------------------
 -- String to value
-function stringToValue(value) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json_decode(value:sub(7)) elseif value:match("^!eval!") then v = syfer_solve(value:sub(7), getSetting("evalVariables")) elseif value:match("^!tags!") then value = value:sub(7) local t = {} for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end local str = value:match("[^,%s]+$") if str then t[str] = true end v = t else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
+function stringToValue(value) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json_decode(value:sub(7)) elseif value:match("^!!!") then v = bang.read(value:sub(4)) elseif value:match("^!eval!") then v = syfer_solve(value:sub(7), getSetting("evalVariables")) elseif value:match("^!tags!") then value = value:sub(7) local t = {} for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end local str = value:match("[^,%s]+$") if str then t[str] = true end v = t else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
 -- Splice table
 function spliceTable(elements, primary, secondary) local newTable = {} for k, v in pairs(elements) do newTable[k] = primary[k]; if newTable[k] == nil then newTable[k] = secondary[k] end end return newTable end
 -- Is polygon clockwise

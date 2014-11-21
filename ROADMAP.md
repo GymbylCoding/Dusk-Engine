@@ -25,3 +25,6 @@ Not all these may be realized; these are just me having ideas and throwing them 
 
 - Instant update for scaling
 	Without an `onUpdate()` transition parameter, scaling the map with `transition.to()` makes the map jitter when tile culling is turned on. A temporary solution could be a metatable with __newindex for scaling, or perchance a temporary transition library with `onUpdate()` included.
+
+- Animated tiles
+	Mechanism for tile animations.

@@ -44,7 +44,6 @@ function map:tap(event)
 	end
 end
 
-
 map:addEventListener("touch")
 map:addEventListener("tap")
 Runtime:addEventListener("enterFrame", map.updateView)
