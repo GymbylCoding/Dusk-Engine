@@ -117,8 +117,8 @@ local data = {
 	-- unless this is enabled.
 	enableRotatedMapCulling = false,
 
-	-- Math evaluation variables for use with !eval! properties
-	evalVariables = {
+	-- Math evaluation variables for use with !math! properties
+	mathVariables = {
 		screenWidth = screen.width,
 		screenHeight = screen.height
 	}
@@ -145,7 +145,7 @@ end
 --------------------------------------------------------------------------------
 -- Add/Remove Evaluation Variable
 --------------------------------------------------------------------------------
-function settings.setEvalVariable(varName, value) data.evalVariables[varName] = value end
-function settings.removeEvalVariable(varName) data.evalVariables[varName] = nil end
+function settings.setMathVariable(varName, value) data.mathVariables[varName] = value end
+function settings.removeMathVariable(varName) data.mathVariables[varName] = nil end
 
 return settings
