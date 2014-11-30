@@ -4,30 +4,18 @@ Bang
 
 A super-lightweight (only ~44 SLOC, and as many lines of explanatory comments as
 there are lines of code itself!) serialization notation, with a focus on
-conciseness, simplicity, and clarity.
+conciseness, simplicity, and clarity. It eliminates the need for extra text
+(including unquoted strings, optional commas, no brackets around the base table
+- in other words, no boilerplate JSON), but remains extremely readable and
+obvious.
 
-It eliminates the need for extra text (including unquoted strings, optional
-commas, no brackets around the base table - in other words, no boilerplate JSON),
-but remains extremely readable and obvious.
-
-Pointers:
+Syntax Pointers:
 - Keys and values can be of any type, just as in Lua
 - Commas are optional
 - Single or double-quoted strings are both ok, as well as unquoted strings if
 	the string is a valid identifier (i.e. thisIsOkay123)
 - Tables are surrounded in {}, but not the base table - if you surround the base
 	table with {}, you'll get an array of length 1 with your data inside it
-
-Examples:
-
-param1: true
-param2: false
-param3: unquotedString
-param4: optionalComma,
-param5: {list of unquoted strings with optional commas}
-arrayElementFloatingOutInSpace
-{tableArrayElementFloatingOutInSpace: true}
-
 --]]
 --------------------------------------------------------------------------------
 
