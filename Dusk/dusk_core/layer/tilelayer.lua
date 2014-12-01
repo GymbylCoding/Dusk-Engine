@@ -76,7 +76,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			if gid == 0 then return true end
 
 			--------------------------------------------------------------------------
-			-- Create Tile
+			-- Tile Data/Preparation
 			--------------------------------------------------------------------------
 			local flippedX = false
 			local flippedY = false
@@ -126,19 +126,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			--------------------------------------------------------------------------
 			-- Tile Properties
 			--------------------------------------------------------------------------
-			if tileProps then
-				for k, v in pairs(layerProps.object) do
-					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
-				end
-
-				for k, v in pairs(tileProps.object) do
-					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
-				end
-
-				for k, v in pairs(tileProps.props) do
-					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
-				end
-				
+			if tileProps then				
 				------------------------------------------------------------------------
 				-- Add Physics to Tile
 				------------------------------------------------------------------------
@@ -173,6 +161,18 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 					else
 						physics_addBody(tile, unpack(physicsParameters))
 					end
+				end
+				
+				for k, v in pairs(layerProps.object) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+				end
+
+				for k, v in pairs(tileProps.object) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+				end
+
+				for k, v in pairs(tileProps.props) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
 				end
 			else -- if tileProps
 				for k, v in pairs(layerProps.object) do
