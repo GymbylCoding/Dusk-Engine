@@ -4,3 +4,5 @@ dev/
 gitignore/
 prep-for-commit.sh
 docs/
+maps/
+tilesets/water_tileset.png

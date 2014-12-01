@@ -250,6 +250,10 @@ function core.buildMap(data)
 			end
 		end
 	end
+	
+	function map._getTileLayers() return layerList.tile end
+	function map._getObjectLayers() return layerList.object end
+	function map._getImageLayers() return layerList.image end
 
 	------------------------------------------------------------------------------
 	-- Destroy Map

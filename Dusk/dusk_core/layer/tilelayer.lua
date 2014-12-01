@@ -21,6 +21,7 @@ local lib_functions = require("Dusk.dusk_core.misc.functions")
 local display_remove = display.remove
 local display_newGroup = display.newGroup
 local display_newImageRect = display.newImageRect
+local display_newSprite = display.newSprite
 local math_abs = math.abs
 local math_max = math.max
 local math_ceil = math.ceil
@@ -90,26 +91,54 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			local sheetIndex = tileData.tilesetIndex
 			local tileGID = tileData.gid
 
-			local tile = display_newImageRect(imageSheets[sheetIndex], gid, mapData.stats.tileWidth, mapData.stats.tileHeight)
-				tile.x, tile.y = mapData.stats.tileWidth * (x - 0.5), mapData.stats.tileHeight * (y - 0.5)
-				tile.xScale, tile.yScale = screen.zoomX, screen.zoomY
-
-				tile.gid = gid
-				tile.tilesetGID = tileGID
-				tile.tileset = sheetIndex
-				tile.layerIndex = dataIndex
-
-				if flippedX then tile.xScale = -tile.xScale end
-				if flippedY then tile.yScale = -tile.yScale end
-
+			local tile
 			local tileProps
-			tile.props = {}
 
 			if tileProperties[sheetIndex][tileGID] then
 				tileProps = tileProperties[sheetIndex][tileGID]
 			end
 
+			------------------------------------------------------------------------
+			-- Create Tile
+			------------------------------------------------------------------------
+			if tileProps and tileProps.anim.enabled then
+				tile = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
+				tile:setFrame(tileGID)
+			else
+				tile = display_newImageRect(imageSheets[sheetIndex], gid, mapData.stats.tileWidth, mapData.stats.tileHeight)
+			end
+			
+			tile.props = {}
+			
+			tile.x, tile.y = mapData.stats.tileWidth * (x - 0.5), mapData.stats.tileHeight * (y - 0.5)
+			tile.xScale, tile.yScale = screen.zoomX, screen.zoomY
+
+			tile.gid = gid
+			tile.tilesetGID = tileGID
+			tile.tileset = sheetIndex
+			tile.layerIndex = dataIndex
+			tile.tileX, tile.tileY = x, y
+			tile.isAnimated = tileProps and tileProps.anim.enabled
+			
+			if flippedX then tile.xScale = -tile.xScale end
+			if flippedY then tile.yScale = -tile.yScale end
+
+			--------------------------------------------------------------------------
+			-- Tile Properties
+			--------------------------------------------------------------------------
 			if tileProps then
+				for k, v in pairs(layerProps.object) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+				end
+
+				for k, v in pairs(tileProps.object) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
+				end
+
+				for k, v in pairs(tileProps.props) do
+					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
+				end
+				
 				------------------------------------------------------------------------
 				-- Add Physics to Tile
 				------------------------------------------------------------------------
@@ -145,24 +174,12 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 						physics_addBody(tile, unpack(physicsParameters))
 					end
 				end
-
-				------------------------------------------------------------------------
-				-- Add Other Properties
-				------------------------------------------------------------------------
+			else -- if tileProps
 				for k, v in pairs(layerProps.object) do
 					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
 				end
-
-				for k, v in pairs(tileProps.object) do
-					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
-				end
-
-				for k, v in pairs(tileProps.props) do
-					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
-				end
 			end
 
-			tile.tileX, tile.tileY = x, y
 			if not layerTiles[x] then layerTiles[x] = {} end
 			layerTiles[x][y] = tile
 			layer:insert(tile)

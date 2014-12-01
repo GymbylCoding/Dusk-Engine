@@ -39,10 +39,8 @@ local keyPattern = "([%w_%-%+\"\'!@#$%^&*%(%)]+)%."
 local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp, reverseTable, addProperties, getDirectory, setProperty
 
 --------------------------------------------------------------------------------
--- Mini Functions
+-- General Helper Functions
 --------------------------------------------------------------------------------
--- String to value
-function stringToValue(value) local v if value == "true" or value == "false" then if value == "true" then v = true else v = false end elseif value:match("%-?%d+%.?[%d]+") == value then v = tonumber(value) elseif value:match("^!json!") then v = json_decode(value:sub(7)) elseif value:match("^!!!") then v = bang.read(value:sub(4)) elseif value:match("^!math!") or value:match("^!eval!") then if value:match("^!eval!") then verby_alert("Warning: `!eval!` prefix has been deprecated in favor of `!math!`") end v = syfer_solve(value:sub(7), getSetting("evalVariables")) elseif value:match("^!tags!") then value = value:sub(7) local t = {} for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end local str = value:match("[^,%s]+$") if str then t[str] = true end v = t else if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then v = value:sub(2, -2) else v = value end end return v end
 -- Splice table
 function spliceTable(elements, primary, secondary) local newTable = {} for k, v in pairs(elements) do newTable[k] = primary[k]; if newTable[k] == nil then newTable[k] = secondary[k] end end return newTable end
 -- Is polygon clockwise
@@ -55,10 +53,60 @@ function getXY(x, y) local x, y = x, y if type(x) == "table" then if x.x and x.y
 function clamp(v, l, h) return (v < l and l) or (v > h and h) or v end
 -- Reverse table ([1, 2, 3] -> [3, 2, 1])
 function reverseTable(t) local new = {} for i = 1, #t do new[#t - (i - 1)] = t[i] end return new end
--- Add properties
-function addProperties(props, propName, obj) for k, v in pairs(props[propName]) do if (getSetting("dotImpliesTable") or props.options.usedot[k]) and not props.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end end
 -- Get directory
 function getDirectory(dirTree, path) local path = path local numDirs = #dirTree local _i = 1 while path:sub(_i, _i + 2) == "../" do _i = _i + 3 numDirs = numDirs - 1 end local filename = path:sub(_i) local dirPath = table_concat(dirTree, "/", 1, numDirs) return dirPath, filename end
+-- Rotate point
+local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
+
+--------------------------------------------------------------------------------
+-- Engine Helper Functions
+--------------------------------------------------------------------------------
+-- String to value
+function stringToValue(value)
+	local v
+	if value == "true" or value == "false" then
+		if value == "true" then
+			v = true
+		else
+			v = false
+		end
+	elseif value:match("%-?%d+%.?[%d]+") == value then
+		v = tonumber(value)
+	elseif value:match("^!json!") then
+		v = json_decode(value:sub(7))
+	elseif value:match("^!!!") then
+		v = bang.read(value:sub(4))
+	elseif value:match("^!math!") or value:match("^!eval!") then
+		if value:match("^!eval!") then verby_alert("Warning: `!eval!` prefix has been deprecated in favor of `!math!`") end
+		v = syfer_solve(value:sub(7), getSetting("evalVariables"))
+	elseif value:match("^!tags!") then
+		value = value:sub(7)
+		local t = {}
+		for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end
+		local str = value:match("[^,%s]+$") if str then t[str] = true end
+		v = t
+	else
+		if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then
+			v = value:sub(2, -2)
+		else
+			v = value
+		end
+	end
+	return v
+end
+
+-- Add properties
+function addProperties(props, propName, obj)
+	local dotImpliesTable = getSetting("dotImpliesTable")
+	for k, v in pairs(props[propName]) do
+		if (dotImpliesTable or props.options.usedot[k]) and not props.options.nodot[k] then
+			setProperty(obj, k, v)
+		else
+			obj[k] = v
+		end
+	end
+end
+
 -- Set property
 function setProperty(t, str, value)
 	local write = t -- Table we edit
@@ -80,8 +128,6 @@ function setProperty(t, str, value)
 	write[path[#path] ] = value
 	t = write -- Clean up
 end
--- Rotate point
-local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
 
 --------------------------------------------------------------------------------
 -- Get Properties
@@ -92,7 +138,8 @@ local function getProperties(data, objPrefix, isLayer)
 		physics = {{}}, -- Start with one element for the default body
 		object = {},
 		layer = {},
-		props = {}
+		props = {},
+		anim = {currentFrame = 1, tiles = {}}
 	}
 
 	if not isLayer then p.layer = nil end
@@ -126,6 +173,9 @@ local function getProperties(data, objPrefix, isLayer)
 			k = key:sub(9 + string_len(match))
 		elseif key:match("^props:") then
 			insertionTable = p.props
+			k = key:sub(7)
+		elseif key:match("^anim:") then
+			insertionTable = p.anim
 			k = key:sub(6)
 		else
 			if isLayer then
@@ -177,10 +227,11 @@ functions.reversePolygon = reversePolygon
 functions.getXY = getXY
 functions.clamp = clamp
 functions.reverseTable = reverseTable
+functions.rotatePoint = rotatePoint
+functions.getDirectory = getDirectory
 functions.addProperties = addProperties
 functions.getProperties = getProperties
-functions.getDirectory = getDirectory
 functions.setProperty = setProperty
-functions.rotatePoint = rotatePoint
+
 
 return functions
