@@ -105,7 +105,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 				tile = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
 				tile:setFrame(tileGID)
 			else
-				tile = display_newImageRect(imageSheets[sheetIndex], gid, mapData.stats.tileWidth, mapData.stats.tileHeight)
+				tile = display_newImageRect(imageSheets[sheetIndex], tileGID, mapData.stats.tileWidth, mapData.stats.tileHeight)
 			end
 			
 			tile.props = {}

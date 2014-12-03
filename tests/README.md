@@ -10,3 +10,6 @@ Make sure the margin and spacing rules are working correctly.
 
 - `memory_leaks/`
 Check for memory leaks.
+
+- `multi_tileset/`
+Make sure multiple tilesets work.
