@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 --[[
-Dusk Engine Component: Data
+Dusk Engine Component:   
 
 Loads map data from a filename.
 --]]
@@ -35,7 +35,7 @@ function lib_data.get(filename, base)
 	local path = system_pathForFile(filename, base)
 
 	-- Check for nonexistent files
-	if path == nil then verby_error("No file found at path '" .. filename .. "'") end
+	if extension ~= ".lua" and path == nil then verby_error("No file found at path '" .. filename .. "'") end
 
 	------------------------------------------------------------------------------
 	-- Load JSON
