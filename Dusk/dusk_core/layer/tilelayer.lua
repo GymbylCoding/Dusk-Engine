@@ -50,7 +50,7 @@ local flipD = tonumber("20000000", 16)
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
+function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
 	local dotImpliesTable = getSetting("dotImpliesTable")
 	local redrawOnTileExistent = getSetting("redrawOnTileExistent")
@@ -102,8 +102,9 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			-- Create Tile
 			------------------------------------------------------------------------
 			if tileProps and tileProps.anim.enabled then
-				tile = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
-				tile:setFrame(tileGID)
+				tile = display_newSprite(imageSheets[sheetIndex], tileProps.anim.options)
+				tile:setFrame(1)
+				tile._animData = tileProps.anim
 			else
 				tile = display_newImageRect(imageSheets[sheetIndex], tileGID, mapData.stats.tileWidth, mapData.stats.tileHeight)
 			end
@@ -183,6 +184,8 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 			if not layerTiles[x] then layerTiles[x] = {} end
 			layerTiles[x][y] = tile
 			layer:insert(tile)
+			
+			if tile.isAnimated and map._animManager then map._animManager.animatedTileCreated(tile) end
 		elseif redrawOnTileExistent then
 			layer._eraseTile(x, y)
 			layer._drawTile(x, y)
@@ -196,6 +199,7 @@ function tilelayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets,
 		if locked[x] and locked[x][y] == "d" then return end
 
 		if layerTiles[x] and layerTiles[x][y] then
+			if layerTiles[x][y].isAnimated and map._animManager then map._animManager.animatedTileRemoved(layerTiles[x][y]) end
 			display_remove(layerTiles[x][y])
 			layerTiles[x][y] = nil
 

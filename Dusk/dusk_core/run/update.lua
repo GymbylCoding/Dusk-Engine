@@ -21,6 +21,7 @@ local getSetting = lib_settings.get
 
 local lib_camera; if getSetting("enableCamera") then lib_camera = require("Dusk.dusk_core.run.camera") end
 local lib_tileculling; if getSetting("enableTileCulling") then lib_tileculling = require("Dusk.dusk_core.run.tileculling") end
+local lib_anim = require("Dusk.dusk_core.run.anim")
 
 --------------------------------------------------------------------------------
 -- Register Tile Culling and Camera
@@ -31,6 +32,7 @@ function lib_update.register(map)
 
 	local update = {}
 	local camera, culling
+	local anim = lib_anim.new(map)
 
 	------------------------------------------------------------------------------
 	-- Add Camera and Tile Culling to Map
@@ -67,6 +69,7 @@ function lib_update.register(map)
 	-- Update Tile Culling Only
 	------------------------------------------------------------------------------
 	local function updateTileCulling()
+		map._animManager.update()
 		for i = 1, #culling.layer do
 			culling.layer[i].update()
 		end
@@ -77,7 +80,8 @@ function lib_update.register(map)
 	------------------------------------------------------------------------------
 	local function updateCamera()
 		camera.processCameraViewpoint()
-
+		map._animManager.update()
+		
 		for i = 1, #camera.layer do
 			camera.layer[i].update()
 		end
@@ -88,6 +92,7 @@ function lib_update.register(map)
 	------------------------------------------------------------------------------
 	local function updateView()
 		camera.processCameraViewpoint()
+		map._animManager.update()
 
 		for i = 1, mapLayers do
 			if camera.layer[i] then
@@ -131,7 +136,7 @@ function lib_update.register(map)
 		updateCamera = nil
 		updateTileCulling = nil
 	elseif not enableTileCulling and not enableCamera then
-		map.updateView = function() end
+		map.updateView = map._animManager.update
 	end
 
 	return update

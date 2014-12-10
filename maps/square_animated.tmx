@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="24" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="square_anim" tilewidth="32" tileheight="32" spacing="2" margin="2">
+  <image source="../tilesets/square_anim.png" width="240" height="138"/>
+  <tile id="0">
+   <properties>
+    <property name="anim:enabled" value="true"/>
+    <property name="anim:options" value="!!! start: 1 count: 16 time: 1000"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="Tile Layer 1" width="32" height="24">
+  <data encoding="base64" compression="zlib">
+   eJztwwENAAAMw6DOv+kLOSSsmqqq+uIBEw4DAQ==
+  </data>
+ </layer>
+</map>

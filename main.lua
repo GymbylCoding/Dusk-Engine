@@ -16,7 +16,7 @@ physics.setDrawMode("hybrid")
 local dusk = require("Dusk.Dusk")
 dusk.setPreference("enableRotatedMapCulling", true)
 
-local map = dusk.buildMap("everything.json")
+local map = dusk.buildMap("maps/everything.json")
 map.setTrackingLevel(0.3) -- "Fluidity" of the camera movement; numbers closer to 0 mean more fluidly and slowly (but 0 itself will disable the camera!)
 
 function map:touch(event)

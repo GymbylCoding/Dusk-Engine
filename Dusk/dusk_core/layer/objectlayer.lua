@@ -47,7 +47,7 @@ local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = t
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function objectlayer.createLayer(mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
+function objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
 	local dotImpliesTable = getSetting("dotImpliesTable")
 	local ellipseRadiusMode = getSetting("ellipseRadiusMode")
 	local onObj = getSetting("onObj")

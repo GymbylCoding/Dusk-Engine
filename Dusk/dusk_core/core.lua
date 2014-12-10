@@ -117,18 +117,18 @@ function core.buildMap(data)
 
 			-- Pass each layer type to that layer builder
 			if data.layers[i].type == "tilelayer" then
-				layer = lib_tilelayer.createLayer(data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties)
+				layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 				layer._type = "tile"
 
 				-- Tile layer-specific code
 				if layer.tileCullingEnabled == nil then layer.tileCullingEnabled = true end
 			elseif data.layers[i].type == "objectgroup" then
-				layer = lib_objectlayer.createLayer(data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig)
+				layer = lib_objectlayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig)
 				layer._type = "object"
 
 				-- Any object layer-specific code
 			elseif data.layers[i].type == "imagelayer" then
-				layer = lib_imagelayer.createLayer(data.layers[i], data._dusk.dirTree)
+				layer = lib_imagelayer.createLayer(map, data.layers[i], data._dusk.dirTree)
 				layer._type = "image"
 
 				-- Any image layer-specific code could go here

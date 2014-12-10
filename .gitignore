@@ -4,8 +4,3 @@ gitignore/
 prep-for-commit.sh
 docs/
 tilesets/water_tileset.png
-tilesets/square_anim.png
-maps/map1.json
-maps/square_animated.json
-maps/water_animated.json
-maps/water_animated.tmx

@@ -26,7 +26,7 @@ local getDirectory = lib_functions.getDirectory
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function imagelayer.createLayer(data, dirTree)
+function imagelayer.createLayer(map, data, dirTree)
 	local props = getProperties(data.properties or {}, "image", true)
 
 	local layer = display_newGroup()
