@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="32" height="24" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="tileset" tilewidth="32" tileheight="32">
+  <image source="../tilesets/tileset.png" width="224" height="128"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="32" height="24">
+  <properties>
+   <property name="alpha" value="0.5"/>
+   <property name="xParallax" value="0.5"/>
+   <property name="yParallax" value="0.5"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJztwzENAAAIA7AFB/NvFhfwtEmbpKqq6sl5vgguMSE=
+  </data>
+ </layer>
+ <objectgroup name="Object Layer 1" width="32" height="24">
+  <properties>
+   <property name="abc" value="123"/>
+   <property name="def" value="!json! {&quot;a&quot; : 1}"/>
+   <property name="bangTest" value="!!! a:1"/>
+   <property name="ghi" value="jkl"/>
+   <property name="innerTable.woozle" value="true"/>
+   <property name="objects:bodyType" value="static"/>
+   <property name="physics:enabled" value="true"/>
+   <property name="xParallax" value="0.75"/>
+   <property name="yParallax" value="0.75"/>
+  </properties>
+  <object x="224" y="128" width="736" height="32"/>
+  <object x="64" y="128">
+   <polygon points="0,0 0,576 64,512 64,64"/>
+  </object>
+  <object x="192" y="192">
+   <polyline points="0,0 0,384 256,384 32,352 32,32 256,0 32,0 -64,-96"/>
+  </object>
+  <object x="224" y="224" width="320" height="320">
+   <properties>
+    <property name="physics:enabled" value="false"/>
+   </properties>
+   <ellipse/>
+  </object>
+ </objectgroup>
+ <imagelayer name="Image Layer 1" width="32" height="24">
+  <image source="../tilesets/tileset.png"/>
+  <properties>
+   <property name="physics:enabled" value="true"/>
+  </properties>
+ </imagelayer>
+</map>
