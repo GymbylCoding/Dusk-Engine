@@ -53,11 +53,37 @@ local flipD = tonumber("20000000", 16)
 function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
 	local dotImpliesTable = getSetting("dotImpliesTable")
-	local redrawOnTileExistent = getSetting("redrawOnTileExistent")
 
 	local layer = display_newGroup()
+	
+	layer._leftmostTile = mapData._dusk.layers[dataIndex].leftTile
+	layer._rightmostTile = mapData._dusk.layers[dataIndex].rightTile
+	layer._highestTile = mapData._dusk.layers[dataIndex].topTile
+	layer._lowestTile = mapData._dusk.layers[dataIndex].bottomTile
 
 	layer.props = {}
+	
+	if layer._leftmostTile == math.huge then
+		layer._isBlank = true
+		-- If we want, we can overwrite the normal functions with blank ones; this
+		-- layer is completely empty so no reason to have useless functions that
+		-- take time. However, in the engine, we can just check for layer._isBlank
+		-- and it'll be even faster than a useless function call.
+		--[[
+		function layer.tile() return nil end
+		function layer._drawTile() end
+		function layer._eraseTile() end
+		function layer._redrawTile() end
+		function layer._lockTileDrawn() end
+		function layer._lockTileErased() end
+		function layer._unlockTile() end
+		function layer._edit() end
+		function layer.draw() end
+		function layer.erase() end
+		function layer.lock() end
+		--]]
+	end
+
 	local layerTiles = {}
 	local locked = {}
 
@@ -68,13 +94,14 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 	------------------------------------------------------------------------------
 	function layer._drawTile(x, y)
 		if locked[x] and locked[x][y] == "e" then return false end
-
+		
 		if not layerTiles[x] or not layerTiles[x][y] then
 			local id = ((y - 1) * mapData.width) + x
 			local gid = data.data[id]
 
+			-- Skip blank tiles
 			if gid == 0 then return true end
-
+			
 			--------------------------------------------------------------------------
 			-- Tile Data/Preparation
 			--------------------------------------------------------------------------
@@ -101,10 +128,13 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 			------------------------------------------------------------------------
 			-- Create Tile
 			------------------------------------------------------------------------
-			if tileProps and tileProps.anim.enabled then
+			if tileProps and tileProps.object["!isSprite!"] then
+				tile = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
+				tile:setFrame(tileGID)
+			elseif tileProps and tileProps.anim.enabled then
 				tile = display_newSprite(imageSheets[sheetIndex], tileProps.anim.options)
-				tile:setFrame(1)
 				tile._animData = tileProps.anim
+				tile.isAnimated = true
 			else
 				tile = display_newImageRect(imageSheets[sheetIndex], tileGID, mapData.stats.tileWidth, mapData.stats.tileHeight)
 			end
@@ -119,7 +149,6 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 			tile.tileset = sheetIndex
 			tile.layerIndex = dataIndex
 			tile.tileX, tile.tileY = x, y
-			tile.isAnimated = tileProps and tileProps.anim.enabled
 			
 			if flippedX then tile.xScale = -tile.xScale end
 			if flippedY then tile.yScale = -tile.yScale end
@@ -186,9 +215,6 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 			layer:insert(tile)
 			
 			if tile.isAnimated and map._animManager then map._animManager.animatedTileCreated(tile) end
-		elseif redrawOnTileExistent then
-			layer._eraseTile(x, y)
-			layer._drawTile(x, y)
 		end
 	end
 

@@ -38,7 +38,7 @@ function tileculling.addTileCulling(map)
 	-- Load Layers
 	------------------------------------------------------------------------------
 	for layer, i in map.tileLayers() do
-		if layer.tileCullingEnabled then
+		if layer.tileCullingEnabled and not layer._isBlank then
 			local layerCulling = {
 				prev = {l = 0, r = 0, t = 0, b = 0},
 				now = {l = 0, r = 0, t = 0, b = 0},
@@ -65,29 +65,49 @@ function tileculling.addTileCulling(map)
 				local rDiff = nr - pr
 				local tDiff = nt - pt
 				local bDiff = nb - pb
-
-				if lDiff > 0 then
-					layerEdits.add(pl, nl, pt, pb, "e")
-				elseif lDiff < 0 then
-					layerEdits.add(pl, nl, nt, nb, "d")
+				
+				-- Left side
+				if lDiff > 0 then -- Moved left
+					if nl <= layer._rightmostTile then
+						layerEdits.add(pl, nl, pt, pb, "e")
+					end
+				elseif lDiff < 0 then -- Moved right
+					if nl >= layer._leftmostTile then
+						layerEdits.add(pl, nl, nt, nb, "d")
+					end
 				end
 
-				if rDiff < 0 then
-					layerEdits.add(pr, nr, pt, pb, "e")
-				elseif rDiff > 0 then
-					layerEdits.add(pr, nr, nt, nb, "d")
+				-- Right side
+				if rDiff < 0 then -- Moved right
+					if nr <= layer._rightmostTile then
+						layerEdits.add(pr, nr, pt, pb, "e")
+					end
+				elseif rDiff > 0 then -- Moved left
+					if nr >= layer._leftmostTile then
+						layerEdits.add(pr, nr, nt, nb, "d")
+					end
 				end
 
-				if tDiff > 0 then
-					layerEdits.add(nl, nr, pt, layerCulling.now.t, "e")
-				elseif tDiff < 0 then
-					layerEdits.add(nl, nr, pt, layerCulling.now.t, "d")
+				-- Top side
+				if tDiff > 0 then -- Moved down
+					if nt >= layer._highestTile then
+						layerEdits.add(nl, nr, pt, nt, "e")
+					end
+				elseif tDiff < 0 then -- Moved up
+					if nt <= layer._lowestTile then
+						layerEdits.add(nl, nr, pt, nt, "d")
+					end
 				end
 
-				if bDiff < 0 then
-					layerEdits.add(nl, nr, pb, layerCulling.now.b, "e")
-				elseif bDiff > 0 then
-					layerEdits.add(nl, nr, pb, layerCulling.now.b, "d")
+				-- Bottom side
+				if bDiff < 0 then -- Moved up
+					if nb <= layer._lowestTile then
+						layerEdits.add(nl, nr, pb, nb, "e")
+					end
+				elseif bDiff > 0 then -- Moved down
+					if nb >= layer._highestTile then
+						layerEdits.add(nl, nr, pb, nb, "d")
+					end
 				end
 
 				-- Guard against tile "leaks"
@@ -108,6 +128,11 @@ function tileculling.addTileCulling(map)
 				end
 
 				layerEdits.execute()
+				-- Reset current position
+				now.l = nl
+				now.r = nr
+				now.t = nt
+				now.b = nb
 			end
 
 			--------------------------------------------------------------------------
@@ -136,12 +161,6 @@ function tileculling.addTileCulling(map)
 					prev.t = now.t
 					prev.b = now.b
 
-					-- Reset current position
-					now.l = l
-					now.r = r
-					now.t = t
-					now.b = b
-
 					return l, r, t, b
 				end
 			else
@@ -161,20 +180,12 @@ function tileculling.addTileCulling(map)
 					prev.r = now.r
 					prev.t = now.t
 					prev.b = now.b
-
-					-- Reset current position
-					now.l = l
-					now.r = r
-					now.t = t
-					now.b = b
-
+					
 					return l, r, t, b
 				end
 			end
 
-
 			layer._updateTileCulling = layerCulling.update
-
 			culling.layer[i] = layerCulling
 		end
 	end

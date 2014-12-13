@@ -48,8 +48,33 @@ function core.loadMap(filename, base)
 	local data = lib_data.get(filename, base)
 	local stats = lib_stats.get(data); data.stats = stats
 
-	data._dusk = {}
-	data._dusk.dirTree = dirTree
+	data._dusk = {
+		dirTree = dirTree,
+		layers = {}
+	}
+	
+	for i = 1, #data.layers do
+		data._dusk.layers[i] = {}
+		if data.layers[i].type == "tilelayer" then
+			local l, r, t, b = math.huge, -math.huge, math.huge, -math.huge
+			local w, h = data.layers[i].width, data.layers[i].height
+			for x = 1, w do
+				for y = 1, h do
+					local d = data.layers[i].data[(y - 1) * w + x]
+					if d ~= 0 then
+						if x < l then l = x end
+						if x > r then r = x end
+						if y < t then t = y end
+						if y > b then b = y end
+					end
+				end
+			end
+			data._dusk.layers[i].leftTile = l
+			data._dusk.layers[i].rightTile = r
+			data._dusk.layers[i].topTile = t
+			data._dusk.layers[i].bottomTile = b
+		end
+	end
 
 	return data, stats
 end

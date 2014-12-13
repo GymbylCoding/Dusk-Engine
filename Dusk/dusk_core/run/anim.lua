@@ -63,6 +63,8 @@ function lib_anim.new(map)
 			}
 			animDatas[hash].nextFrameTime = time + animDatas[hash].frameTime
 		end
+		
+		tile:setFrame(((animDatas[hash].numFramesElapsed - 1) % animDatas[hash].options.count) + 1)
 	end
 	
 	function anim.animatedTileRemoved(tile)
