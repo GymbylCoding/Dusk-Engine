@@ -213,6 +213,7 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 			if not layerTiles[x] then layerTiles[x] = {} end
 			layerTiles[x][y] = tile
 			layer:insert(tile)
+			tile:toBack()
 			
 			if tile.isAnimated and map._animManager then map._animManager.animatedTileCreated(tile) end
 		end

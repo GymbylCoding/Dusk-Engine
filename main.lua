@@ -41,10 +41,6 @@ local function setMap(mapName)
 	Runtime:addEventListener("enterFrame", map.updateView)
 end
 
-local m = display.newRect(0, 0, 100, 100)
-display.remove(m)
-print(m)
-
 --------------------------------------------------------------------------------
 -- Runtime Tap Event
 --------------------------------------------------------------------------------
