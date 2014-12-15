@@ -49,7 +49,7 @@ function tileculling.addTileCulling(map)
 
 			local layerEdits = newEditQueue()
 			layerEdits.setTarget(layer)
-
+			
 			--------------------------------------------------------------------------
 			-- Update Culling
 			--------------------------------------------------------------------------
@@ -68,44 +68,44 @@ function tileculling.addTileCulling(map)
 				
 				-- Left side
 				if lDiff > 0 then -- Moved left
-					if nl <= layer._rightmostTile then
+					if pl <= layer._rightmostTile then
 						layerEdits.add(pl, nl, pt, pb, "e")
 					end
 				elseif lDiff < 0 then -- Moved right
-					if nl >= layer._leftmostTile then
+					if pl >= layer._leftmostTile then
 						layerEdits.add(pl, nl, nt, nb, "d")
 					end
 				end
 
 				-- Right side
 				if rDiff < 0 then -- Moved right
-					if nr <= layer._rightmostTile then
+					if pr <= layer._rightmostTile then
 						layerEdits.add(pr, nr, pt, pb, "e")
 					end
 				elseif rDiff > 0 then -- Moved left
-					if nr >= layer._leftmostTile then
+					if pr >= layer._leftmostTile then
 						layerEdits.add(pr, nr, nt, nb, "d")
 					end
 				end
 
 				-- Top side
 				if tDiff > 0 then -- Moved down
-					if nt >= layer._highestTile then
+					if pt >= layer._highestTile then
 						layerEdits.add(nl, nr, pt, nt, "e")
 					end
 				elseif tDiff < 0 then -- Moved up
-					if nt <= layer._lowestTile then
+					if pt <= layer._lowestTile then
 						layerEdits.add(nl, nr, pt, nt, "d")
 					end
 				end
 
 				-- Bottom side
 				if bDiff < 0 then -- Moved up
-					if nb <= layer._lowestTile then
+					if pb <= layer._lowestTile then
 						layerEdits.add(nl, nr, pb, nb, "e")
 					end
 				elseif bDiff > 0 then -- Moved down
-					if nb >= layer._highestTile then
+					if pb >= layer._highestTile then
 						layerEdits.add(nl, nr, pb, nb, "d")
 					end
 				end

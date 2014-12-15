@@ -56,10 +56,10 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 
 	local layer = display_newGroup()
 	
-	layer._leftmostTile = mapData._dusk.layers[dataIndex].leftTile
-	layer._rightmostTile = mapData._dusk.layers[dataIndex].rightTile
-	layer._highestTile = mapData._dusk.layers[dataIndex].topTile
-	layer._lowestTile = mapData._dusk.layers[dataIndex].bottomTile
+	layer._leftmostTile = mapData._dusk.layers[dataIndex].leftTile - 1
+	layer._rightmostTile = mapData._dusk.layers[dataIndex].rightTile + 1
+	layer._highestTile = mapData._dusk.layers[dataIndex].topTile - 1
+	layer._lowestTile = mapData._dusk.layers[dataIndex].bottomTile + 1
 
 	layer.props = {}
 	

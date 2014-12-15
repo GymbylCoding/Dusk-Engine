@@ -24,6 +24,11 @@ local verby_error = verby.error
 -- Data
 --------------------------------------------------------------------------------
 local data = {
+	["experimental:roundCameraPosition"] = false,
+	
+	-- Should we display a rectangle that's Tiled's background color
+	displayBackgroundRectangle = false,
+	
 	-- Does a dot in a property name place a property in a separate table
 	-- (obj.x.y.z vs. obj["x.y.z"])
 	dotImpliesTable = true,

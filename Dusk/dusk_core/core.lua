@@ -25,8 +25,9 @@ local lib_imagelayer = require("Dusk.dusk_core.layer.imagelayer")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 local lib_update = require("Dusk.dusk_core.run.update")
 
-local display_newGroup = display.newGroup
 local type = type
+local tonumber = tonumber
+local display_newGroup = display.newGroup
 local table_insert = table.insert
 local math_ceil = math.ceil
 local getSetting = lib_settings.get
@@ -101,6 +102,14 @@ function core.buildMap(data)
 	------------------------------------------------------------------------------
 	local map = display_newGroup()
 	local update
+
+	if data.backgroundcolor and getSetting("displayBackgroundRectangle") then
+		local bkg = display.newRect(0, 0, display.contentWidth - display.screenOriginX * 2, display.contentHeight - display.screenOriginY * 2)
+		bkg.x, bkg.y = display.contentCenterX, display.contentCenterY
+		map:insert(bkg)
+		local r, g, b = tonumber(data.backgroundcolor:sub(2, 3), 16), tonumber(data.backgroundcolor:sub(4, 5), 16), tonumber(data.backgroundcolor:sub(6, 7), 16)
+		bkg:setFillColor(r / 255, g / 255, b / 255)
+	end
 
 	-- Make sure map appears in same position for all devices
 	--map:setReferencePoint(display.TopLeftReferencePoint) -- For older versions of Corona, just uncomment it to use
