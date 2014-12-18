@@ -88,27 +88,14 @@ function lib_camera.addControl(map)
 			--------------------------------------------------------------------------
 			-- Update Camera
 			--------------------------------------------------------------------------
-			if getSetting("experimental:roundCameraPosition") then
-				camera.layer[i].update = function()
-					local layer = map.layer[i]
-
-					camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
-					camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
-
-					layer.x = math_round((layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset)
-					layer.y = math_round((layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset)
-				end
-			else
-				camera.layer[i].update = function()
-					local layer = map.layer[i]
-
-					camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
-					camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
-
-					layer.x = (layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset
-					layer.y = (layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset
-				end
+			camera.layer[i].update = function()
+				local layer = map.layer[i]
+				camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
+				camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
+				layer.x = math_round((layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset)
+				layer.y = math_round((layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset)
 			end
+
 			--------------------------------------------------------------------------
 			-- Get/Set Methods
 			--------------------------------------------------------------------------
@@ -222,16 +209,9 @@ function lib_camera.addControl(map)
 	------------------------------------------------------------------------------
 	-- Set/Get Viewpoint
 	------------------------------------------------------------------------------
-	if getSetting("experimental:roundCameraPosition") then
-		function map.setViewpoint(x, y)
-			local x, y = getXY(x, y)
-			camera.viewX, camera.viewY = math_round(x), math_round(y)
-		end
-	else
-		function map.setViewpoint(x, y)
-			local x, y = getXY(x, y)
-			camera.viewX, camera.viewY = x, y
-		end
+	function map.setViewpoint(x, y)
+		local x, y = getXY(x, y)
+		camera.viewX, camera.viewY = math_round(x), math_round(y)
 	end
 
 	function map.getViewpoint()
@@ -301,15 +281,15 @@ function lib_camera.addControl(map)
 	------------------------------------------------------------------------------
 	-- Set tracking level (in tracking level format)
 	function map.setTrackingLevel(t)
-		if not (t ~= nil) then verby_error("Missing argument to `map.setTrackingLevel()`") end
-		if not (t > 0) then verby_error("Invalid argument passed to `map.setTrackingLevel()`: expected [t] > 0 but got " .. t .. " instead") end
+		if not t then verby_error("Missing argument to `map.setTrackingLevel()`") end
+		if t <= 0 then verby_error("Invalid argument passed to `map.setTrackingLevel()`: expected t > 0 but got " .. t .. " instead") end
 		camera.trackingLevel = t
 	end
 
 	-- Set tracking level (in damping format)
 	function map.setDamping(d)
-		if not (d ~= nil) then verby_error("Missing argument to `map.setDamping()`") end
-		if not (d ~= 0) then verby_error("Invalid argument passed to `map.setDamping()`: expected t ~= 0 but got 0 instead.") end
+		if not d then verby_error("Missing argument to `map.setDamping()`") end
+		if d == 0 then verby_error("Invalid argument passed to `map.setDamping()`: expected d > 0 but got 0 instead.") end
 		return map.setTrackingLevel(1 / d)
 	end
 

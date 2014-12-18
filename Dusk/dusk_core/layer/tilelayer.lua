@@ -29,6 +29,7 @@ local table_maxn = table.maxn
 local table_insert = table.insert
 local string_len = string.len
 local tonumber = tonumber
+local tostring = tostring
 local pairs = pairs
 local unpack = unpack
 local type = type
@@ -149,6 +150,7 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 			tile.tileset = sheetIndex
 			tile.layerIndex = dataIndex
 			tile.tileX, tile.tileY = x, y
+			tile.hash = tostring(tile)
 			
 			if flippedX then tile.xScale = -tile.xScale end
 			if flippedY then tile.yScale = -tile.yScale end

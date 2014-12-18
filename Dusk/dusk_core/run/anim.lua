@@ -33,67 +33,126 @@ function lib_anim.new(map)
 	local animDataIndex = {}
 	
 	map._animManager = anim
+
+	local function watchTileCallback(event)
+		animDatas[event.target._animDataHash].currentFrame = event.target.frame
+		anim.sync(animDatas[event.target._animDataHash], event.target.frame)
+	end
+
+	local function initWatchTile(d)
+		if d.watchTile then d.watchTile:removeEventListener("sprite", watchTileCallback) end
+		d.watchTile = d.tiles[1]
+		if d.watchTile then
+			d.requiresManualAnimStart = true
+			d.currentFrame = d.watchTile.frame
+			d.watchTile:addEventListener("sprite", watchTileCallback)
+		end
+	end
 	
 	------------------------------------------------------------------------------
 	-- Tile Created Callback
 	------------------------------------------------------------------------------
 	function anim.animatedTileCreated(tile)
 		local animData = tile._animData
-		animData.options.time = animData.options.time or display.fps * animData.options.count
+		animData.options.time = animData.options.time or display.fps * tile.numFrames
 		
 		if not animData.hash then
 			animData.hash = tostring(animData)
-			table.insert(animDataIndex, animData.hash)
+			table_insert(animDataIndex, animData.hash)
 		end
-		
+
 		local hash = animData.hash
 		
 		if animDatas[hash] then
-			local pending = animDatas[hash].pending
-			table_insert(pending, tile)
-			tile._animPendingIndex = #pending
+			table_insert(animDatas[hash].tiles, tile)
+			tile._animTilesIndex = #animDatas[hash].tiles
 		else
 			animDatas[hash] = {
 				zero = time,
-				pending = {tile},
-				frameTime = animData.options.time / animData.options.count,
+				tiles = {tile},
+				frameTime = animData.options.time / tile.numFrames,
+				frameCount = tile.numFrames,
 				nextFrameTime = 0,
 				numFramesElapsed = 2,
 				options = animData.options,
+				nextSyncTime = 0,
+				currentFrame = 1,
+				watchTile = nil,
+				requiresManualAnimStart = true
 			}
 			animDatas[hash].nextFrameTime = time + animDatas[hash].frameTime
+			tile._animTilesIndex = 1
 		end
 		
-		tile:setFrame(((animDatas[hash].numFramesElapsed - 1) % animDatas[hash].options.count) + 1)
+		if not animDatas[hash].watchTile then
+			initWatchTile(animDatas[hash])
+		end
+		
+		tile._animDataHash = hash
+		tile:setFrame(animDatas[hash].currentFrame)
 	end
 	
+	------------------------------------------------------------------------------
+	-- Tile Removed Callback
+	------------------------------------------------------------------------------
 	function anim.animatedTileRemoved(tile)
+		local d = animDatas[tile._animDataHash]
+		table_remove(d.tiles, tile._animTilesIndex)
+		for i = tile._animTilesIndex, #d.tiles do
+			d.tiles[i]._animTilesIndex = d.tiles[i]._animTilesIndex - 1
+		end
 		if tile._animPendingIndex then
-			local d = animDatas[tile._animData.hash]
 			table_remove(d.pending, tile._animPendingIndex)
 			for i = tile._animPendingIndex, #d.pending do
 				d.pending[i]._animPendingIndex = d.pending[i]._animPendingIndex - 1
 			end
 		end
+		if tile == d.watchTile then
+			d.watchTile = nil
+			initWatchTile(d)
+			if not d.watchTile then
+				-- No more tiles to watch, we'll have to do it manually
+				d.requiresManualAnimStart = true
+			end
+		end
 	end
 	
+	------------------------------------------------------------------------------
+	-- Sync Tiles to a Frame
+	------------------------------------------------------------------------------
+	function anim.sync(d, frame)
+		for i = 1, #d.tiles do
+			if d.tiles[i] ~= d.watchTile then
+				d.tiles[i]:setFrame(frame)
+			end
+		end
+	end
+
 	------------------------------------------------------------------------------
 	-- Update
 	------------------------------------------------------------------------------
 	function anim.update()
 		time = system_getTimer()
-
 		for i = 1, #animDataIndex do
 			local d = animDatas[animDataIndex[i] ]
-			if time > d.nextFrameTime then
-				d.nextFrameTime = d.zero + d.frameTime * d.numFramesElapsed
-				d.numFramesElapsed = d.numFramesElapsed + 1
-				for p = 1, #d.pending do
-					d.pending[p]._animPendingIndex = nil
-					d.pending[p]:setFrame(((d.numFramesElapsed - 1) % d.options.count) + 1)
-					d.pending[p]:play()
+			if d.requiresManualAnimStart and #d.tiles > 0 then
+				if time >= d.nextFrameTime then
+					d.requiresManualAnimStart = false
+					
+					if d.watchTile then
+						d.watchTile:setFrame(((d.currentFrame + 1) % d.frameCount) + 1)
+						d.watchTile:play()
+						anim.sync(d, d.watchTile.frame)
+					end
+					
+					d.nextFrameTime = d.zero + d.frameTime * d.numFramesElapsed
+					d.numFramesElapsed = d.numFramesElapsed + 1
 				end
-				d.pending = {} -- Clear out all the pending tiles
+			end
+			if d.watchTile then
+				d.currentFrame = d.watchTile.frame
+			else
+				d.currentFrame = ((d.numFramesElapsed - 1) % d.frameCount) + 1
 			end
 		end
 	end

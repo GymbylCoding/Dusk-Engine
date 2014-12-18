@@ -18,10 +18,11 @@ local mapTouch
 local dusk = require("Dusk.Dusk")
 dusk.setPreference("enableRotatedMapCulling", true)
 
-local map = dusk.buildMap("maps/grass_stone.json")
+local currMap = "grass_stone.json"
+
+local map = dusk.buildMap("maps/" .. currMap)
 map.setTrackingLevel(0.3) -- "Fluidity" of the camera movement; numbers closer to 0 mean more fluidly and slowly (but 0 itself will disable the camera!)
 
-local currMap = "grass_stone.json"
 local mapX, mapY
 
 
@@ -50,7 +51,6 @@ local function onTap(event)
 			"Load: grass_stone.json",
 			"Load: everything.json",
 			"Load: square_animated.json",
-			"Turn camera rounding " .. (dusk.getPreference("experimental:roundCameraPosition") == true and "off" or "on"),
 			"Cancel"
 		}, function(event)
 			if event.index == 1 then
@@ -59,10 +59,6 @@ local function onTap(event)
 				setMap("everything.json")
 			elseif event.index == 3 then
 				setMap("square_animated.json")
-			elseif event.index == 4 then
-				dusk.setPreference("experimental:roundCameraPosition", not dusk.getPreference("experimental:roundCameraPosition"))
-				setMap(currMap)
-				native.showAlert("Camera Rounding", "Camera rounding is " .. (dusk.getPreference("experimental:roundCameraPosition") == true and "on" or "off"), {"OK"})
 			end
 		end)
 	end
@@ -96,4 +92,4 @@ map:addEventListener("touch", mapTouch)
 Runtime:addEventListener("enterFrame", map.updateView)
 Runtime:addEventListener("tap", onTap)
 
--- native.showAlert("Dusk", "Welcome to the Dusk Engine. You have several (alliterative) options...\n\n- Do the demos in the Demos/ directory\n- Try the TOAD tool to tweak tilesets\n- Examine the example environment 'everything.json'\n\nThis example map that's loaded on the screen demonstrates a bunch of Dusk's features - object layers, tile culling, parallax, rotated maps, etc. You can drag and drop it, or double-tap/click to rotate.", {"Got it!"})
+native.showAlert("Dusk", "Welcome to the Dusk Engine. Try double-tapping to load different example maps.", {"Got it!"})

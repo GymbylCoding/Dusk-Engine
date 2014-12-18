@@ -112,7 +112,6 @@ function core.buildMap(data)
 	end
 
 	-- Make sure map appears in same position for all devices
-	--map:setReferencePoint(display.TopLeftReferencePoint) -- For older versions of Corona, just uncomment it to use
 	map.anchorX, map.anchorY = 0, 0
 	map.x, map.y = screen.left, screen.top
 
@@ -170,8 +169,8 @@ function core.buildMap(data)
 
 			layer._name = data.layers[i].name ~= "" and data.layers[i].name or "layer" .. layerIndex
 			if layer.cameraTrackingEnabled == nil then layer.cameraTrackingEnabled = true end
-			if layer.xParallax == nil then layer.xParallax = 1 end
-			if layer.yParallax == nil then layer.yParallax = 1 end
+			if layer.xParallax == nil then layer.xParallax = layer.parallax or 1 end
+			if layer.yParallax == nil then layer.yParallax = layer.parallax or 1 end
 			layer.isVisible = data.layers[i].visible
 
 			--------------------------------------------------------------------------

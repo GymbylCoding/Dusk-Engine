@@ -24,8 +24,6 @@ local verby_error = verby.error
 -- Data
 --------------------------------------------------------------------------------
 local data = {
-	["experimental:roundCameraPosition"] = false,
-	
 	-- Should we display a rectangle that's Tiled's background color
 	displayBackgroundRectangle = false,
 	
