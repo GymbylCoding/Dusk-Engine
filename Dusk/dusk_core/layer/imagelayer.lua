@@ -6,7 +6,7 @@ Builds an image layer from data.
 --]]
 --------------------------------------------------------------------------------
 
-local imagelayer = {}
+local lib_imagelayer = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -26,7 +26,7 @@ local getDirectory = lib_functions.getDirectory
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function imagelayer.createLayer(map, data, dirTree)
+function lib_imagelayer.createLayer(map, data, dirTree)
 	local props = getProperties(data.properties or {}, "image", true)
 
 	local layer = display_newGroup()
@@ -54,4 +54,4 @@ function imagelayer.createLayer(map, data, dirTree)
 	return layer
 end
 
-return imagelayer
+return lib_imagelayer

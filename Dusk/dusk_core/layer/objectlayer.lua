@@ -6,7 +6,7 @@ Builds an object layer from data.
 --]]
 --------------------------------------------------------------------------------
 
-local objectlayer = {}
+local lib_objectlayer = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -47,7 +47,7 @@ local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = t
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
+function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
 	local dotImpliesTable = getSetting("dotImpliesTable")
 	local ellipseRadiusMode = getSetting("ellipseRadiusMode")
 	local onObj = getSetting("onObj")
@@ -325,4 +325,4 @@ function objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, image
 	return layer
 end
 
-return objectlayer
+return lib_objectlayer

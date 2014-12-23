@@ -6,7 +6,7 @@ Loads tilesets from data.
 --]]
 --------------------------------------------------------------------------------
 
-local lib_tileset = {}
+local lib_tilesets = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -29,7 +29,7 @@ local getDirectory = lib_functions.getDirectory
 --------------------------------------------------------------------------------
 -- Get Tilesets from Data
 --------------------------------------------------------------------------------
-function lib_tileset.get(data, dirTree)
+function lib_tilesets.get(data, dirTree)
 	local data = data
 	local dirTree = dirTree or {}
 
@@ -122,4 +122,4 @@ function lib_tileset.get(data, dirTree)
 	return imageSheets, imageSheetConfig, tileProperties, tileIndex
 end
 
-return lib_tileset
+return lib_tilesets

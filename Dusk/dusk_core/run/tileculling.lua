@@ -6,7 +6,7 @@ Manages displayed tiles for tile layers in a map.
 --]]
 --------------------------------------------------------------------------------
 
-local tileculling = {}
+local lib_tileculling = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -27,7 +27,7 @@ local math_min = math.min
 --------------------------------------------------------------------------------
 -- Add Tile Culling to a Map
 --------------------------------------------------------------------------------
-function tileculling.addTileCulling(map)
+function lib_tileculling.addTileCulling(map)
 	local divTileWidth, divTileHeight = 1 / map.data.tileWidth, 1 / map.data.tileHeight
 
 	local culling = {
@@ -193,4 +193,4 @@ function tileculling.addTileCulling(map)
 	return culling
 end
 
-return tileculling
+return lib_tileculling

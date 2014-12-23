@@ -6,7 +6,7 @@ Controls and keeps track of user preferences for various engine aspects.
 --]]
 --------------------------------------------------------------------------------
 
-local settings = {}
+local lib_settings = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -130,7 +130,7 @@ local data = {
 --------------------------------------------------------------------------------
 -- Set Preference
 --------------------------------------------------------------------------------
-function settings.set(preferenceName, value)
+function lib_settings.set(preferenceName, value)
 	if not preferenceName or value == nil then verby_error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
 	if data[preferenceName] == nil then verby_error("Unrecognized setting \"" .. preferenceName .. "\".") end
 
@@ -140,7 +140,7 @@ end
 --------------------------------------------------------------------------------
 -- Get Preference
 --------------------------------------------------------------------------------
-function settings.get(preferenceName)
+function lib_settings.get(preferenceName)
 	if preferenceName == nil then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
 	return data[preferenceName] or nil
 end
@@ -148,7 +148,7 @@ end
 --------------------------------------------------------------------------------
 -- Add/Remove Evaluation Variable
 --------------------------------------------------------------------------------
-function settings.setMathVariable(varName, value) data.mathVariables[varName] = value end
-function settings.removeMathVariable(varName) data.mathVariables[varName] = nil end
+function lib_settings.setMathVariable(varName, value) data.mathVariables[varName] = value end
+function lib_settings.removeMathVariable(varName) data.mathVariables[varName] = nil end
 
-return settings
+return lib_settings

@@ -6,7 +6,7 @@ Various helper functions for the rest of Dusk to use.
 --]]
 --------------------------------------------------------------------------------
 
-local functions = {}
+local lib_functions = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -220,18 +220,17 @@ end
 --------------------------------------------------------------------------------
 -- Add Functions to Public Library
 --------------------------------------------------------------------------------
-functions.stringToValue = stringToValue
-functions.spliceTable = spliceTable
-functions.isPolyClockwise = isPolyClockwise
-functions.reversePolygon = reversePolygon
-functions.getXY = getXY
-functions.clamp = clamp
-functions.reverseTable = reverseTable
-functions.rotatePoint = rotatePoint
-functions.getDirectory = getDirectory
-functions.addProperties = addProperties
-functions.getProperties = getProperties
-functions.setProperty = setProperty
+lib_functions.stringToValue = stringToValue
+lib_functions.spliceTable = spliceTable
+lib_functions.isPolyClockwise = isPolyClockwise
+lib_functions.reversePolygon = reversePolygon
+lib_functions.getXY = getXY
+lib_functions.clamp = clamp
+lib_functions.reverseTable = reverseTable
+lib_functions.rotatePoint = rotatePoint
+lib_functions.getDirectory = getDirectory
+lib_functions.addProperties = addProperties
+lib_functions.getProperties = getProperties
+lib_functions.setProperty = setProperty
 
-
-return functions
+return lib_functions

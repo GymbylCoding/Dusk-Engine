@@ -6,7 +6,7 @@ Builds a tile layer from data.
 --]]
 --------------------------------------------------------------------------------
 
-local tilelayer = {}
+local lib_tilelayer = {}
 
 --------------------------------------------------------------------------------
 -- Localize
@@ -51,7 +51,7 @@ local flipD = tonumber("20000000", 16)
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
+function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
 	local dotImpliesTable = getSetting("dotImpliesTable")
 
@@ -408,4 +408,4 @@ function tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSh
 	return layer
 end
 
-return tilelayer
+return lib_tilelayer
