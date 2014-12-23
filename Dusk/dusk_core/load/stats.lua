@@ -33,6 +33,7 @@ function lib_stats.get(data)
 	stats.tileHeight = data.tileheight * screen.zoomY
 	stats.width = stats.mapWidth * stats.tileWidth
 	stats.height = stats.mapHeight * stats.tileHeight
+	stats.mapData = data
 
 	return stats
 end
