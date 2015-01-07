@@ -34,12 +34,23 @@ This folder (download the ZIP and unpack) includes...
 
 ### Install ###
 
-The engine itself is found in the folder named "Dusk". It's what you'll use for your personal projects. To use Dusk in your project, copy the folder into your project's **root** directory (where `main.lua` is) and `require` it like so:
+The engine itself is found in the folder named "Dusk". It's what you'll actually use. To use Dusk in your project, copy the folder into your project's **root** directory (where `main.lua` is) and `require` it like so:
 ```Lua
 local dusk = require("Dusk.Dusk")
 ```
 
 You won't have to worry about any other files in the Dusk folder, unless you want to take a peek at the code. They're all used internally by the engine itself.
+
+
+### Contribute ###
+
+One of the good things about open source projects is that anyone can code on them. Contributions are welcome. Take a look at the files in `contribute/` to get started.
+
+
+### Made a Game With Dusk? ###
+
+If you've published a game with Dusk, please contact me from [my website][contact] and I'll see about setting up a finished games showcase.
+
 
 ### License ###
 
@@ -65,5 +76,6 @@ THE SOFTWARE.
 
 [quickstart]: http://github.com/GymbylCoding/Dusk-Engine/wiki/Quickstart
 [corona]: http://www.coronalabs.com
-[tiled]: http://www.mapeditor.com
+[tiled]: http://www.mapeditor.org
 [game]: http://bit.ly/1mpG2wD
+[contact]: http://www.gymbyl.com/contact
