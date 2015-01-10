@@ -207,6 +207,17 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile.props, k, v) else tile.props[k] = v end
 				end
 			else -- if tileProps
+				------------------------------------------------------------------------
+				-- Add Physics to Tile
+				------------------------------------------------------------------------
+				if layerProps.options.physicsExistent then
+					if layerProps.options.physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
+						physics_addBody(tile, layerProps.physics)
+					else
+						physics_addBody(tile, unpack(layerProps.physics))
+					end
+				end
+				
 				for k, v in pairs(layerProps.object) do
 					if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tile, k, v) else tile[k] = v end
 				end
