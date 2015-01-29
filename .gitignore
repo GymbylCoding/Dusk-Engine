@@ -2,5 +2,9 @@
 toad/autoinstall
 gitignore/
 prep-for-commit.sh
-docs/
 tilesets/water_tileset.png
+docs/src
+dev/
+clicktock_cli/
+maps/ascii_map.json
+tilesets/ascii_tileset*.png

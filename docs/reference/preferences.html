@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dusk Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+	</head>
+	<body>
+		<div id="content">
+			<a id="contents-link" href="../index.html">Contents</a>
+			<h1 id="name">List of Preferences</h1>
+			<p>Dusk allows you to use a number of preferences to customize Dusk's behaviour. This is a list of preferences and their meaning.</p>
+			<ul>
+				<li><code>spaceAfterEscapedPrefix</code> <small>(Boolean)</small> : If this is <code>true</code>, the first character after special prefixes like <code>!dot!</code> and <code>!nodot!</code> is ignored, thereby offering better readability: <code>!nodot! ...abc...</code> rather than <code>!nodot!...abc...</code>. Make sure, however, that you have it to your desired setting; if you create something like <code>!dot!a.b.c</code> with it enabled, you will likely get unexpected results.</li>
+				<li><code>dotImpliesTable</code> <small>(Boolean)</small> : Specifies whether dot symbols (<code>.</code>) by default are treated as table separators when provided in property names. If this is <code>true</code>, dots will be parsed as keys; if <code>false</code>, dots are interpreted as-is.</li>
+				<li><code>detectMapPath</code> <small>(Boolean)</small> : If set to <code>true</code>, Dusk will search for tileset images starting from the map's directory. You should enable this if you save your tilesets in the same directory or in a subdirectory of your map files.</li>
+				<li><code>redrawOnTileExistent</code> <small>(Boolean)</small> : By default, Dusk only draws a tile in a tile layer if one doesn't already exist at the same <code>x,y</code> location in that layer. If set to <code>true</code>, this behavior is overridden and existing tiles will be redrawn. This greatly decreases the engine speed, so only enable this if you have a very good reason for it.</li>
+				<li><code>autoGenerateObjectShapes</code> <small>(Boolean)</small> : If set to <code>true</code>, Dusk will automatically generate physics bodies for objects with physics enabled. Ellipse objects will get radii, rectangle objects will get normal rectangle bodies, and polygons and polylines will get their according shapes. This shape only applies to the first physics body of an object; if you have more than one body enabled, only the first will have an automatically generated shape.</li>
+				<li><code>ellipseRadiusMode</code> <small>(string)</small> : Defines the way automatically generated bodies are created for ellipse objects. A value of <code>min</code> means the calculated radius will be the smallest length from side to center of the ellipse, a value of <code>max</code> will calculate the greatest distance, and a value of <code>average</code> will use the average of them.</li>
+				<li><code>objTypeRectPointSquare</code> <small>(Boolean)</small> : Specifies whether point objects (rectangles with <code>w,h = 0,0</code>) and square objects (rectangles with <code>w = h</code>) are given the <code>objType</code> of <code>point</code> and <code>square</code>, respectively, or are simply given <code>rectangle</code> as the <code>objType</code>.</li>
+				<li><code>virtualObjectsVisible</code> <small>(Boolean)</small> : Specifies whether rectangle objects, ellipse objects, polyline objects, and polygon objects within object layers are displayed or hidden.</li>
+				<li><code>enableCamera</code> <small>(Boolean)</small> : Set to <code>true</code> to enable Dusk's camera system for maps. If set to <code>false</code>, the camera methods don't even exist in the map object.</li>
+				<li><code>defaultCameraTrackingLevel</code> <small>(number)</small> : The tracking level the camera system of a map starts out with. The tracking level can be changed after the map is created.</li>
+				<li><code>scaleCameraBoundsToScreen</code> <small>(Boolean)</small> : If set to <code>true</code>, scaling of the map with camera bounds enabled will internally scale the bounds accordingly. This will result in the same amount of viewable content.</li>
+				<li><code>onPointBased</code> <small>(function)</small> : A function called each time a polygon or polyline object is created. The object is sent as an argument.</li>
+				<li><code>onEllipse</code> <small>(function)</small> : A function called each time an ellipse object is created. The object is sent as an argument.</li>
+				<li><code>onImageObj</code> <small>(function)</small> : A function called each time an image object is created. The object is sent as an argument.</li>
+				<li><code>onRect</code> <small>(function)</small> : A function called each time a rectangle object is created. The object is sent as an argument.</li>
+				<li><code>onObj</code> <small>(function)</small> : A function called each time an object is created. The object is sent as an argument.</li>
+			</ul>
+		</div>
+	</body>
+</html>

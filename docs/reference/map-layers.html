@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dusk Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+	</head>
+	<body>
+		<div id="content">
+			<a id="contents-link" href="../index.html">Contents</a>
+			<h1 id="name"><code>map.layer</code></h1>
+			<p><code>map.layer</code> is a table holding each layer in the map. You can access each layer through either the layer's name or the layer's index. The name corresponds to the name in Tiled, and index to the level of the layer in Tiled. Layers are built just as they're displayed in Tiled - layer #1 is on top, going downwards the higher the index.</p>
+			<pre><code type="Lua">local layer
+
+layer = map.layer[1] -- The first layer in the map
+
+layer = map.layer["objects"] -- The layer named "objects" in Tiled
+
+layer = map.layer[#map.layer] -- The last layer in the map</code></pre>
+		</div>
+	</body>
+</html>
