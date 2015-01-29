@@ -116,7 +116,6 @@ function lib_anim.new(map)
 				tile._syncTileAnimation = s
 				if tile == animDatas[hash].watchTile then
 					tile:pause()
-					print("whoopsies! need to set a new watch tile!")
 					animDatas[hash].watchTile = nil
 					initWatchTile(animDatas[hash])
 					if not animDatas[hash].watchTile then
