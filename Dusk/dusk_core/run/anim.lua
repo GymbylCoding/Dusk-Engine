@@ -161,8 +161,6 @@ function lib_anim.new(map)
 		for i = 1, #d.tiles do
 			if d.tiles[i] ~= d.watchTile and d.tiles[i]._syncTileAnimation then
 				d.tiles[i]:setFrame(frame)
-			elseif not d.tiles[i]._syncTileAnimation then
-
 			end
 		end
 	end
