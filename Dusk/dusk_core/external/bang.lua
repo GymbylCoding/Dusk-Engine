@@ -6,14 +6,16 @@ A super-lightweight (only ~44 SLOC, and as many lines of explanatory comments as
 there are lines of code itself!) serialization notation, with a focus on
 conciseness, simplicity, and clarity. It eliminates the need for extra text
 (including unquoted strings, optional commas, no brackets around the base table
-- in other words, no boilerplate JSON), but remains extremely readable and
-obvious.
+- in other words, no boilerplate code like JSON requires), but remains extremely
+readable and clear.
 
 Syntax Pointers:
 - Keys and values can be of any type, just as in Lua
 - Commas are optional
-- Single or double-quoted strings are both ok, as well as unquoted strings if
-	the string is a valid identifier (i.e. thisIsOkay123)
+- Single or double-quoted strings or long strings (long strings are triple-
+	quoted) are all ok, as well as unquoted strings if the string is a valid
+	identifier (i.e. thisIsOkay123); long strings ignore a leading newline if it
+	exists
 - Tables are surrounded in {}, but not the base table - if you surround the base
 	table with {}, you'll get an array of length 1 with your data inside it
 --]]
@@ -50,9 +52,11 @@ local Identifier = C((R("AZ") + R("az") + "_") * (R("AZ") + R("az") + "_" + R("0
 local EscapeSequence = Escape * (C("\"") + C("\'") + (P("n") / "\n") + (P("t") / "\t"))
 
 local String =
-	(P("\"") * Ct(((EscapeSequence) + C(Any - "\"")) ^ 0) / table_concat * P("\"")) + -- Double quoted string
-	(P("\'") * Ct(((EscapeSequence) + C(Any - "\'")) ^ 0) / table_concat * P("\'")) + -- Single quoted string
-	Identifier                                                                        -- Unquoted string
+	(P('"""') * P("\n") ^ -1 * Ct(((EscapeSequence) + C(Any - '"""')) ^ 0) / table_concat * P('"""')) + -- Double block string
+	(P("'''") * P("\n") ^ -1 * Ct(((EscapeSequence) + C(Any - "'''")) ^ 0) / table_concat * P("'''")) + -- Single block string
+	(P('"') * Ct(((EscapeSequence) + C(Any - '"')) ^ 0) / table_concat * P('"')) + -- Double quoted string
+	(P("'") * Ct(((EscapeSequence) + C(Any - "'")) ^ 0) / table_concat * P("'")) + -- Single quoted string
+	Identifier                                                                     -- Unquoted string
 
 local Boolean = (P("true") / function() return true end + P("false") / function() return false end)
 

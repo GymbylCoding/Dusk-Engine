@@ -1,4 +1,4 @@
-### Dusk Engine Feature List ###
+### Dusk Engine Feature List
 
 - Tile, object, and image layers
 - JSON- and Lua-encoded maps

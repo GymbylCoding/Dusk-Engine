@@ -9,7 +9,7 @@ Not all these may be realized; these are just me having ideas and throwing them 
 	Tiled enables you to export tileset files as `.tsx`; Dusk could load these if TMX parsing is ever implemented.
 
 - New culling algorithm
-	Right now, only tile layers are cull-able. A refactoring of the culling system with a new algorithm could make all things be cull-able (and even open the way for rotated maps with culling, isometric maps, etc).
+	Right now, only tile layers are cull-able. A refactoring of the culling system with a new algorithm could make all things be cull-able (and even open the way for more complicated maps, etc).
 
 - Layer-specific scaling support
 	Right now, the map can be scaled, but the camera system doesn't work so well (litotes) with independent layers being scaled.

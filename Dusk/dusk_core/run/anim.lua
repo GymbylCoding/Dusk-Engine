@@ -41,7 +41,13 @@ function lib_anim.new(map)
 
 	local function initWatchTile(d)
 		if d.watchTile then d.watchTile:removeEventListener("sprite", watchTileCallback) end
-		d.watchTile = d.tiles[1]
+		local i = 1
+		local wt = d.tiles[i]
+		while wt and not wt._syncTileAnimation do
+			i = i + 1
+			wt = d.tiles[i]
+		end
+		d.watchTile = wt
 		if d.watchTile then
 			d.requiresManualAnimStart = true
 			d.currentFrame = d.watchTile.frame
@@ -56,6 +62,8 @@ function lib_anim.new(map)
 		local animData = tile._animData
 		animData.options.time = animData.options.time or display.fps * tile.numFrames
 		
+		local tileX, tileY = tile.tileX, tile.tileY
+
 		if not animData.hash then
 			animData.hash = tostring(animData)
 			table_insert(animDataIndex, animData.hash)
@@ -70,6 +78,7 @@ function lib_anim.new(map)
 			animDatas[hash] = {
 				zero = time,
 				tiles = {tile},
+				noSyncTileAnimation = {},
 				frameTime = animData.options.time / tile.numFrames,
 				frameCount = tile.numFrames,
 				nextFrameTime = 0,
@@ -80,16 +89,51 @@ function lib_anim.new(map)
 				watchTile = nil,
 				requiresManualAnimStart = true
 			}
-			animDatas[hash].nextFrameTime = time + animDatas[hash].frameTime
 			tile._animTilesIndex = 1
+			animDatas[hash].nextFrameTime = time + animDatas[hash].frameTime
 		end
+
+		----------------------------------------------------------------------------
+		-- Tile Methods
+		----------------------------------------------------------------------------
+		tile._syncTileAnimation = true
 		
+		if animDatas[hash].noSyncTileAnimation[tile.tileX] and animDatas[hash].noSyncTileAnimation[tile.tileX][tile.tileY] then
+			tile._syncTileAnimation = false
+		end
+
+		function tile:setSyncAnimation(s)
+			if s then
+				tile:setFrame(animDatas[hash].currentFrame)
+				if animDatas[hash].noSyncTileAnimation[tile.tileX] and animDatas[hash].noSyncTileAnimation[tile.tileX][tile.tileY] then
+					animDatas[hash].noSyncTileAnimation[tile.tileX][tile.tileY] = nil
+				end
+				tile._syncTileAnimation = s
+			else
+				tile:setFrame(1)
+				if not animDatas[hash].noSyncTileAnimation[tileX] then animDatas[hash].noSyncTileAnimation[tileX] = {} end
+				animDatas[hash].noSyncTileAnimation[tileX][tileY] = true
+				tile._syncTileAnimation = s
+				if tile == animDatas[hash].watchTile then
+					tile:pause()
+					print("whoopsies! need to set a new watch tile!")
+					animDatas[hash].watchTile = nil
+					initWatchTile(animDatas[hash])
+					if not animDatas[hash].watchTile then
+						animDatas[hash].requiresManualAnimStart = true
+					end
+				end
+			end
+		end
+
 		if not animDatas[hash].watchTile then
 			initWatchTile(animDatas[hash])
 		end
 		
 		tile._animDataHash = hash
-		tile:setFrame(animDatas[hash].currentFrame)
+		if tile._syncTileAnimation then
+			tile:setFrame(animDatas[hash].currentFrame)
+		end
 	end
 	
 	------------------------------------------------------------------------------
@@ -100,12 +144,6 @@ function lib_anim.new(map)
 		table_remove(d.tiles, tile._animTilesIndex)
 		for i = tile._animTilesIndex, #d.tiles do
 			d.tiles[i]._animTilesIndex = d.tiles[i]._animTilesIndex - 1
-		end
-		if tile._animPendingIndex then
-			table_remove(d.pending, tile._animPendingIndex)
-			for i = tile._animPendingIndex, #d.pending do
-				d.pending[i]._animPendingIndex = d.pending[i]._animPendingIndex - 1
-			end
 		end
 		if tile == d.watchTile then
 			d.watchTile = nil
@@ -122,8 +160,10 @@ function lib_anim.new(map)
 	------------------------------------------------------------------------------
 	function anim.sync(d, frame)
 		for i = 1, #d.tiles do
-			if d.tiles[i] ~= d.watchTile then
+			if d.tiles[i] ~= d.watchTile and d.tiles[i]._syncTileAnimation then
 				d.tiles[i]:setFrame(frame)
+			elseif not d.tiles[i]._syncTileAnimation then
+
 			end
 		end
 	end
@@ -149,6 +189,7 @@ function lib_anim.new(map)
 					d.numFramesElapsed = d.numFramesElapsed + 1
 				end
 			end
+
 			if d.watchTile then
 				d.currentFrame = d.watchTile.frame
 			else

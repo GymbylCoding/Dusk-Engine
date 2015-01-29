@@ -58,8 +58,8 @@ player.sensorWidth = 3
 player.xVel, player.yVel = 0, 0 -- Initial X and Y velocities
 player.groundOffset = 20 -- Y-offset of the player's collision point
 player.xRetain = 0.95
-player.bounce = 0 -- Tweak this if you want
-player.jumpForce = 10
+player.bounce = 0.5 -- Tweak this if you want
+player.jumpForce = 15
 player.isGrounded = false -- This flag represents if the player is on the ground
 
 --------------------------------------------------------------------------------
@@ -97,19 +97,25 @@ end
 
 function move:touch(event)
 	if "began" == event.phase then
+		display.getCurrentStage():setFocus(move, event.id)
+		move.isFocus = true
 		move.bar.x = clamp(event.x - move.x, -move.width * 0.5 + move.bar.width * 0.5, move.width * 0.5 - move.bar.width * 0.5)
 		move.jump.x = move.bar.x
 		move.jump.y = clamp((event.y - event.yStart) * 0.8, -move.background.height, 0)
 		move.drawFill()
-	elseif "moved" == event.phase then
-		move.bar.x = clamp(event.x - move.x, -move.width * 0.5 + move.bar.width * 0.5, move.width * 0.5 - move.bar.width * 0.5)
-		move.jump.x = move.bar.x
-		move.jump.y = clamp((event.y - event.yStart) * 0.8, -move.background.height, 0)
-		move.drawFill()
-	elseif "ended" == event.phase then
-		move.bar.x = 0
-		move.jump.x, move.jump.y = 0, 0
-		move.drawFill()
+	elseif move.isFocus then
+		if "moved" == event.phase then
+			move.bar.x = clamp(event.x - move.x, -move.width * 0.5 + move.bar.width * 0.5, move.width * 0.5 - move.bar.width * 0.5)
+			move.jump.x = move.bar.x
+			move.jump.y = clamp((event.y - event.yStart) * 0.8, -move.background.height, 0)
+			move.drawFill()
+		elseif "ended" == event.phase then
+			display.getCurrentStage():setFocus(nil, event.id)
+			move.isFocus = false
+			move.bar.x = 0
+			move.jump.x, move.jump.y = 0, 0
+			move.drawFill()
+		end
 	end
 
 	if move.jump.y ~= -move.background.height then canJump = true end
@@ -235,10 +241,10 @@ player.x, player.y = map.tilesToPixels(map.playerPosition)
 map.setTrackingLevel(0.1)
 map.setCameraFocus(player)
 
-display.getCurrentStage():setFocus(move)
+-- display.getCurrentStage():setFocus(move)
 
 Runtime:addEventListener("enterFrame", gameLoop)
 move:addEventListener("touch")
 
 -- Display the initial alert
-native.showAlert("Spin", "Welcome to the Spin demo. This is a demo that demonstrates non-Box2D physics using tile properties.\n\nControl the player by clicking or touching to either side of the screen and moving back and forth. To jump, slide the touch or click point upward. To do multiple jumps, you'll need to move your click or touch point to the position along the Y-axis that it started.\n\nRead the code to see how it works!", {"Got it!"})
+-- native.showAlert("Spin", "Welcome to the Spin demo. This is a demo that demonstrates non-Box2D physics using tile properties.\n\nControl the player by clicking or touching to either side of the screen and moving back and forth. To jump, slide the touch or click point upward. To do multiple jumps, you'll need to move your click or touch point to the position along the Y-axis that it started.\n\nRead the code to see how it works!", {"Got it!"})
