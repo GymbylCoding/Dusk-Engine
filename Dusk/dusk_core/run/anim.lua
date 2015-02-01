@@ -3,6 +3,8 @@
 Dusk Engine Component: Animation
 
 Adds the ability for tiles to be animated in a map.
+
+Currently a little unstable.
 --]]
 --------------------------------------------------------------------------------
 
@@ -98,21 +100,21 @@ function lib_anim.new(map)
 		----------------------------------------------------------------------------
 		tile._syncTileAnimation = true
 		
-		if animDatas[hash].noSyncTileAnimation[tile.tileX] and animDatas[hash].noSyncTileAnimation[tile.tileX][tile.tileY] then
+		if animDatas[hash].noSyncTileAnimation[tileX] and animDatas[hash].noSyncTileAnimation[tileX][tileY] then
 			tile._syncTileAnimation = false
 		end
 
 		function tile:setSyncAnimation(s)
 			if s then
 				tile:setFrame(animDatas[hash].currentFrame)
-				if animDatas[hash].noSyncTileAnimation[tile.tileX] and animDatas[hash].noSyncTileAnimation[tile.tileX][tile.tileY] then
-					animDatas[hash].noSyncTileAnimation[tile.tileX][tile.tileY] = nil
+				if animDatas[hash].noSyncTileAnimation[tileX] and animDatas[hash].noSyncTileAnimation[tileX][tileY] then
+					animDatas[hash].noSyncTileAnimation[tileX][tileY] = nil
 				end
 				tile._syncTileAnimation = s
 			else
 				tile:setFrame(1)
 				if not animDatas[hash].noSyncTileAnimation[tileX] then animDatas[hash].noSyncTileAnimation[tileX] = {} end
-				animDatas[hash].noSyncTileAnimation[tileX][tileY] = true
+				animDatas[hash].noSyncTileAnimation[tileX][tileY] = 1
 				tile._syncTileAnimation = s
 				if tile == animDatas[hash].watchTile then
 					tile:pause()
@@ -132,6 +134,8 @@ function lib_anim.new(map)
 		tile._animDataHash = hash
 		if tile._syncTileAnimation then
 			tile:setFrame(animDatas[hash].currentFrame)
+		elseif animDatas[hash].noSyncTileAnimation[tileX] and animDatas[hash].noSyncTileAnimation[tileX][tileY] then
+			tile:setFrame(animDatas[hash].noSyncTileAnimation[tileX][tileY])
 		end
 	end
 	
@@ -140,6 +144,9 @@ function lib_anim.new(map)
 	------------------------------------------------------------------------------
 	function anim.animatedTileRemoved(tile)
 		local d = animDatas[tile._animDataHash]
+		if not tile._syncTileAnimation and d.noSyncTileAnimation[tile.tileX] and d.noSyncTileAnimation[tile.tileX][tile.tileY] then
+			d.noSyncTileAnimation[tile.tileX][tile.tileY] = tile.frame
+		end
 		table_remove(d.tiles, tile._animTilesIndex)
 		for i = tile._animTilesIndex, #d.tiles do
 			d.tiles[i]._animTilesIndex = d.tiles[i]._animTilesIndex - 1
