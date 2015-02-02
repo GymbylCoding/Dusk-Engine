@@ -47,8 +47,8 @@ function spliceTable(elements, primary, secondary) local newTable = {} for k, v 
 function isPolyClockwise(pointList) local area = 0 for i = 1, #pointList - 2, 2 do local pointStart = {x = pointList[i] - pointList[1], y = pointList[i + 1]-pointList[2]} local pointEnd = {x = pointList[i + 2]-pointList[1], y = pointList[i + 3]-pointList[2]} area = area + (pointStart.x*-pointEnd.y)-(pointEnd.x*-pointStart.y) end return (area < 0) end
 -- Reverse polygon (in form of [x,y, x,y, x,y], not [[x,y], [x,y]])
 function reversePolygon(t) local nt = {} for i = 1, #t, 2 do nt[#nt + 1] = t[#t - i] nt[#nt + 1] = t[#t - i + 1] end return nt end
--- Get X/Y (either number[x] and number[y], table[x] with .x,.y, or table[x] with [1],[2])
-function getXY(x, y) local x, y = x, y if type(x) == "table" then if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else verby_error("Missing X- or Y-argument.") end end
+-- Get X/Y
+function getXY(x, y) local x, y = x, y if type(x) == "table" then verby_alert("Warning: Table-based XY location is deprecated. Send coordinates as two numbers.") if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else verby_error("Missing X- or Y-argument.") end end
 -- Clamp value to a range
 function clamp(v, l, h) return (v < l and l) or (v > h and h) or v end
 -- Reverse table ([1, 2, 3] -> [3, 2, 1])
