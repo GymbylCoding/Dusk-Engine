@@ -90,7 +90,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 
 	function layer.tile(x, y) if layerTiles[x] ~= nil and layerTiles[x][y] ~= nil then return layerTiles[x][y] else return nil end end
 
-	layer._tiles = {}
+	layer.tiles = layerTiles
 
 	------------------------------------------------------------------------------
 	-- Draw a Single Tile to the Screen
