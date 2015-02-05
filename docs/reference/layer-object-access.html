@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dusk Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+	</head>
+	<body>
+		<div id="content">
+			<a id="contents-link" href="../index.html">Contents</a>
+			<h1 id="name">Object Access</h1>
+			<p>You can access objects in an object layer in one of several ways.</p>
+			<br></br>
+			<h5><code>layer.object</code> Table</h5>
+			<p>An object layer stores each of the layer's objects in the <code>layer.object</code> table. Just as in the <code>map.layer</code> table, you can access an object through either the object's name (set from Tiled) or the object's index.</p>
+			<pre><code type="Lua">local object
+
+object = map.layer[x].object[1] -- The first object in the layer
+
+object = map.layer[x].object["object"] -- The object named "object" in Tiled</code></pre>
+			<br></br>
+			<h5>Iterators</h5>
+			<p>Object layers also provide a number of ways to iterate through each object in the layer. See the <a href="object-iterators.html">object iterator reference</a> for more information.</p>
+		</div>
+	</body>
+</html>

@@ -1,9 +1,13 @@
 html {
 	font-family: "Anonymous Pro", "Source Code Pro", "Lucida Console", "Courier New", "Consolas", "Droid Sans Mono", monospace;
-	font-size: 9pt;
-	background-color: #e6e6ff;
+	font-size: 11pt;
+	background-color: #e5e5ff;
 	line-height: 1.25em;
 	color: #555;
+}
+
+body {
+	margin-bottom: 25%;
 }
 
 a {
@@ -67,11 +71,11 @@ h4, h5, h6, #synopsis-label, #description-label, #arguments-label, #returns-labe
 }
 
 li {
-	margin-bottom: 2em;
+	margin-bottom: 1em;
 }
 
 #name {
-	margin-bottom: 0.5em;
+	margin-bottom: 1em;
 	margin-top: 0.5em;
 	text-align: center;
 }

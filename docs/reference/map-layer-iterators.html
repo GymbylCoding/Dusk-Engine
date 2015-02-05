@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dusk Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+	</head>
+	<body>
+		<div id="content">
+			<a id="contents-link" href="../index.html">Contents</a>
+			<h1 id="name">Layer Iterators</h1>
+			<p>You can iterate through layer types in a map in one of several ways.</p>
+			<h4>Format</h4>
+			<pre><code type="Lua">for layer in map.&lt;iterator name&gt;() do
+	-- Do something to layer
+end</code></pre>
+			<h4>Iterators</h4>
+			<ul>
+				<li><code>map.tileLayers()</code>: Iterates through all tile layers in the map.</li>
+				<li><code>map.objectLayers()</code>: Iterates through all object layers in the map.</li>
+				<li><code>map.imageLayers()</code>: Iterates through all image layers in the map.</li>
+			</ul>
+		</div>
+	</body>
+</html>
