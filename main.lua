@@ -92,4 +92,4 @@ map:addEventListener("touch", mapTouch)
 Runtime:addEventListener("enterFrame", map.updateView)
 Runtime:addEventListener("tap", onTap)
 
--- native.showAlert("Dusk", "Welcome to the Dusk Engine. Try double-tapping to load different example maps.", {"Got it!"})
+native.showAlert("Dusk", "Welcome to the Dusk Engine. Try double-tapping to load different example maps.", {"Got it!"})
