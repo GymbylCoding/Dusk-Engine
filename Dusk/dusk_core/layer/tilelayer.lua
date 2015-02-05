@@ -352,7 +352,11 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	function layer.tileByPixels(x, y)
 		local x, y = layer.pixelsToTiles(x, y)
-		return layer.tile(x, y)
+		if layerTiles[x] and layerTiles[x][y] then
+			return layerTiles[x][y]
+		else
+			return nil
+		end
 	end
 
 	------------------------------------------------------------------------------
@@ -360,8 +364,8 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	function layer._getTilesInRange(x, y, w, h)
 		local t = {}
-		for xPos = x, x + w do
-			for yPos = y, y + h do
+		for xPos = x, x + w - 1 do
+			for yPos = y, y + h - 1 do
 				local tile = layer.tile(xPos, yPos)
 				if tile then
 					table_insert(t, tile)
