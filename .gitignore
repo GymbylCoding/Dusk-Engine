@@ -4,7 +4,7 @@ gitignore/
 prep-for-commit.sh
 tilesets/water_tileset.png
 docs/src
-dev/
+dev/mte.lua
 clicktock_cli/
 maps/ascii_map.json
 tilesets/ascii_tileset*.png
