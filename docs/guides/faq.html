@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dusk Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+	</head>
+	<body>
+		<div id="all">
+			<a id="contents-link" href="../index.html">Contents</a>
+			<h1 id="page-title">FAQ</h1>
+			<div id="text">
+				<p>This is a compilation of questions from the <a href="http://forums.coronalabs.com/topic/42355-dusk-engine/">main Dusk forum post</a> and elsewhere, as well as other helpful questions to help you use Dusk.</p>
+				<ul>
+					<li><a href="#add-physics">How do I add physics to tiles or objects?</a></li>
+					<li><a href="#map-loads-one-rect-tiles">My map loads one rectangle of tiles and won't load any more. What's happening?</a></li>
+					<li><a href="#focus-object-doesnt-move">I'm trying to use the camera system, but when I focus it on an object, the map moves, but the focus object continues to move outside the screen. How do I fix this?</a></li>
+					<li><a href="#bodytype-doesnt-work">How do I add a <code>bodyType</code> to my physics objects? <code>physics:bodyType</code> doesn't work!</a></li>
+					<li><a href="#erase-tile-permanently">How do I erase a tile permanently from a layer?</a></li>
+					<li><a href="#flickering-tile-lines">How do I get rid of the flickering lines between tiles?</a></li>
+					<li><a href="#two-copies-of-everything">Why do there seem to be two copies of each layer/object when I iterate through the <code>map.layer</code>/<code>layer.object</code> table?</a></li>
+					<li><a href="#remove-a-map">How do I remove a map? When I use <code>map:removeSelf()</code>, all sorts of nasty errors appear.</a></li>
+					<li><a href="#camera-follow">How do I make the camera follow my game's main character?</a></li>
+					<li><a href="#camera-tracking-level">How do I make the camera less "rigid"?</a></li>
+				</ul>
+				<span class="hr"></span>
+				<a name="add-physics"></a>
+				<div class="outlined">
+					<h3>How do I add physics to tiles or objects?</h3>
+					<p>You can add physics to tiles or objects in one of two ways.</p>
+					<p><strong>Through tile or object properties</strong>. To do this, edit the properties of a tile in a tileset or an object in a layer, and add the property <code>physics:enabled</code> as <code>true</code>. Then, you can add other physics options by prefixing them with <code>physics:</code>. Everything prefixed with <code>physics:</code> is automatically added to the physics table when an object or tile is created. For example, to add the <code>bounce</code> or <code>friction</code> properties, use <code>physics:bounce</code> and <code>physics:friction</code>.</p>
+					<p><strong>Through layer properties</strong>. If you set up physics through layer properties (<em>viz.</em> add a <code>physics:enabled</code> property and options to the layer instead of to the layer's children), physics will be passed to the layer's children automatically, because layers aren't physics-enabled. Thus, any physics options you add to a layer will be added to the layer's children instead. Everything detailed in the paragraph above applies here.</p>
+					<p>An important thing to note is that two physics properties behave differently. The <code>isSensor</code> property can be added to the physics table (that is, <code>physics:isSensor</code>), but it can also be added directly to the object as a property. The <code>bodyType</code> property can only be added to the object as a property, and does not go inside the physics table. If you specify <code>physics:bodyType</code> in your options, nothing will appear to happen. You will have to set it as a simple property, without the <code>physics:</code> prefix. You can make the property apply to all children of a layer by prefixing the option with <code>tiles:</code> or <code>objects:</code> for tile layers and object layers, respectively.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="map-loads-one-rect-tiles"></a>
+				<div class="outlined">
+					<h3>My map loads one rectangle of tiles and won't load any more. What's happening?</h3>
+					<p>One of the things that makes Dusk a good engine is its tile culling capabilities. Tile culling is the removal and addition of tiles as needed as the map moves around the screen. By using tile culling, tile engines like Dusk are able to load maps of a far bigger size (25,000,000 - <strong>twenty-five million</strong> - is the most I've ever tried), because the only tiles that really exist are the ones currently visible in the screen.</p>
+					<p>Your problem is likely that you're forgetting to call <code>map.updateView()</code> as you move your map around. Simply place this function call in an <code>enterFrame</code> listener in your code, and add a call to it when you move the map, and this problem will be solved.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="focus-object-doesnt-move"></a>
+				<div class="outlined">
+					<h3>I'm trying to use the camera system, but when I focus it on an object, the map moves, but the focus object continues to move outside the screen. How do I fix this?</h3>
+					<p>This is a simple fix. Make sure everything you want to move with the camera is inserted into one of the map's layers.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="bodytype-doesnt-work"></a>
+				<div class="outlined">
+					<h3>How do I add a <code>bodyType</code> to my physics objects? <code>physics:bodyType</code> doesn't work!</h3>
+					<p>As detailed in <em>How do I add physics to tiles or objects?</em>, the <code>bodyType</code> property is different in Corona from the rest of the physics properties. It requires that you add it as a plain property instead of in the physics table. Thus, for an object or tile, <code>bodyType</code> will work; for a layer's children, <code>objects:bodyType</code> or <code>tiles:bodyType</code> will work.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="erase-tile-permanently"></a>
+				<div class="outlined">
+					<h3>How can I erase a tile permanently from a layer?</h3>
+					<p>Use the <code>layer._lockTileErased(x, y)</code> function. This function erases the tile if it exists and keeps it from being drawn in the future. You can then unlock it with <code>layer._unlockTile(x, y)</code>. The inverse of this is <code>layer._lockTileDrawn(x, y)</code>, which forces the tile to stay drawn even when it goes outside the screen's bounds.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="flickering-tile-lines"></a>
+				<div class="outlined">
+					<h3>How do I get rid of the flickering lines between tiles?</h3>
+					<p>First, add the following two lines to the top of your <code>main.lua</code>:</p>
+					<pre><code type="lua">display.setDefault("minTextureFilter", "nearest")
+display.setDefault("magTextureFilter", "nearest")</code></pre>
+					<p>Then, make sure your tileset has a spacing of at least 1 pixel. Spacing is the distance between tiles in a tileset. Dusk ought to fix everything else automatically.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="two-copies-of-everything"></a>
+				<div class="outlined">
+					<h3>Why do there seem to be two copies of each layer/object when I iterate through the <code>map.layer</code>/<code>layer.object</code> table?</h3>
+					<p>Dusk stores each layer two times: once under <code>map.layer[index]</code> and once under <code>map.layer[name]</code>. This is so that you can access each layer either through the layer's index or the layer's name. For iterating through each layer, you should use one of the designated layer iterators.</p>
+					<p>The same thing applies to <code>layer.object</code>. Each object gets two references as well.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="remove-a-map"></a>
+				<div class="outlined">
+					<h3>How do I remove a map? When I use <code>map:removeSelf()</code>, all sorts of nasty errors appear.</h3>
+					<p>The correct way to remove a map is via the <code>map.destroy()</code> function.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="camera-follow"></a>
+				<div class="outlined">
+					<h3>How do I make the camera follow my game's main character?</h3>
+					<p>Use the <code>map.setCameraFocus(player)</code> function. It will tell Dusk to stay focused on an object. Don't forget to call <code>map.updateView()</code> every frame, or the camera will appear to do nothing.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="camera-tracking-level"></a>
+				<div class="outlined">
+					<h3>How do I make the camera less "rigid"?</h3>
+					<p>Use the <code>map.setTrackingLevel(t)</code> function. It takes a number from 0 to 1, and makes the camera more or less "fluid" and slow to track. Numbers approaching 0 are more fluid. A tracking value of 0.3 or 0.4 is usually good for most games.</p>
+					<p>Alternatively, you can use the <code>map.setDamping(d)</code> function; it takes any number over zero and sets the tracking level inversely. For this, higher numbers make the camera slower.</p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

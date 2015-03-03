@@ -5,33 +5,35 @@
 		<link rel="stylesheet" type="text/css" href="../style.css">
 	</head>
 	<body>
-		<div id="content">
+		<div id="all">
 			<a id="contents-link" href="../index.html">Contents</a>
-			<h1 id="name"><code>dusk.loadMap()</code></h1>
-			<div id="synopsis-div">
-				<a name="synopsis"></a>
-				<h4 id="synopsis-label">Synopsis</h4>
-				<p>Loads a map from a file.</p>
-			</div>
-			<div id="description-div">
-				<a name="description"></a>
-				<h4 id="description-label">Description</h4>
-				<p>This function can be used to load map data from a file for editing before building a map. It takes a file path that points to a map exported from <a href="http://mapeditor.org">Tiled</a> and loads it. Dusk currently supports maps exported as either JSON or Lua.</p>
-				<p>Please note that this is <strong>not</strong> the same as simply reading a JSON file or <code>require()</code>-ing a Lua file. Dusk adds extra data into the map structure for <a href="build-map.html"><code>dusk.buildMap()</code></a>.</p>
-			</div>
-			<div id="arguments-div">
-				<a name="arguments"></a>
-				<h4 id="arguments-label">Arguments</h4>
-				<a name="argument-fileName"></a>
-				<h6 class="argument-label"><code>fileName</code><span class="argument-type"> : String</span></h6>
-				<p>The file path of the map to load.</p>
-			</div>
-			<div id="returns-div">
-				<a name="returns"></a>
-				<h3 id="returns-label">Returns</h3>
-				<a name="return-mapData"></a>
-				<h6 class="return-label"><code>mapData</code><span class="return-type"> : Dusk Map Data</span></h6>
-				<p>The loaded data.</p>
+			<h1 id="page-title"><code>dusk.loadMap()</code></h1>
+			<div id="text">
+				<div id="synopsis-div" class="outlined">
+					<a name="synopsis"></a>
+					<h3 id="synopsis-label">Synopsis</h3>
+					<p>Loads a map from a file.</p>
+				</div>
+				<div id="description-div" class="outlined">
+					<a name="description"></a>
+					<h3 id="description-label">Description</h3>
+					<p>This function can be used to load map data from a file for editing before building a map. It takes a file path that points to a map exported from <a href="http://mapeditor.org">Tiled</a> and loads it. Dusk currently supports maps exported as either JSON or Lua.</p>
+					<p>Please note that this is <strong>not</strong> the same as simply reading a JSON file or <code>require()</code>-ing a Lua file. Dusk adds extra data into the map structure for <a href="build-map.html"><code>dusk.buildMap()</code></a>.</p>
+				</div>
+				<div id="arguments-div" class="outlined">
+					<a name="arguments"></a>
+					<h3 id="arguments-label">Arguments</h3>
+					<a name="argument-fileName"></a>
+					<h6 class="argument-label"><code>fileName</code><span class="argument-type"> : String</span></h6>
+					<p>The file path of the map to load.</p>
+				</div>
+				<div id="returns-div" class="outlined">
+					<a name="returns"></a>
+					<h3 id="returns-label">Returns</h3>
+					<a name="return-mapData"></a>
+					<h6 class="return-label"><code>mapData</code><span class="return-type"> : Dusk Map Data</span></h6>
+					<p>The loaded data.</p>
+				</div>
 			</div>
 		</div>
 	</body>

@@ -5,38 +5,40 @@
 		<link rel="stylesheet" type="text/css" href="../style.css">
 	</head>
 	<body>
-		<div id="content">
+		<div id="all">
 			<a id="contents-link" href="../index.html">Contents</a>
-			<h1 id="name">Tile Access</h1>
-			<p>Most maps will be made up of tiles; that's most of what Tiled is for, after all. When you need access to a tile in your game, you can use one of several methods. All of these methods are methods of a tile layer object, which is accessed through the <a href="map-layers.html"><code>map.layer</code></a> table.</p>
-			<br></br>
-			<h5><code>layer.tile(x, y)</code></h5>
-			<p>This is, perhaps, the simplest method to get a tile from the layer. It will return the tile at tile position <code>(x, y)</code>. If the tile is outside the screen border and is not locked from culling, this will be <code>nil</code>.</p>
-			<p>Though this is the easiest method, if you need access to a tile multiple times in a loop or in a function called often, you should localize the tile when you access it. This is a function, and as such has a bit of overhead every time it's called.</p>
-			<h6>Good:</h6>
-			<pre><code type="Lua">local tile = map.layer[x].tile(x, y)
+			<h1 id="page-title">Tile Access</h1>
+			<div id="text">
+				<p>Most maps will be made up of tiles; that's most of what Tiled is for, after all. When you need access to a tile in your game, you can use one of several methods. All of these methods are methods of a tile layer object, which is accessed through the <a href="map-layers.html"><code>map.layer</code></a> table.</p>
+				<br></br>
+				<h5><code>layer.tile(x, y)</code></h5>
+				<p>This is, perhaps, the simplest method to get a tile from the layer. It will return the tile at tile position <code>(x, y)</code>. If the tile is outside the screen border and is not locked from culling, this will be <code>nil</code>.</p>
+				<p>Though this is the easiest method, if you need access to a tile multiple times in a loop or in a function called often, you should localize the tile when you access it. This is a function, and as such has a bit of overhead every time it's called.</p>
+				<h6>Good:</h6>
+				<pre><code type="Lua">local tile = map.layer[x].tile(x, y)
 tile.someCustomProperty = true
 tile.somethingElse = 48.6
 tile.xyz = 123</code></pre>
-			<h6>Bad:</h6>
-			<pre><code type="Lua">map.layer[x].tile(x, y).someCustomProperty = true
+				<h6>Bad:</h6>
+				<pre><code type="Lua">map.layer[x].tile(x, y).someCustomProperty = true
 map.layer[x].tile(x, y).somethingElse = 48.6
 map.layer[x].tile(x, y).xyz = 123</code></pre>
-			<br></br>
-			<h5><code>layer.tiles[x][y]</code></h5>
-			<p>Dusk also allows you to access the tile layer's tile grid directly through the <code>tiles</code> table. The <code>tiles</code> table is a matrix of tiles. Really, all the <code>layer.tile(x, y)</code> function does is provide a thin wrapper around this table with error checking.</p>
-			<p>If the column (X-position) of the tile doesn't exist, you'll get an error, so unless you know the tile exists, you should wrap your access in an <code>if</code> check. This is what the <code>layer.tile(x, y)</code> function does for you.</p>
-			<pre><code type="Lua">if map.layer[x].tiles[x] and map.layer[x].tiles[x][y] then
+				<br></br>
+				<h5><code>layer.tiles[x][y]</code></h5>
+				<p>Dusk also allows you to access the tile layer's tile grid directly through the <code>tiles</code> table. The <code>tiles</code> table is a matrix of tiles. Really, all the <code>layer.tile(x, y)</code> function does is provide a thin wrapper around this table with error checking.</p>
+				<p>If the column (X-position) of the tile doesn't exist, you'll get an error, so unless you know the tile exists, you should wrap your access in an <code>if</code> check. This is what the <code>layer.tile(x, y)</code> function does for you.</p>
+				<pre><code type="Lua">if map.layer[x].tiles[x] and map.layer[x].tiles[x][y] then
 	local tile = map.layer[x].tiles[x][y]
 end</code></pre>
-			<p>This approach is faster than the <code>layer.tile(x, y)</code> function, but the tile should still be localized if you use it often.</p>
-			<br></br>
-			<h5><code>layer.tileByPixels(x, y)</code></h5>
-			<p>This method allows you to grab a tile at a pixel location. Internally, it first converts the location to tile coordinates, then retrieves the tile at that position. Thus, of the methods of getting tiles, this is the slowest. That doesn't mean "don't use it"; it'll actually take the same amount of time as converting and getting the tile. Just don't abuse it, and use it to get tiles to iterate by offsetting pixels or something equally crazy. Instead, this function is useful for getting tiles from a touch event or similar.</p>
-			<pre><code type="Lua">local tile = map.layer[x].tileByPixels(pixelX, pixelY)</code></pre>
-			<br></br>
-			<h5>Iterators</h5>
-			<p>Tile layers also provide a few iterators to get chunks of tiles with. You can read the docs for them <a href="layer-tile-iterators.html">here</a>.</p>
+				<p>This approach is faster than the <code>layer.tile(x, y)</code> function, but the tile should still be localized if you use it often.</p>
+				<br></br>
+				<h5><code>layer.tileByPixels(x, y)</code></h5>
+				<p>This method allows you to grab a tile at a pixel location. Internally, it first converts the location to tile coordinates, then retrieves the tile at that position. Thus, of the methods of getting tiles, this is the slowest. That doesn't mean "don't use it"; it'll actually take the same amount of time as converting and getting the tile. Just don't abuse it, and use it to get tiles to iterate by offsetting pixels or something equally crazy. Instead, this function is useful for getting tiles from a touch event or similar.</p>
+				<pre><code type="Lua">local tile = map.layer[x].tileByPixels(pixelX, pixelY)</code></pre>
+				<br></br>
+				<h5>Iterators</h5>
+				<p>Tile layers also provide a few iterators to get chunks of tiles with. You can read the docs for them <a href="layer-tile-iterators.html">here</a>.</p>
+			</div>
 		</div>
 	</body>
 </html>

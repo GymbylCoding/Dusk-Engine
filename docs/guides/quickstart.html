@@ -5,28 +5,30 @@
 		<link rel="stylesheet" type="text/css" href="../style.css">
 	</head>
 	<body>
-		<div id="content">
+		<div id="all">
 			<a id="contents-link" href="../index.html">Contents</a>
-			<h1 id="name">Quickstart</h1>
-			<p>Want to get a map on-screen as soon as possible? Just follow these instructions and you'll be using Dusk in no time.</p>
-			<h4>Get the Code</h4>
-			<p><a href="https://github.com/GymbylCoding/Dusk-Engine/archive/master.zip">Download the ZIP archive from GitHub</a>, expand, and copy the engine folder (named "Dusk") into your project's root directory (the one with <code>main.lua</code> in it).</p>
-			<h4>Include the Library</h4>
-			<p>In your scene, add the following line:</p>
-			<pre><code type="Lua">local dusk = require("Dusk.Dusk")</code></pre>
-			<h4>Build a Map</h4>
-			<p>Make a Tiled map and export it as JSON, then load it with the following:</p>
-			<pre><code type="Lua">local map = dusk.buildMap("path/to/map.json")</code></pre>
-			<p>Make sure you include your extension, even if it's a Lua map!</p>
-			<h4>Run Your Code</h4>
-			<p>Run it in the Corona Simulator! Presto! A map.</p>
-			<h4>More Stuff</h4>
-			<ul>
-				<li>The map is a display object, so you can move it around, scale it, fade it in and out, or whatever else you want</li>
-				<li>You can access a layer with <code>map.layer["layer name"]</code> or <code>map.layer[index]</code></li>
-				<li>Dusk has a built-in camera system inside it; to make objects move according to it, you'll have to insert them into a map layer (<code>map.layer[whatever]:insert(obj)</code>)</li>
-				<li>Call <code>map.updateView()</code> in your <code>enterFrame</code> listener to make the camera system and culling work, otherwise, it'll appear that any part of the map that's off the screen has disappeared (it has, due to Dusk's culling algorithm)</li>
-			</ul>
+			<h1 id="page-title">Quickstart</h1>
+			<div id="text">
+				<p>Want to get a map on-screen as soon as possible? Just follow these instructions and you'll be using Dusk in no time.</p>
+				<h4>Get the Code</h4>
+				<p><a href="https://github.com/GymbylCoding/Dusk-Engine/archive/master.zip">Download the ZIP archive from GitHub</a>, expand, and copy the engine folder (named "Dusk") into your project's root directory (the one with <code>main.lua</code> in it).</p>
+				<h4>Include the Library</h4>
+				<p>In your scene, add the following line:</p>
+				<pre><code type="Lua">local dusk = require("Dusk.Dusk")</code></pre>
+				<h4>Build a Map</h4>
+				<p>Make a Tiled map and export it as JSON, then load it with the following:</p>
+				<pre><code type="Lua">local map = dusk.buildMap("path/to/map.json")</code></pre>
+				<p>Make sure you include your extension, even if it's a Lua map!</p>
+				<h4>Run Your Code</h4>
+				<p>Run it in the Corona Simulator! Presto! A map.</p>
+				<h4>More Stuff</h4>
+				<ul>
+					<li>The map is a display object, so you can move it around, scale it, fade it in and out, or whatever else you want</li>
+					<li>You can access a layer with <code>map.layer["layer name"]</code> or <code>map.layer[index]</code></li>
+					<li>Dusk has a built-in camera system inside it; to make objects move according to it, you'll have to insert them into a map layer (<code>map.layer[whatever]:insert(obj)</code>)</li>
+					<li>Call <code>map.updateView()</code> in your <code>enterFrame</code> listener to make the camera system and culling work, otherwise, it'll appear that any part of the map that's off the screen has disappeared (it has, due to Dusk's culling algorithm)</li>
+				</ul>
+			</div>
 		</div>
 	</body>
 </html>
