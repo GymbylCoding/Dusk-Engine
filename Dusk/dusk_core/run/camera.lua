@@ -93,7 +93,7 @@ function lib_camera.addControl(map)
 				camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
 				camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
 				layer.x = math_round((layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset)
-					layer.y = math_round((layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset)
+				layer.y = math_round((layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset)
 			end
 
 			--------------------------------------------------------------------------

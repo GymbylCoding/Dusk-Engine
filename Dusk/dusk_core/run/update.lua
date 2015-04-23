@@ -51,12 +51,13 @@ function lib_update.register(map)
 		end
 
 		culling = lib_tileculling.addTileCulling(map)
+		culling.screenTileField.x, culling.screenTileField.y = screen.centerX, screen.centerY
 
 		for layer, i in map.tileLayers() do
-			if culling.layer[i] then
-				local l, r, t, b = culling.layer[i].updatePositions()
+			if culling.screenTileField.layer[i] then
+				local l, r, t, b = culling.screenTileField.layer[i].updatePositions()
 				layer._edit(l, r, t, b, "d")
-				culling.layer[i].updatePositions()
+				culling.screenTileField.layer[i].updatePositions()
 			end
 		end
 	else
@@ -70,8 +71,9 @@ function lib_update.register(map)
 	------------------------------------------------------------------------------
 	local function updateTileCulling()
 		map._animManager.update()
-		for i = 1, #culling.layer do
-			culling.layer[i].update()
+
+		for i = 1, #culling.screenTileField.layer do
+			culling.screenTileField.layer[i].update()
 		end
 	end
 
@@ -93,14 +95,13 @@ function lib_update.register(map)
 	local function updateView()
 		camera.processCameraViewpoint()
 		map._animManager.update()
-
 		for i = 1, mapLayers do
 			if camera.layer[i] then
 				camera.layer[i].update()
 			end
 
-			if culling.layer[i] then
-				culling.layer[i].update()
+			if culling.screenTileField.layer[i] then
+				culling.screenTileField.layer[i].update()
 			end
 		end
 	end

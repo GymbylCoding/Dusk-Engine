@@ -32,6 +32,10 @@ dusk.removeMathVariable = lib_settings.removeMathVariable
 dusk.setEvalVariable = function(...) verby_alert("Warning: `dusk.setEvalVariable()` has been deprecated in favor of `dusk.setMathVariable()`") dusk.setMathVariable(...) end
 dusk.removeEvalVariable = function(...) verby_alert("Warning: `dusk.removeEvalVariable()` has been deprecated in favor of `dusk.removeMathVariable()`") dusk.removeMathVariable(...) end
 
+-- Plugin support is not quite complete
+-- dusk.registerPlugin = dusk_core.registerPlugin
+-- dusk.unregisterPlugin = dusk_core.unregisterPlugin
+
 --------------------------------------------------------------------------------
 -- Load Map
 --------------------------------------------------------------------------------

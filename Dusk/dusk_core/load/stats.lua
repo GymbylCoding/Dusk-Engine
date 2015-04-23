@@ -29,8 +29,8 @@ function lib_stats.get(data)
 	stats.mapHeight = data.height
 	stats.rawTileWidth = data.tilewidth
 	stats.rawTileHeight = data.tileheight
-	stats.tileWidth = data.tilewidth * screen.zoomX
-	stats.tileHeight = data.tileheight * screen.zoomY
+	stats.tileWidth = data.tilewidth
+	stats.tileHeight = data.tileheight
 	stats.width = stats.mapWidth * stats.tileWidth
 	stats.height = stats.mapHeight * stats.tileHeight
 	stats.mapData = data

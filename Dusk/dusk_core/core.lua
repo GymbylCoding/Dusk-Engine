@@ -29,6 +29,7 @@ local type = type
 local tonumber = tonumber
 local display_newGroup = display.newGroup
 local table_insert = table.insert
+local table_remove = table.remove
 local math_ceil = math.ceil
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setMathVariable
@@ -36,6 +37,65 @@ local removeVariable = lib_settings.removeMathVariable
 local verby_error = verby.error
 local verby_alert = verby.alert
 local getXY = lib_functions.getXY
+
+--------------------------------------------------------------------------------
+-- Plugins
+--------------------------------------------------------------------------------
+core.plugins = {}
+
+core.pluginCallbacks = {
+	onLoadMap = {},
+	onBuildMap = {}
+}
+
+function core.registerPlugin(plugin)
+	core.plugins[#core.plugins + 1] = plugin
+	if plugin.initialize then plugin.initialize(core) end
+
+	if plugin.onLoadMap then
+		core.pluginCallbacks.onLoadMap[#core.pluginCallbacks.onLoadMap + 1] = {
+			callback = plugin.onLoadMap,
+			plugin = plugin
+		}
+		plugin._dusk_onLoadMapIndex = #core.pluginCallbacks.onLoadMap
+	end
+
+	if plugin.onBuildMap then
+		core.pluginCallbacks.onBuildMap[#core.pluginCallbacks.onBuildMap + 1] = {
+			callback = plugin.onBuildMap,
+			plugin = plugin
+		}
+		plugin._dusk_onBuildMapIndex = #core.pluginCallbacks.onBuildMap
+	end
+end
+
+function core.unregisterPlugin(plugin)
+	local found = 0
+	for i = 1, #core.plugins do
+		if core.plugins[i] == plugin then
+			found = i
+			break
+		end
+	end
+
+	if found == 0 then verby_error("Cannot unregister plugin: plugin not found.") end
+
+	if plugin._dusk_onLoadMapIndex then
+		table_remove(core.pluginCallbacks.onLoadMap, plugin._dusk_onLoadMapIndex)
+		for i = found + 1, #core.plugins do
+			if core.plugins[i]._dusk_onLoadMapIndex then core.plugins[i]._dusk_onLoadMapIndex = core.plugins[i]._dusk_onLoadMapIndex - 1 end
+		end
+	end
+
+	if plugin._dusk_onBuildMapIndex then
+		table_remove(core.pluginCallbacks.onBuildMap, plugin._dusk_onBuildMapIndex)
+		for i = found + 1, #core.plugins do
+			if core.plugins[i]._dusk_onBuildMapIndex then core.plugins[i]._dusk_onBuildMapIndex = core.plugins[i]._dusk_onBuildMapIndex - 1 end
+		end
+	end
+
+	table_remove(core.plugins, found)
+end
 
 --------------------------------------------------------------------------------
 -- Load Map

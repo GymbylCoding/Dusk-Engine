@@ -50,12 +50,13 @@ local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = t
 function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig)
 	local dotImpliesTable = getSetting("dotImpliesTable")
 	local ellipseRadiusMode = getSetting("ellipseRadiusMode")
-	local onObj = getSetting("onObj")
-	local onEllipse = getSetting("onEllipse")
-	local onPointBased = getSetting("onPointBased")
-	local onImageObj = getSetting("onImageObj")
-	local onRect = getSetting("onRect")
-	local autoGenerateObjectShapes = getSetting("autoGenerateObjectShapes")
+	local styleObj = getSetting("styleObject")
+	local styleEllipse = getSetting("styleEllipseObject")
+	local stylePointBased = getSetting("stylePointBasedObject")
+	local styleImageObj = getSetting("styleImageObject")
+	local styleRect = getSetting("styleRectObject")
+	local autoGenerateObjectShapes = getSetting("autoGenerateObjectPhysicsShapes")
+	local objectsDefaultToData = getSetting("objectsDefaultToData")
 
 	local layerProps = getProperties(data.properties or {}, "objects", true)
 
@@ -65,161 +66,215 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	layer.object = {}
 
 	------------------------------------------------------------------------------
-	-- Create Objects
+	-- Build Object
 	------------------------------------------------------------------------------
-	for i = 1, #data.objects do
-		local o = data.objects[i]
-		if not (o ~= nil) then verby_error("Object data missing at index " .. i) end
-
+	layer.buildObject = function(o)
 		local obj
 		local objProps = getProperties(o.properties or {}, "object", false)
 		local physicsExistent = objProps.options.physicsExistent; if physicsExistent == nil then physicsExistent = layerProps.options.physicsExistent end
-
-		----------------------------------------------------------------------------
-		-- Ellipse Object
-		----------------------------------------------------------------------------
-		if o.ellipse then
-			local zx, zy, zw, zh = o.x * screen.zoomX, o.y * screen.zoomY, o.width * screen.zoomX, o.height * screen.zoomY
-
-			if zw > zh then
-				obj = display_newCircle(layer, 0, 0, zw * 0.5); obj.yScale = zh / zw
-			else
-				obj = display_newCircle(layer, 0, 0, zh * 0.5); obj.xScale = zw / zh
-			end
-
-			obj.x, obj.y = zx + (obj.contentWidth * 0.5), zy + (obj.contentHeight * 0.5)
-			if o.rotation ~= 0 then
-				local cornerX, cornerY = zx, zy
-				local rX, rY = rotatePoint(zw * 0.5, zh * 0.5, o.rotation or 0)
-				obj.x, obj.y = rX + cornerX, rY + cornerY
-				obj.rotation = o.rotation
-			end
-
-			-- Generate shape
-			if autoGenerateObjectShapes and physicsExistent then
-				if ellipseRadiusMode == "min" then
-					objProps.physics[1].radius = math_min(zw * 0.5, zh * 0.5) -- Min radius
-				elseif ellipseRadiusMode == "max" then
-					objProps.physics[1].radius = math_max(zw * 0.5, zh * 0.5) -- Max radius
-				elseif ellipseRadiusMode == "average" then
-					objProps.physics[1].radius = ((zw * 0.5) + (zh * 0.5)) * 0.5 -- Average radius
-				end
-			end
-
-			obj._objType = "ellipse"
-			onEllipse(obj)
-
-		----------------------------------------------------------------------------
-		-- Polygon or Polyline Object
-		----------------------------------------------------------------------------
-		elseif o.polygon or o.polyline then
-			local points = o.polygon or o.polyline
-
-			obj = display_newLine(points[1].x, points[1].y, points[2].x, points[2].y)
-			obj.points = points -- Give the object the raw point data
-
-			for i = 3, #points do obj:append(points[i].x, points[i].y) end -- Append each point
-
-			if o.polygon then obj:append(points[1].x, points[1].y) end
-			obj.x, obj.y = o.x, o.y
-
-			-- Generate physics shape
-			if autoGenerateObjectShapes and physicsExistent then
-				local physicsShape = {}
-
-				for i = 1, math_min(#points, 8) do
-					table_insert(physicsShape, points[i].x)
-					table_insert(physicsShape, points[i].y)
-				end
-
-				-- Reverse shape if not clockwise (Corona only allows clockwise physics shapes)
-				if not isPolyClockwise(physicsShape) then
-					physicsShape = reversePolygon(physicsShape)
-				end
-
-				objProps.physics[1].shape = physicsShape
-			end
-
-			obj._objType = (o.polygon and "polygon") or "polyline"
-			onPointBased(obj)
-
-		----------------------------------------------------------------------------
-		-- Image Object
-		----------------------------------------------------------------------------
-		elseif o.gid then
-			local tileData = tileIndex[o.gid]
-			local sheetIndex = tileData.tilesetIndex
-			local tileGID = tileData.gid
-
-			obj = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
-				obj:setFrame(tileGID)
-				obj.x, obj.y = o.x + (mapData.stats.tileWidth * 0.5), o.y - (mapData.stats.tileHeight * 0.5)
-				obj.xScale, obj.yScale = screen.zoomX, screen.zoomY
-
-			obj._objType = "image"
-			onImageObj(obj)
-
-			-- No need to generate shape because it automatically fits to rectangle shapes
-
-		----------------------------------------------------------------------------
-		-- Rectangle Object
-		----------------------------------------------------------------------------
+		local isDataObject
+		if objProps["!isData!"] ~= nil then
+			isDataObject = objProps["!isData!"]
+		elseif layerProps["!isData!"] ~= nil then
+			isDataObject = layerProps["!isData!"]
 		else
-			obj = display_newRect(o.x * screen.zoomX, o.y * screen.zoomY, o.width * screen.zoomX, o.height * screen.zoomY)
-			obj:translate(obj.width * 0.5, obj.height * 0.5)
-
-			if o.rotation ~= 0 then
-				local cornerX, cornerY = o.x, o.y
-				local rX, rY = rotatePoint(o.width * 0.5, o.height * 0.5, o.rotation or 0)
-				obj.x, obj.y = rX + cornerX, rY + cornerY
-				obj.rotation = o.rotation
-			end
-
-			obj._objType = "rectangle"
-			-- Create point or square special type for objects
-			if getSetting("objTypeRectPointSquare") then if obj.width == 0 and obj.height == 0 then obj.objType = "point" elseif obj.width == obj.height then obj.objType = "square" end end
-
-			onRect(obj)
-
-			-- No need to generate shape because it automatically fits to rectangle shapes
+			isDataObject = objectsDefaultToData
 		end
 
 		----------------------------------------------------------------------------
-		-- Add Physics to Object
+		-- "Real" Object
 		----------------------------------------------------------------------------
-		if physicsExistent then
-			local physicsParameters = {}
-			local physicsBodyCount = layerProps.options.physicsBodyCount
-			local tpPhysicsBodyCount = objProps.options.physicsBodyCount; if tpPhysicsBodyCount == nil then tpPhysicsBodyCount = physicsBodyCount end
+		if not isDataObject then
+			--------------------------------------------------------------------------
+			-- Ellipse Object
+			--------------------------------------------------------------------------
+			if o.ellipse then
+				local zx, zy, zw, zh = o.x, o.y, o.width, o.height
 
-			physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
+				if zw > zh then
+					obj = display_newCircle(layer, 0, 0, zw * 0.5); obj.yScale = zh / zw
+				else
+					obj = display_newCircle(layer, 0, 0, zh * 0.5); obj.xScale = zw / zh
+				end
 
-			for i = 1, physicsBodyCount do
-				physicsParameters[i] = spliceTable(physicsKeys, objProps.physics[i] or {}, layerProps.physics[i] or {})
-			end
+				obj.x, obj.y = zx + (obj.contentWidth * 0.5), zy + (obj.contentHeight * 0.5)
+				if o.rotation ~= 0 then
+					local cornerX, cornerY = zx, zy
+					local rX, rY = rotatePoint(zw * 0.5, zh * 0.5, o.rotation or 0)
+					obj.x, obj.y = rX + cornerX, rY + cornerY
+					obj.rotation = o.rotation
+				end
 
-			if physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
-				physics_addBody(obj, physicsParameters[1])
+				-- Generate shape
+				if autoGenerateObjectShapes and physicsExistent then
+					if ellipseRadiusMode == "min" then
+						objProps.physics[1].radius = math_min(zw * 0.5, zh * 0.5) -- Min radius
+					elseif ellipseRadiusMode == "max" then
+						objProps.physics[1].radius = math_max(zw * 0.5, zh * 0.5) -- Max radius
+					elseif ellipseRadiusMode == "average" then
+						objProps.physics[1].radius = ((zw * 0.5) + (zh * 0.5)) * 0.5 -- Average radius
+					end
+				end
+
+				obj._objType = "ellipse"
+				styleEllipse(obj)
+
+			--------------------------------------------------------------------------
+			-- Polygon or Polyline Object
+			--------------------------------------------------------------------------
+			elseif o.polygon or o.polyline then
+				local points = o.polygon or o.polyline
+
+				obj = display_newLine(points[1].x, points[1].y, points[2].x, points[2].y)
+				obj.points = points -- Give the object the raw point data
+
+				for i = 3, #points do obj:append(points[i].x, points[i].y) end -- Append each point
+
+				if o.polygon then obj:append(points[1].x, points[1].y) end
+				obj.x, obj.y = o.x, o.y
+
+				-- Generate physics shape
+				if autoGenerateObjectShapes and physicsExistent then
+					local physicsShape = {}
+
+					for i = 1, math_min(#points, 8) do
+						table_insert(physicsShape, points[i].x)
+						table_insert(physicsShape, points[i].y)
+					end
+
+					-- Reverse shape if not clockwise (Corona only allows clockwise physics shapes)
+					if not isPolyClockwise(physicsShape) then
+						physicsShape = reversePolygon(physicsShape)
+					end
+
+					objProps.physics[1].shape = physicsShape
+				end
+
+				obj._objType = (o.polygon and "polygon") or "polyline"
+				stylePointBased(obj)
+
+			--------------------------------------------------------------------------
+			-- Image Object
+			--------------------------------------------------------------------------
+			elseif o.gid then
+				local tileData = tileIndex[o.gid]
+				local sheetIndex = tileData.tilesetIndex
+				local tileGID = tileData.gid
+
+				obj = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
+					obj:setFrame(tileGID)
+					obj.x, obj.y = o.x + (mapData.stats.tileWidth * 0.5), o.y - (mapData.stats.tileHeight * 0.5)
+					obj.xScale, obj.yScale = screen.zoomX, screen.zoomY
+
+				obj._objType = "image"
+				styleImageObj(obj)
+
+				-- No need to generate shape because it automatically fits to rectangle shapes
+
+			--------------------------------------------------------------------------
+			-- Rectangle Object
+			--------------------------------------------------------------------------
 			else
-				physics_addBody(obj, unpack(physicsParameters))
+				obj = display_newRect(o.x + o.width * 0.5, o.y + o.height * 0.5, o.width, o.height)
+				obj:translate(obj.width * 0.5, obj.height * 0.5)
+
+				if o.rotation ~= 0 then
+					local cornerX, cornerY = o.x, o.y
+					local rX, rY = rotatePoint(o.width * 0.5, o.height * 0.5, o.rotation or 0)
+					obj.x, obj.y = rX + cornerX, rY + cornerY
+					obj.rotation = o.rotation
+				end
+
+				obj._objType = "rectangle"
+				-- Create point or square special type for objects
+				if getSetting("objTypeRectPointSquare") then if obj.width == 0 and obj.height == 0 then obj._objType = "point" elseif obj.width == obj.height then obj._objType = "square" end end
+
+				styleRect(obj)
+
+				-- No need to generate shape because it automatically fits to rectangle shapes
 			end
-		end
 
+			--------------------------------------------------------------------------
+			-- Add Physics to Object
+			--------------------------------------------------------------------------
+			if physicsExistent then
+				local physicsParameters = {}
+				local physicsBodyCount = layerProps.options.physicsBodyCount
+				local tpPhysicsBodyCount = objProps.options.physicsBodyCount; if tpPhysicsBodyCount == nil then tpPhysicsBodyCount = physicsBodyCount end
+
+				physicsBodyCount = math_max(physicsBodyCount, tpPhysicsBodyCount)
+
+				for i = 1, physicsBodyCount do
+					physicsParameters[i] = spliceTable(physicsKeys, objProps.physics[i] or {}, layerProps.physics[i] or {})
+				end
+
+				if physicsBodyCount == 1 then -- Weed out any extra slowdown due to unpack()
+					physics_addBody(obj, physicsParameters[1])
+				else
+					physics_addBody(obj, unpack(physicsParameters))
+				end
+			end
+
+			styleObj(obj)
 		----------------------------------------------------------------------------
-		-- Add Properties
+		-- Data Object
 		----------------------------------------------------------------------------
-		-- Apply onObj function to object
-		onObj(obj)
+		else -- if isDataObject then
+			--------------------------------------------------------------------------
+			-- Ellipse Object
+			--------------------------------------------------------------------------
+			if o.ellipse then
+				obj = {
+					_objType = "ellipse",
+					width = o.width,
+					height = o.height,
+					x = o.x + o.width * 0.5,
+					y = o.y + o.height * 0.5
+				}
 
-		-- Add object properties
-		obj.props = {}
+			--------------------------------------------------------------------------
+			-- Polygon or Polyline Object
+			--------------------------------------------------------------------------
+			elseif o.polygon or o.polyline then
+				local points = o.polygon or o.polyline
 
-		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end
-		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end
-		for k, v in pairs(objProps.props) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(obj.props, k, v) else obj.props[k] = v end end
+				obj = {
+					_objType = o.polygon and "polygon" or "polyline",
+					points = points,
+					x = o.x,
+					y = o.y
+				}
 
-		if obj._objType ~= "image" then
-			obj.isVisible = getSetting("virtualObjectsVisible")
+			--------------------------------------------------------------------------
+			-- Image Object
+			--------------------------------------------------------------------------
+			elseif o.gid then
+				local tileData = tileIndex[o.gid]
+				local sheetIndex = tileData.tilesetIndex
+				local tileGID = tileData.gid
+
+				obj = {
+					_objType = "image",
+					x = o.x + mapData.stats.tileWidth * 0.5,
+					y = o.y - mapData.stats.tileHeight * 0.5,
+					frame = tileGID,
+					gid = o.gid
+				}
+
+			--------------------------------------------------------------------------
+			-- Rectangle Object
+			--------------------------------------------------------------------------
+			else
+				obj = {
+					_objType = "rectangle",
+					x = o.x + o.width * 0.5,
+					y = o.y + o.height * 0.5,
+					width = o.width,
+					height = o.height
+				}
+
+				if getSetting("objTypeRectPointSquare") then if obj.width == 0 and obj.height == 0 then obj._objType = "point" elseif obj.width == obj.height then obj._objType = "square" end end
+			end
 		end
 
 		----------------------------------------------------------------------------
@@ -229,7 +284,27 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		obj._type = o.type
 		layer.object[obj._name] = obj
 		table_insert(layer.object, obj)
-		layer:insert(obj)
+
+		-- Add object properties
+		obj.props = {}
+
+		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end
+		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(obj, k, v) else obj[k] = v end end
+		for k, v in pairs(objProps.props) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(obj.props, k, v) else obj.props[k] = v end end
+
+		if not isDataObject then
+			obj.isVisible = getSetting("virtualObjectsVisible")
+			layer:insert(obj)
+		end
+	end
+
+	------------------------------------------------------------------------------
+	-- Create Objects
+	------------------------------------------------------------------------------
+	for i = 1, #data.objects do
+		local o = data.objects[i]
+		if not (o ~= nil) then verby_error("Object data missing at index " .. i) end
+		layer.buildObject(o)
 	end
 
 	------------------------------------------------------------------------------
@@ -269,9 +344,9 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	end
 
 	------------------------------------------------------------------------------
-	-- Iterator: _literal()
+	-- Iterator: _literalIterator()
 	------------------------------------------------------------------------------
-	function layer._literal(n, checkFor, inTable)
+	function layer._literalIterator(n, checkFor, inTable)
 		if not (n ~= nil) then verby_error("Nothing was passed to constructor of literal-match iterator") end
 
 		local n = n
@@ -281,9 +356,9 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	end
 
 	------------------------------------------------------------------------------
-	-- Iterator: _match()
+	-- Iterator: _matchIterator()
 	------------------------------------------------------------------------------
-	function layer._match(n, checkFor, inTable)
+	function layer._matchIterator(n, checkFor, inTable)
 		if not (n ~= nil) then verby_error("Nothing was passed to constructor of pattern-based iterator") end
 
 		local n = n
@@ -296,15 +371,15 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	-- Iterators
 	------------------------------------------------------------------------------
 	-- nameIs()
-	function layer.nameIs(n, inTable) return layer._literal(n, "_name", inTable) end
+	function layer.nameIs(n, inTable) return layer._literalIterator(n, "_name", inTable) end
 	-- nameMatches()
-	function layer.nameMatches(n, inTable) return layer._match(n, "_name", inTable) end
+	function layer.nameMatches(n, inTable) return layer._matchIterator(n, "_name", inTable) end
 	-- typeIs()
-	function layer.typeIs(n, inTable) return layer._literal(n, "_type", inTable) end
+	function layer.typeIs(n, inTable) return layer._literalIterator(n, "_type", inTable) end
 	-- typeMatches()
-	function layer.typeMatches(n, inTable) return layer._match(n, "_type", inTable) end
+	function layer.typeMatches(n, inTable) return layer._matchIterator(n, "_type", inTable) end
 	-- objTypeIs()
-	function layer.objTypeIs(n, inTable) return layer._literal(n, "_objType", inTable) end
+	function layer.objTypeIs(n, inTable) return layer._literalIterator(n, "_objType", inTable) end
 	-- objects()
 	function layer.objects(inTable) return layer._newIterator(function() return true end, inTable) end
 
