@@ -54,8 +54,8 @@
 				<span class="hr"></span>
 				<a name="erase-tile-permanently"></a>
 				<div class="outlined">
-					<h3>How can I erase a tile permanently from a layer?</h3>
-					<p>Use the <code>layer._lockTileErased(x, y)</code> function. This function erases the tile if it exists and keeps it from being drawn in the future. You can then unlock it with <code>layer._unlockTile(x, y)</code>. The inverse of this is <code>layer._lockTileDrawn(x, y)</code>, which forces the tile to stay drawn even when it goes outside the screen's bounds.</p>
+					<h3>How can I erase or draw a tile permanently?</h3>
+					<p>Use the <code>layer.lockTileErased(x, y)</code> or <code>layer.lockTileDrawn(x, y)</code> function. These two functions basically turn off culling for a single tile. You can then unlock the tile with <code>layer.unlockTile(x, y)</code>.</p>
 				</div>
 				<span class="hr"></span>
 				<a name="flickering-tile-lines"></a>
@@ -91,7 +91,7 @@ display.setDefault("magTextureFilter", "nearest")</code></pre>
 				<div class="outlined">
 					<h3>How do I make the camera less "rigid"?</h3>
 					<p>Use the <code>map.setTrackingLevel(t)</code> function. It takes a number from 0 to 1, and makes the camera more or less "fluid" and slow to track. Numbers approaching 0 are more fluid. A tracking value of 0.3 or 0.4 is usually good for most games.</p>
-					<p>Alternatively, you can use the <code>map.setDamping(d)</code> function; it takes any number over zero and sets the tracking level inversely. For this, higher numbers make the camera slower.</p>
+					<p>Alternatively, you can use the <code>map.setDamping(d)</code> function; it takes any number over zero and sets the tracking level inversely. For this, higher numbers make the camera slower, which can be more natural-feeling to some people.</p>
 				</div>
 				<span class="hr"></span>
 				<a name="catching-on-tile-boundaries"></a>
@@ -103,7 +103,7 @@ display.setDefault("magTextureFilter", "nearest")</code></pre>
 						<li>Make your object physics body circular</li>
 						<li>Make your object a multi-element physics body with a circle at the bottom</li>
 						<li>Give your object a tiny bit of bounce</li>
-						<li>Give tiles a clipped-off-corner shape and your object a normal rectangular one with a bit of bounce</li>
+						<li>Give tiles a clipped-off-corner shape and your object a normal rectangular one with a tiny bit of bounce</li>
 					</ul>
 				</div>
 			</div>
