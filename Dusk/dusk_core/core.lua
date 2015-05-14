@@ -144,7 +144,7 @@ end
 -- Build Map
 --------------------------------------------------------------------------------
 function core.buildMap(data)
-	local imageSheets, imageSheetConfig, tileProperties, tileIndex = lib_tilesets.get(data, data._dusk.dirTree)
+	local imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
 
 	setVariable("mapWidth", data.stats.mapWidth)
 	setVariable("mapHeight", data.stats.mapHeight)
@@ -167,6 +167,7 @@ function core.buildMap(data)
 		local bkg = display.newRect(0, 0, display.contentWidth - display.screenOriginX * 2, display.contentHeight - display.screenOriginY * 2)
 		bkg.x, bkg.y = display.contentCenterX, display.contentCenterY
 		map:insert(bkg)
+		map.background = bkg
 		local r, g, b = tonumber(data.backgroundcolor:sub(2, 3), 16), tonumber(data.backgroundcolor:sub(4, 5), 16), tonumber(data.backgroundcolor:sub(6, 7), 16)
 		bkg:setFillColor(r / 255, g / 255, b / 255)
 	end
@@ -210,7 +211,7 @@ function core.buildMap(data)
 
 			-- Pass each layer type to that layer builder
 			if data.layers[i].type == "tilelayer" then
-				layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties)
+				layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties, tileIDs)
 				layer._type = "tile"
 
 				-- Tile layer-specific code
@@ -343,6 +344,18 @@ function core.buildMap(data)
 			end
 		end
 	end
+
+	function map.layers()
+		local i = 0
+		return function()
+			i = i + 1
+			if map.layer[i] then
+				return map.layer[i], i
+			else
+				return nil
+			end
+		end
+	end
 	
 	function map._getTileLayers() return layerList.tile end
 	function map._getObjectLayers() return layerList.object end
@@ -368,6 +381,9 @@ function core.buildMap(data)
 	-- Finish Up
 	------------------------------------------------------------------------------
 	update = lib_update.register(map)
+	for layer in map.objectLayers() do
+		layer._buildAllObjects()
+	end
 
 	return map
 end

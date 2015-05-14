@@ -154,7 +154,8 @@ local function getProperties(data, objPrefix, isLayer)
 
 		local dotMode
 
-		if key:match("^!nodot!") then
+		if key:match("^!no[Dd]ot!") then
+			if key:sub(4) == "d" then verby_alert("Warning: `!nodot!` prefix is deprecated. Use `!noDot!`.") end
 			key = key:sub((getSetting("spaceAfterEscapedPrefix") and 9) or 8)
 			dotMode = false
 		elseif key:match("^!dot!") then

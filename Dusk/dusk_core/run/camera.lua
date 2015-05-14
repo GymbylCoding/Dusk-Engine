@@ -38,6 +38,7 @@ function lib_camera.addControl(map)
 	local camera
 
 	camera = {
+		enableParallax = true,
 		trackingLevel = getSetting("defaultCameraTrackingLevel"),
 		scaleBoundsToScreen = getSetting("scaleCameraBoundsToScreen"),
 		viewX = screen.centerX,
@@ -92,6 +93,7 @@ function lib_camera.addControl(map)
 				local layer = map.layer[i]
 				camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
 				camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
+
 				layer.x = math_round((layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset)
 				layer.y = math_round((layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset)
 			end
@@ -253,7 +255,9 @@ function lib_camera.addControl(map)
 		if noSnapCamera then
 			-- Specified as do not snap camera to object, so do nothing
 		else
+			camera.enableParallax = false
 			map.snapCamera() -- Center on object to start out; this function is not defined in this library, but we know we'll get it when lib_update processes the map
+			camera.enableParallax = true
 		end
 	end
 

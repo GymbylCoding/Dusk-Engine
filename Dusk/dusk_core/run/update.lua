@@ -20,18 +20,19 @@ local lib_settings = require("Dusk.dusk_core.misc.settings")
 local getSetting = lib_settings.get
 
 local lib_camera; if getSetting("enableCamera") then lib_camera = require("Dusk.dusk_core.run.camera") end
-local lib_tileculling; if getSetting("enableTileCulling") then lib_tileculling = require("Dusk.dusk_core.run.tileculling") end
+local lib_culling; if getSetting("enableTileCulling") or getSetting("enableObjectCulling") then lib_tileculling = require("Dusk.dusk_core.run.culling") end
 local lib_anim = require("Dusk.dusk_core.run.anim")
 
 --------------------------------------------------------------------------------
 -- Register Tile Culling and Camera
 --------------------------------------------------------------------------------
 function lib_update.register(map)
-	local enableCamera, enableTileCulling = getSetting("enableCamera"), getSetting("enableTileCulling")
+	local enableCamera, enableTileCulling, enableObjectCulling = getSetting("enableCamera"), getSetting("enableTileCulling"), getSetting("enableObjectCulling")
 	local mapLayers = #map.layer
 
 	local update = {}
 	local camera, culling
+	local enableCulling = enableTileCulling or enableObjectCulling
 	local anim = lib_anim.new(map)
 
 	------------------------------------------------------------------------------
@@ -45,35 +46,42 @@ function lib_update.register(map)
 		camera = lib_camera.addControl(map)
 	end
 
-	if enableTileCulling then
-		if not lib_tileculling then
-			lib_tileculling = require("Dusk.dusk_core.run.tileculling")
+	if enableCulling then
+		if not lib_culling then
+			lib_culling = require("Dusk.dusk_core.run.culling")
 		end
 
-		culling = lib_tileculling.addTileCulling(map)
-		culling.screenTileField.x, culling.screenTileField.y = screen.centerX, screen.centerY
+		culling = lib_culling.addCulling(map)
+		culling.screenCullingField.x, culling.screenCullingField.y = screen.centerX, screen.centerY
 
-		for layer, i in map.tileLayers() do
-			if culling.screenTileField.layer[i] then
-				local l, r, t, b = culling.screenTileField.layer[i].updatePositions()
-				layer._edit(l, r, t, b, "d")
-				culling.screenTileField.layer[i].updatePositions()
+		for layer, i in map.layers() do
+			if culling.screenCullingField.layer[i] then
+				local l, r, t, b = culling.screenCullingField.layer[i].updatePositions()
+				if layer._layerType == "tile" then
+					layer._edit(l, r, t, b, "d")
+				else
+					layer.draw(l, r, t, b, true, true)
+				end
+				culling.screenCullingField.layer[i].updatePositions()
 			end
 		end
 	else
 		for layer in map.tileLayers() do
 			layer._edit(1, map.data.mapWidth, 1, map.data.mapHeight, "d")
 		end
+		for layer in map.objectLayers() do
+			layer.draw(1, map.data.mapWidth, 1, map.data.mapHeight)
+		end
 	end
 	
 	------------------------------------------------------------------------------
-	-- Update Tile Culling Only
+	-- Update Culling Only
 	------------------------------------------------------------------------------
-	local function updateTileCulling()
+	local function updateCulling()
 		map._animManager.update()
 
-		for i = 1, #culling.screenTileField.layer do
-			culling.screenTileField.layer[i].update()
+		for i = 1, #culling.screenCullingField.layer do
+			culling.screenCullingField.layer[i].update()
 		end
 	end
 
@@ -100,8 +108,8 @@ function lib_update.register(map)
 				camera.layer[i].update()
 			end
 
-			if culling.screenTileField.layer[i] then
-				culling.screenTileField.layer[i].update()
+			if culling.screenCullingField.layer[i] then
+				culling.screenCullingField.layer[i].update()
 			end
 		end
 	end
@@ -114,7 +122,7 @@ function lib_update.register(map)
 		culling = nil
 	end
 
-	map.snapCamera = function()
+	function map.snapCamera()
 		local trackingLevel = map.getTrackingLevel()
 		map.setTrackingLevel(1)
 		map.updateView()
@@ -124,19 +132,19 @@ function lib_update.register(map)
 	------------------------------------------------------------------------------
 	-- Give Tile/Camera Updating to Map
 	------------------------------------------------------------------------------
-	if enableTileCulling and not enableCamera then
-		map.updateView = updateTileCulling
+	if enableCulling and not enableCamera then
+		map.updateView = updateCulling
 		updateView = nil
 		updateCamera = nil
-	elseif enableCamera and not enableTileCulling then
+	elseif enableCamera and not enableCulling then
 		map.updateView = updateCamera
 		updateTileCulling = nil
 		updateView = nil
-	elseif enableTileCulling and enableCamera then
+	elseif enableCulling and enableCamera then
 		map.updateView = updateView
 		updateCamera = nil
 		updateTileCulling = nil
-	elseif not enableTileCulling and not enableCamera then
+	elseif not enableCulling and not enableCamera then
 		map.updateView = map._animManager.update
 	end
 

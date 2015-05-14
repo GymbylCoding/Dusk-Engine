@@ -99,10 +99,11 @@ local data = {
 
 	-- Allow Dusk to clip and draw tiles as needed
 	enableTileCulling = true,
-
+	enableObjectCulling = true,
+	
 	-- Tiles outside the screen to draw. If you're seeing tiles being drawn and
 	-- erased, set this as needed. Otherwise, a value of 1 should be fine.
-	tileCullingMargin = 1,
+	cullingMargin = 1,
 
 	-- Functions called to style objects
 	stylePointBasedObject = function(p) p.strokeWidth = 5 p:setStrokeColor(1, 1, 1, 0.5) end,

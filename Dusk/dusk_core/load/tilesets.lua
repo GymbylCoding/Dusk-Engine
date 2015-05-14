@@ -38,6 +38,7 @@ function lib_tilesets.get(data, dirTree)
 	local tileProperties = {}				-- Tile properties for each tileset
 	local tileIndex = {}						-- Tile GID table - each number in the data corresponds to a tile
 	local c = 0											-- Total number of tiles from all tilesets
+	local tileIDs = {}              -- Tile ID list
 
 	------------------------------------------------------------------------------
 	-- Iterate Through Tilesets
@@ -100,6 +101,9 @@ function lib_tilesets.get(data, dirTree)
 			
 				if data.tilesets[i].tileproperties[strGID] then
 					tilesetProperties[gid] = getProperties(data.tilesets[i].tileproperties[strGID], "tile", false)
+					if tilesetProperties[gid].object["!tileID!"] then
+						tileIDs[tilesetProperties[gid].object["!tileID!"] ] = gid
+					end
 				end
 			end
 		end
@@ -119,7 +123,7 @@ function lib_tilesets.get(data, dirTree)
 
 	data.highestGID = c
 
-	return imageSheets, imageSheetConfig, tileProperties, tileIndex
+	return imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs
 end
 
 return lib_tilesets
