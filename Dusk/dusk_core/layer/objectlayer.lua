@@ -61,7 +61,6 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	local objectsDefaultToData = getSetting("objectsDefaultToData")
 	local virtualObjectsVisible = getSetting("virtualObjectsVisible")
 	local objTypeRectPointSquare = getSetting("objTypeRectPointSquare")
-	local gridScale = getSetting("objectCullingGridScale")
 
 	local layerProps = getProperties(data.properties or {}, "objects", true)
 
@@ -117,6 +116,10 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 	local cullObject = function(objData)
 		display.remove(objData.constructedObject)
+
+		layer.object[objData.constructedObject._name] = nil
+		layer.object[objData.objectIndex] = nil
+
 		objData.constructedObject = nil
 	end
 
@@ -181,6 +184,9 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		end
 
 		objData.constructedObject = obj
+
+		layer.object[obj._name] = obj
+		layer.object[objData.objectIndex] = obj
 	end
 
 	------------------------------------------------------------------------------
@@ -203,16 +209,18 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		if physicsExistent == nil then physicsExistent = layerProps.options.physicsExistent end
 
 		local isDataObject
-		if objProps["!isData!"] ~= nil then
+		
+		if objProps.object["!isData!"] ~= nil then
 			isDataObject = objProps["!isData!"]
-		elseif layerProps["!isData!"] ~= nil then
-			isDataObject = layerProps["!isData!"]
+		elseif layerProps.layer["!isData!"] ~= nil then
+			isDataObject = layerProps.layer["!isData!"]
 		else
 			isDataObject = objectsDefaultToData
 		end
 
 		data.physicsExistent = physicsExistent
 		data.isDataObject = isDataObject
+		data.objectIndex = o.objectIndex
 
 		-- Ellipse
 		if o.ellipse then
@@ -343,13 +351,18 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 			data.physicsParameters = physicsParameters
 		end
 
-		if o.rotation == 0 then
-			getObjectDataBounds(data)
-			addObjectDataToCullingGrid(data)
-		else
-			-- Currently can't do rotated objects because of manual bounds calculation
-			verby_alert("Warning: Object rotation is not 0; object will not be added to culling grid or culled.")
+		if data.isDataObject then
+			print("data object")
 			constructObject(data)
+		else
+			if o.rotation == 0 then
+				getObjectDataBounds(data)
+				addObjectDataToCullingGrid(data)
+			else
+				-- Currently can't do rotated objects because of manual bounds calculation
+				verby_alert("Warning: Object rotation is not 0; object will not be added to culling grid or culled.")
+				constructObject(data)
+			end
 		end
 
 		return data
@@ -418,6 +431,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		for i = 1, #data.objects do
 			local o = data.objects[i]
 			if o == nil then verby_error("Object data missing at index " .. i) end
+			o.objectIndex = i
 			objDatas[i] = constructObjectData(o)
 		end
 	end
