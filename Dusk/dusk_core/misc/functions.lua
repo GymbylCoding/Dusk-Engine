@@ -64,14 +64,15 @@ local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY 
 -- String to value
 function stringToValue(value)
 	local v
+	local t = tonumber(value)
 	if value == "true" or value == "false" then
 		if value == "true" then
 			v = true
 		else
 			v = false
 		end
-	elseif value:match("%-?%d+%.?[%d]+") == value then
-		v = tonumber(value)
+	elseif t then
+		v = t
 	elseif value:match("^!json!") then
 		v = json_decode(value:sub(7))
 	elseif value:match("^!!!") then

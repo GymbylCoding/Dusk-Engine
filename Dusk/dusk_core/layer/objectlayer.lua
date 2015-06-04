@@ -69,6 +69,16 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	layer._layerType = "object"
 	layer.object = {}
 
+	local objListeners = {
+		drawn = {
+			type = {},
+			name = {},
+		},
+		erased = {
+			type = {},
+			name = {}
+		}
+	}
 	local objDatas = {}
 
 	local cullingGrid = {}
@@ -115,6 +125,25 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	end
 
 	local cullObject = function(objData)
+		if objListeners.erased.name[objData.constructedObject._name] then
+			local l = objListeners.erased.name[objData.constructedObject._name]
+			for i = 1, #l do
+				l[i]({
+					object = objData.constructedObject,
+					name = "erased"
+				})
+			end
+		end
+		if objListeners.erased.type[objData.constructedObject._type] then
+			local l = objListeners.erased.type[objData.constructedObject._type]
+			for i = 1, #l do
+				l[i]({
+					object = objData.constructedObject,
+					name = "erased"
+				})
+			end
+		end
+
 		display.remove(objData.constructedObject)
 
 		layer.object[objData.constructedObject._name] = nil
@@ -187,6 +216,25 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 		layer.object[obj._name] = obj
 		layer.object[objData.objectIndex] = obj
+
+		if objListeners.drawn.name[obj._name] then
+			local l = objListeners.drawn.name[obj._name]
+			for i = 1, #l do
+				l[i]({
+					object = objData.constructedObject,
+					name = "drawn"
+				})
+			end
+		end
+		if objListeners.drawn.type[obj._type] then
+			local l = objListeners.drawn.type[obj._type]
+			for i = 1, #l do
+				l[i]({
+					object = objData.constructedObject,
+					name = "drawn"
+				})
+			end
+		end
 	end
 
 	------------------------------------------------------------------------------
@@ -226,6 +274,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		if o.ellipse then
 			data.type = "ellipse"
 			data.transfer._objType = "ellipse"
+			data.transfer.isVisible = virtualObjectsVisible
 
 			local zx, zy, zw, zh = o.x, o.y, o.width, o.height
 
@@ -263,6 +312,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		elseif o.polygon or o.polyline then
 			data.type = "polywhatsit"
 			data.transfer._objType = o.polygon and "polygon" or "polyline"
+			data.transfer.isVisible = virtualObjectsVisible
 			
 			local xMin, yMin, xMax, yMax = math_huge, math_huge, math_nhuge, math_nhuge
 			local points = o.polygon or o.polyline
@@ -312,6 +362,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		else
 			data.type = "rect"
 			data.transfer._objType = "rect"
+			data.transfer.isVisible = virtualObjectsVisible
 
 			data.width, data.height = o.width, o.height
 			
@@ -329,12 +380,12 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		data.transfer._name = o.name
 		data.transfer._type = o.type
 		if not isDataObject then
-			data.transfer.isVisible = virtualObjectsVisible
+			-- data.transfer.isVisible = virtualObjectsVisible
 		end
 
-		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(objData.transfer, k, v) else objData.transfer[k] = v end end
-		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(objData.transfer, k, v) else objData.transfer[k] = v end end
-		for k, v in pairs(objProps.props) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(objData.transfer.props, k, v) else objData.transfer.props[k] = v end end
+		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(data.transfer, k, v) else data.transfer[k] = v end end
+		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(data.transfer, k, v) else data.transfer[k] = v end end
+		for k, v in pairs(objProps.props) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(data.transfer.props, k, v) else data.transfer.props[k] = v end end
 
 		-- Physics data
 		if physicsExistent then
@@ -352,7 +403,6 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		end
 
 		if data.isDataObject then
-			print("data object")
 			constructObject(data)
 		else
 			if o.rotation == 0 then
@@ -421,6 +471,49 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 				end
 			end
 		end
+	end
+
+	------------------------------------------------------------------------------
+	-- Add Object Listener
+	------------------------------------------------------------------------------
+	function layer.addObjectListener(forField, value, eventName, callback)
+		local target = objListeners[eventName]
+		if not target then verby_error("Unrecognized event \"" .. eventName .. "\"") end
+
+		if forField == "name" then
+			target = target.name
+			for object in layer.nameIs(value) do
+				if eventName == "drawn" and object then
+					callback({
+						object = object,
+						name = "drawn"
+					})
+				elseif eventName == "erased" and not object then
+					callback({
+						object = object,
+						name = "erased"
+					})
+				end
+			end
+		elseif forField == "type" then
+			target = target.type
+			for object in layer.typeIs(value) do
+				if eventName == "drawn" and object then
+					callback({
+						object = object,
+						name = "drawn"
+					})
+				elseif eventName == "erased" and not object then
+					callback({
+						object = object,
+						name = "erased"
+					})
+				end
+			end
+		end
+
+		target[value] = target[value] or {}
+		target[value][#target[value] + 1] = callback
 	end
 
 	------------------------------------------------------------------------------

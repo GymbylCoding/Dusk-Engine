@@ -148,7 +148,7 @@ end
 --------------------------------------------------------------------------------
 function lib_settings.get(preferenceName)
 	if preferenceName == nil then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
-	return data[preferenceName] or nil
+	return data[preferenceName]
 end
 
 --------------------------------------------------------------------------------
