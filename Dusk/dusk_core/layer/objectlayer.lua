@@ -163,7 +163,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 				obj = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
 					obj:setFrame(tileGID)
-					obj.x, obj.y = o.x + (mapData.stats.tileWidth * 0.5), o.y - (mapData.stats.tileHeight * 0.5)
+					obj.x, obj.y = o.x + o.width * 0.5, o.y - o.height * 0.5
 					obj.xScale, obj.yScale = screen.zoomX, screen.zoomY
 
 				obj._objType = "image"
