@@ -563,12 +563,13 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	function layer._getTilesInRange(x, y, w, h)
 		local t = {}
-		for xPos = x, x + w - 1 do
-			for yPos = y, y + h - 1 do
+		local incrX, incrY = 1, 1
+		if w < 0 then incrX = -1 end
+		if h < 0 then incrY = -1 end
+		for xPos = x, x + w - 1, incrX do
+			for yPos = y, y + h - 1, incrY do
 				local tile = layer.tile(xPos, yPos)
-				if tile then
-					table_insert(t, tile)
-				end
+				if tile then t[#t + 1] = tile end
 			end
 		end
 
@@ -594,6 +595,18 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x - w, y - h, w * 2, h * 2)
+
+		local i = 0
+		return function()
+			i = i + 1
+			if tiles[i] then return tiles[i] else return nil end
+		end
+	end
+
+	function layer.tilesInBlock(x1, y1, x2, y2)
+		if x1 == nil or y1 == nil or x2 == nil or y2 == nil then verby_error("Missing argument(s).") end
+	
+		local tiles = layer._getTilesInRange(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
 
 		local i = 0
 		return function()

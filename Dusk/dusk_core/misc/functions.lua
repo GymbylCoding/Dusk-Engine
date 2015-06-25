@@ -36,7 +36,7 @@ local verby_alert = verby.alert
 local getSetting = lib_settings.get
 local keyPattern = "([%w_%-%+\"\'!@#$%^&*%(%)]+)%."
 
-local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp, reverseTable, addProperties, getDirectory, setProperty
+local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp, reverseTable, addProperties, getDirectory, rotatePoint, setProperty
 
 --------------------------------------------------------------------------------
 -- General Helper Functions
@@ -56,7 +56,7 @@ function reverseTable(t) local new = {} for i = 1, #t do new[#t - (i - 1)] = t[i
 -- Get directory
 function getDirectory(dirTree, path) local path = path local numDirs = #dirTree local _i = 1 while path:sub(_i, _i + 2) == "../" do _i = _i + 3 numDirs = numDirs - 1 end local filename = path:sub(_i) local dirPath = table_concat(dirTree, "/", 1, numDirs) return dirPath, filename end
 -- Rotate point
-local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
+function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
 
 --------------------------------------------------------------------------------
 -- Engine Helper Functions
@@ -65,6 +65,8 @@ local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY 
 function stringToValue(value)
 	local v
 	local t = tonumber(value)
+	local m = value:match("^!(.-)![^!]")
+
 	if value == "true" or value == "false" then
 		if value == "true" then
 			v = true
@@ -73,14 +75,13 @@ function stringToValue(value)
 		end
 	elseif t then
 		v = t
-	elseif value:match("^!json!") then
+	elseif m == "json" then
 		v = json_decode(value:sub(7))
-	elseif value:match("^!!!") then
+	elseif m == "!" then
 		v = bang.read(value:sub(4))
-	elseif value:match("^!math!") or value:match("^!eval!") then
-		if value:match("^!eval!") then verby_alert("Warning: `!eval!` prefix has been deprecated in favor of `!math!`") end
+	elseif m == "math" then
 		v = syfer_solve(value:sub(7), getSetting("evalVariables"))
-	elseif value:match("^!tags!") then
+	elseif m == "tags" then
 		value = value:sub(7)
 		local t = {}
 		for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end

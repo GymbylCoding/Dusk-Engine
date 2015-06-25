@@ -35,7 +35,7 @@ local data = {
 	-- that path
 	detectMapPath = true,
 
-	-- Should prefixes like !dot! or !nodot! have the rest of the property clipped
+	-- Should prefixes like !dot! or !noDot! have the rest of the property clipped
 	-- with a space after it for readability (`!dot! prop` vs. `!dot!prop`)
 	spaceAfterEscapedPrefix = false,
 

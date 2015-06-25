@@ -200,16 +200,16 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 			end
 		end
 
-		for k, v in pairs(objData.transfer) do
-			obj[k] = v
-		end
-
 		if objData.physicsExistent then
-			if #data.physicsParameters == 1 then
+			if #objData.physicsParameters == 1 then
 				physics_addBody(obj, objData.physicsParameters[1])
 			else
 				physics_addBody(obj, unpack(objData.physicsParameters))
 			end
+		end
+
+		for k, v in pairs(objData.transfer) do
+			obj[k] = v
 		end
 
 		objData.constructedObject = obj
@@ -379,9 +379,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 		data.transfer._name = o.name
 		data.transfer._type = o.type
-		if not isDataObject then
-			-- data.transfer.isVisible = virtualObjectsVisible
-		end
+		if not isDataObject then data.transfer.isVisible = virtualObjectsVisible end
 
 		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(data.transfer, k, v) else data.transfer[k] = v end end
 		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(data.transfer, k, v) else data.transfer[k] = v end end
@@ -410,7 +408,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 				addObjectDataToCullingGrid(data)
 			else
 				-- Currently can't do rotated objects because of manual bounds calculation
-				verby_alert("Warning: Object rotation is not 0; object will not be added to culling grid or culled.")
+				-- verby_alert("Warning: Object rotation is not 0; object will not be added to culling grid or culled.")
 				constructObject(data)
 			end
 		end
