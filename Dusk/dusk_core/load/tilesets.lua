@@ -11,7 +11,6 @@ local lib_tilesets = {}
 --------------------------------------------------------------------------------
 -- Localize
 --------------------------------------------------------------------------------
-local verby = require("Dusk.dusk_core.external.verby")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
@@ -22,7 +21,6 @@ local table_insert = table.insert
 local table_concat = table.concat
 local tostring = tostring
 local string_len = string.len
-local verby_error = verby.error
 local getProperties = lib_functions.getProperties
 local getDirectory = lib_functions.getDirectory
 
@@ -115,7 +113,7 @@ function lib_tilesets.get(data, dirTree)
 
 		options.config.count = gid
 
-		if not imageSheets[i] then verby_error("Tileset image (\"" .. options.image .. "\") not found.") end
+		if not imageSheets[i] then error("Tileset image (\"" .. options.image .. "\") not found.") end
 
 		imageSheetConfig[i] = options.config
 		tileProperties[i] = tilesetProperties

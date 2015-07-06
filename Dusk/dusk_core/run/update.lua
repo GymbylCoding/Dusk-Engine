@@ -13,7 +13,6 @@ local lib_update = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 
@@ -70,7 +69,7 @@ function lib_update.register(map)
 					else
 						layer._edit(1, map.data.mapWidth, 1, map.data.mapHeight, "d")
 					end
-				else
+				elseif layer._layerType == "object" then
 					if enableObjectCulling then
 						layer.draw(l, r, t, b, true, true)
 					else

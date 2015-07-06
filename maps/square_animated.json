@@ -11,6 +11,7 @@
          "x":0,
          "y":0
         }],
+ "nextobjectid":1,
  "orientation":"orthogonal",
  "properties":
     {
@@ -38,6 +39,77 @@
                 {
                  "anim:enabled":"true",
                  "anim:options":"!!! start: 1 count: 16 time: 1000"
+                }
+            },
+         "tiles":
+            {
+             "0":
+                {
+                 "animation":[
+                        {
+                         "duration":100,
+                         "tileid":0
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":1
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":2
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":3
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":4
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":5
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":6
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":7
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":8
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":9
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":10
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":11
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":12
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":13
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":14
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":15
+                        }]
                 }
             },
          "tilewidth":32

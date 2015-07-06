@@ -13,7 +13,6 @@ local lib_objectlayer = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
@@ -34,9 +33,7 @@ local table_insert = table.insert
 local table_maxn = table.maxn
 local type = type
 local unpack = unpack
-local verby_error = verby.error
-local verby_alert = verby.alert
-local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
+local physics_addBody
 local getSetting = lib_settings.get
 local spliceTable = lib_functions.spliceTable
 local isPolyClockwise = lib_functions.isPolyClockwise
@@ -45,6 +42,17 @@ local getProperties = lib_functions.getProperties
 local setProperty = lib_functions.setProperty
 local rotatePoint = lib_functions.rotatePoint
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
+
+if physics and type(physics) == "table" and physics.addBody then
+	physics_addBody = physics.addBody
+else
+	physics_addBody = function(...)
+		require("physics")
+		physics.start()
+		physics_addBody = physics.addBody
+		return physics_addBody(...)
+	end
+end
 
 --------------------------------------------------------------------------------
 -- Create Layer
@@ -118,10 +126,10 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		cullingGrid[l][b] = cullingGrid[l][b] or makeCullingGridEntry()
 		cullingGrid[r][b] = cullingGrid[r][b] or makeCullingGridEntry()
 
-		table_insert(cullingGrid[l][t].lt, objData)
-		table_insert(cullingGrid[r][t].rt, objData)
-		table_insert(cullingGrid[l][b].lb, objData)
-		table_insert(cullingGrid[r][b].rb, objData)
+		cullingGrid[l][t].lt[#cullingGrid[l][t].lt + 1] = objData
+		cullingGrid[r][t].rt[#cullingGrid[r][t].rt + 1] = objData
+		cullingGrid[l][b].lb[#cullingGrid[l][b].lb + 1] = objData
+		cullingGrid[r][b].rb[#cullingGrid[r][b].rb + 1] = objData
 	end
 
 	local cullObject = function(objData)
@@ -208,9 +216,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 			end
 		end
 
-		for k, v in pairs(objData.transfer) do
-			obj[k] = v
-		end
+		for k, v in pairs(objData.transfer) do obj[k] = v end
 
 		objData.constructedObject = obj
 
@@ -379,7 +385,9 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 		data.transfer._name = o.name
 		data.transfer._type = o.type
-		if not isDataObject then data.transfer.isVisible = virtualObjectsVisible end
+		if not isDataObject then
+			-- data.transfer.isVisible = virtualObjectsVisible
+		end
 
 		for k, v in pairs(layerProps.object) do if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(data.transfer, k, v) else data.transfer[k] = v end end
 		for k, v in pairs(objProps.object) do if (dotImpliesTable or objProps.options.usedot[k]) and not objProps.options.nodot[k] then setProperty(data.transfer, k, v) else data.transfer[k] = v end end
@@ -408,7 +416,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 				addObjectDataToCullingGrid(data)
 			else
 				-- Currently can't do rotated objects because of manual bounds calculation
-				-- verby_alert("Warning: Object rotation is not 0; object will not be added to culling grid or culled.")
+				print("Warning: Object rotation is not 0; object will not be added to culling grid or culled.")
 				constructObject(data)
 			end
 		end
@@ -476,7 +484,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	------------------------------------------------------------------------------
 	function layer.addObjectListener(forField, value, eventName, callback)
 		local target = objListeners[eventName]
-		if not target then verby_error("Unrecognized event \"" .. eventName .. "\"") end
+		if not target then error("Unrecognized event \"" .. eventName .. "\"") end
 
 		if forField == "name" then
 			target = target.name
@@ -521,7 +529,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		prepareCulling()
 		for i = 1, #data.objects do
 			local o = data.objects[i]
-			if o == nil then verby_error("Object data missing at index " .. i) end
+			if o == nil then error("Object data missing at index " .. i) end
 			o.objectIndex = i
 			objDatas[i] = constructObjectData(o)
 		end
@@ -567,7 +575,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	-- Iterator: _literalIterator()
 	------------------------------------------------------------------------------
 	function layer._literalIterator(n, checkFor, inTable)
-		if not (n ~= nil) then verby_error("Nothing was passed to constructor of literal-match iterator") end
+		if not (n ~= nil) then error("Nothing was passed to constructor of literal-match iterator") end
 
 		local n = n
 		local checkFor = checkFor or "type"
@@ -579,7 +587,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	-- Iterator: _matchIterator()
 	------------------------------------------------------------------------------
 	function layer._matchIterator(n, checkFor, inTable)
-		if not (n ~= nil) then verby_error("Nothing was passed to constructor of pattern-based iterator") end
+		if not (n ~= nil) then error("Nothing was passed to constructor of pattern-based iterator") end
 
 		local n = n
 		local checkFor = checkFor or "type"

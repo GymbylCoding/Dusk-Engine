@@ -13,12 +13,9 @@ local lib_settings = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 
 local type = type
-local verby_assert = verby.assert
-local verby_error = verby.error
 
 --------------------------------------------------------------------------------
 -- Data
@@ -121,7 +118,7 @@ local data = {
 	redrawOnTileExistent = false,
 
 	-- Allow Dusk to cull rotated maps; if you're not rotating your maps, this
-	-- should be inactive. It adds a small performance drop. On the other hand, if
+	-- should be inactive. It adds a tiny performance drop. On the other hand, if
 	-- you're rotating your maps, all sorts of culling matrix corruption happens
 	-- unless this is enabled.
 	enableRotatedMapCulling = false,
@@ -130,15 +127,26 @@ local data = {
 	mathVariables = {
 		screenWidth = screen.width,
 		screenHeight = screen.height
-	}
+	},
+
+	-- Escaped prefix methods
+	escapedPrefixMethods = {}
+}
+
+-- Settings that cannot be directly set
+local readOnly = {
+	escapedPrefixMethods = true,
+	mathVariables = true
 }
 
 --------------------------------------------------------------------------------
 -- Set Preference
 --------------------------------------------------------------------------------
 function lib_settings.set(preferenceName, value)
-	if not preferenceName or value == nil then verby_error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
-	if data[preferenceName] == nil then verby_error("Unrecognized setting \"" .. preferenceName .. "\".") end
+	if not preferenceName or value == nil then error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
+	if data[preferenceName] == nil then error("Unrecognized setting \"" .. preferenceName .. "\".") end
+
+	if readOnly[preferenceName] then print("Warning: Setting \"" .. preferenceName .. "\" cannot be set directly. There may be a dedicated setter for it.") end
 
 	data[preferenceName] = value
 end
@@ -147,7 +155,7 @@ end
 -- Get Preference
 --------------------------------------------------------------------------------
 function lib_settings.get(preferenceName)
-	if preferenceName == nil then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
+	if preferenceName == nil then error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
 	return data[preferenceName]
 end
 

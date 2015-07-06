@@ -9,9 +9,10 @@ display.setStatusBar(display.HiddenStatusBar)
 display.setDefault("minTextureFilter", "nearest")
 display.setDefault("magTextureFilter", "nearest")
 
-require("physics")
-physics.start()
-physics.setDrawMode("hybrid")
+-- This ain't needed now - Dusk auto-loads physics if needed
+-- require("physics")
+-- physics.start()
+-- physics.setDrawMode("hybrid")
 
 local mapTouch
 

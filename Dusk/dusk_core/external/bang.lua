@@ -2,12 +2,12 @@
 --[[
 Bang
 
-A super-lightweight (only ~44 SLOC, and as many lines of explanatory comments as
-there are lines of code itself!) serialization notation, with a focus on
-conciseness, simplicity, and clarity. It eliminates the need for extra text
-(including unquoted strings, optional commas, no brackets around the base table
-- in other words, no boilerplate code like JSON requires), but remains extremely
-readable and clear.
+A super-lightweight (only ~44 SLOC, and nearly as many lines of explanatory
+comments as there are lines of code itself!) serialization notation, with a
+focus on conciseness, simplicity, and clarity. It eliminates the need for extra
+text (including unquoted strings, optional commas, no brackets around the base
+table - in other words, no boilerplate code like JSON requires), but remains
+extremely readable and clear.
 
 Syntax Pointers:
 - Keys and values can be of any type, just as in Lua

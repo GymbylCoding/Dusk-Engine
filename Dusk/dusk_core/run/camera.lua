@@ -13,14 +13,11 @@ local lib_camera = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local getSetting = lib_settings.get
-local verby_error = verby.error
-local verby_alert = verby.alert
 local getXY = lib_functions.getXY
 local clamp = lib_functions.clamp
 local display_contentWidth = display.contentWidth
@@ -113,8 +110,8 @@ function lib_camera.addControl(map)
 			-- Get offset
 			map.layer[i].getCameraOffset = function() return camera.layer[i].xOffset, camera.layer[i].yOffset end
 
-			map.layer[i].setOffset = function(x, y) verby_alert("Warning: `layer.setOffset()` is deprecated in favor of `layer.setCameraOffset()`.") map.layer[i].setCameraOffset(x, y) end
-			map.layer[i].getOffset = function() verby_alert("Warning: `layer.getOffset()` is deprecated in favor of `layer.getCameraOffset()`.") return map.layer[i].getCameraOffset() end
+			map.layer[i].setOffset = function(x, y) print("Warning: `layer.setOffset()` is deprecated in favor of `layer.setCameraOffset()`.") map.layer[i].setCameraOffset(x, y) end
+			map.layer[i].getOffset = function() print("Warning: `layer.getOffset()` is deprecated in favor of `layer.getCameraOffset()`.") return map.layer[i].getCameraOffset() end
 		end
 	end
 
@@ -246,7 +243,7 @@ function lib_camera.addControl(map)
 	-- Set Focus
 	------------------------------------------------------------------------------
 	function map.setCameraFocus(f, noSnapCamera)
-		if not (f ~= nil and f.x ~= nil and f.y ~= nil) then verby_error("Invalid focus object passed to `map.setCameraFocus()`") end
+		if not (f ~= nil and f.x ~= nil and f.y ~= nil) then error("Invalid focus object passed to `map.setCameraFocus()`") end
 
 		camera.getFocusXY = function()
 			return f.x, f.y
@@ -287,15 +284,15 @@ function lib_camera.addControl(map)
 	------------------------------------------------------------------------------
 	-- Set tracking level (in tracking level format)
 	function map.setTrackingLevel(t)
-		if not t then verby_error("Missing argument to `map.setTrackingLevel()`") end
-		if t <= 0 then verby_error("Invalid argument passed to `map.setTrackingLevel()`: expected t > 0 but got " .. t .. " instead") end
+		if not t then error("Missing argument to `map.setTrackingLevel()`") end
+		if t <= 0 then error("Invalid argument passed to `map.setTrackingLevel()`: expected t > 0 but got " .. t .. " instead") end
 		camera.trackingLevel = t
 	end
 
 	-- Set tracking level (in damping format)
 	function map.setDamping(d)
-		if not d then verby_error("Missing argument to `map.setDamping()`") end
-		if d == 0 then verby_error("Invalid argument passed to `map.setDamping()`: expected d > 0 but got 0 instead.") end
+		if not d then error("Missing argument to `map.setDamping()`") end
+		if d == 0 then error("Invalid argument passed to `map.setDamping()`: expected d > 0 but got 0 instead.") end
 		return map.setTrackingLevel(1 / d)
 	end
 

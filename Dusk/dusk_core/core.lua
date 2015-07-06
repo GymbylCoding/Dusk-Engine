@@ -13,10 +13,8 @@ local core = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_data = require("Dusk.dusk_core.load.data")
-local lib_stats = require("Dusk.dusk_core.load.stats")
 local lib_tilesets = require("Dusk.dusk_core.load.tilesets")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_tilelayer = require("Dusk.dusk_core.layer.tilelayer")
@@ -34,9 +32,9 @@ local math_ceil = math.ceil
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setMathVariable
 local removeVariable = lib_settings.removeMathVariable
-local verby_error = verby.error
-local verby_alert = verby.alert
 local getXY = lib_functions.getXY
+
+local escapedPrefixMethods = getSetting("escapedPrefixMethods")
 
 --------------------------------------------------------------------------------
 -- Plugins
@@ -67,6 +65,12 @@ function core.registerPlugin(plugin)
 		}
 		plugin._dusk_onBuildMapIndex = #core.pluginCallbacks.onBuildMap
 	end
+
+	if plugin.escapedPrefixMethods then
+		for k, v in pairs(plugin.escapedPrefixMethods) do
+			escapedPrefixMethods[k] = v
+		end
+	end
 end
 
 function core.unregisterPlugin(plugin)
@@ -78,7 +82,7 @@ function core.unregisterPlugin(plugin)
 		end
 	end
 
-	if found == 0 then verby_error("Cannot unregister plugin: plugin not found.") end
+	if found == 0 then error("Cannot unregister plugin: plugin not found.") end
 
 	if plugin._dusk_onLoadMapIndex then
 		table_remove(core.pluginCallbacks.onLoadMap, plugin._dusk_onLoadMapIndex)
@@ -91,6 +95,12 @@ function core.unregisterPlugin(plugin)
 		table_remove(core.pluginCallbacks.onBuildMap, plugin._dusk_onBuildMapIndex)
 		for i = found + 1, #core.plugins do
 			if core.plugins[i]._dusk_onBuildMapIndex then core.plugins[i]._dusk_onBuildMapIndex = core.plugins[i]._dusk_onBuildMapIndex - 1 end
+		end
+	end
+
+	if plugin.escapedPrefixMethods then
+		for k, v in pairs(plugin.escapedPrefixMethods) do
+			escapedPrefixMethods[k] = nil
 		end
 	end
 
@@ -107,7 +117,7 @@ function core.loadMap(filename, base)
 
 	-- Load other things
 	local data = lib_data.get(filename, base)
-	local stats = lib_stats.get(data); data.stats = stats
+	local stats = lib_functions.getMapStats(data); data.stats = stats
 
 	data._dusk = {
 		dirTree = dirTree,
@@ -145,6 +155,7 @@ end
 --------------------------------------------------------------------------------
 function core.buildMap(data)
 	local imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
+	local escapedPrefixMethods = getSetting("escapedPrefixes")
 
 	setVariable("mapWidth", data.stats.mapWidth)
 	setVariable("mapHeight", data.stats.mapHeight)
@@ -249,11 +260,11 @@ function core.buildMap(data)
 	-- Now we add each layer to the layer list, for quick layer iteration of a specific type
 	for i = 1, #map.layer do
 		if map.layer[i]._type == "tile" then
-			table_insert(layerList.tile, i)
+			layerList.tile[#layerList.tile + 1] = i
 		elseif map.layer[i]._type == "object" then
-			table_insert(layerList.object, i)
+			layerList.object[#layerList.object + 1] = i
 		elseif map.layer[i]._type == "image" then
-			table_insert(layerList.image, i)
+			layerList.image[#layerList.image + 1] = i
 		end
 	end
 
@@ -267,7 +278,7 @@ function core.buildMap(data)
 	function map.tilesToPixels(x, y)
 		local x, y = getXY(x, y)
 
-		if not (x ~= nil and y ~= nil) then verby_error("Missing argument(s) to `map.tilesToPixels()`") end
+		if not (x ~= nil and y ~= nil) then error("Missing argument(s) to `map.tilesToPixels()`") end
 
 		x, y = x - 0.5, y - 0.5
 
@@ -287,7 +298,7 @@ function core.buildMap(data)
 	function map.pixelsToTiles(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s) to `map.pixelsToTiles()`") end
+		if x == nil or y == nil then error("Missing argument(s) to `map.pixelsToTiles()`") end
 
 		x, y = map:contentToLocal(x, y)
 		return math_ceil(x / map.data.tileWidth), math_ceil(y / map.data.tileHeight)
@@ -299,12 +310,10 @@ function core.buildMap(data)
 	function map.isTileWithinMap(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s) to `map.isTileWithinMap()`") end
+		if x == nil or y == nil then error("Missing argument(s) to `map.isTileWithinMap()`") end
 
 		return (x >= 1 and x <= map.data.mapWidth) and (y >= 1 and y <= map.data.mapHeight)
 	end
-
-	map.tileWithinMap = function(x, y) verby_alert("Warning: `map.tileWithinMap()` is deprecated in favor of `map.isTileWithinMap()`.") return map.isTileWithinMap(x, y) end
 
 	------------------------------------------------------------------------------
 	-- Iterators

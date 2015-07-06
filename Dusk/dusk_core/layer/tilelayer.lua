@@ -13,7 +13,6 @@ local lib_tilelayer = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
@@ -36,13 +35,22 @@ local type = type
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
-local verby_error = verby.error
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
 local setProperty = lib_functions.setProperty
 local getXY = lib_functions.getXY
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
-local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
+
+if physics and type(physics) == "table" and physics.addBody then
+	physics_addBody = physics.addBody
+else
+	physics_addBody = function(...)
+		require("physics")
+		physics.start()
+		physics_addBody = physics.addBody
+		return physics_addBody(...)
+	end
+end
 
 local flipX = tonumber("80000000", 16)
 local flipY = tonumber("40000000", 16)
@@ -260,7 +268,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
 			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
 
-			if gid > mapData.highestGID or gid < 0 then verby_error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
+			if gid > mapData.highestGID or gid < 0 then error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
 
 			local tileData = tileIndex[gid]
 			local sheetIndex = tileData.tilesetIndex
@@ -420,10 +428,6 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	-- Lock/Unlock a Tile
 	------------------------------------------------------------------------------
-	function layer._lockTileDrawn(...) verby_alert("Warning: `layer._lockTileDrawn()` has been deprecated in favor of layer.lockTileDrawn().") layer.lockTileDrawn(...) end
-	function layer._lockTileErased(...) verby_alert("Warning: `layer._lockTileErased()` has been deprecated in favor of layer.lockTileErased().") layer.lockTileErased(...) end
-	function layer._unlockTile(...) verby_alert("Warning: `layer._unlockTile()` has been deprecated in favor of layer.unlockTile().") layer.unlockTile(...) end
-
 	function layer.lockTileDrawn(x, y) if not locked[x] then locked[x] = {} end locked[x][y] = "d" layer._drawTile(x, y) end
 	function layer.lockTileErased(x, y) if not locked[x] then locked[x] = {} end locked[x][y] = "e" layer._eraseTile(x, y) end
 	function layer.unlockTile(x, y) if locked[x] and locked[x][y] then locked[x][y] = nil if table_maxn(locked[x]) == 0 then locked[x] = nil end end end
@@ -433,8 +437,8 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	function layer.addTileListener(tileID, eventName, callback)
 		local gid = tileIDs[tileID]
-		if not gid then verby_error("No tile with ID '" .. tileID .. "' found.") end
-		local listenerTable = (eventName == "drawn" and tileDrawListeners) or (eventName == "erased" and tileEraseListeners) or verby_error("Invalid tile event '" .. eventName .. "'")
+		if not gid then error("No tile with ID '" .. tileID .. "' found.") end
+		local listenerTable = (eventName == "drawn" and tileDrawListeners) or (eventName == "erased" and tileEraseListeners) or error("Invalid tile event '" .. eventName .. "'")
 
 		local l = listenerTable[gid] or {}
 		l[#l + 1] = callback
@@ -447,13 +451,11 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			gid = tileID
 		else
 			gid = tileIDs[tileID]
-			if not gid then verby_error("No tile with ID '" .. tileID .. "' found.") end
+			if not gid then error("No tile with ID '" .. tileID .. "' found.") end
 		end
 
-		local listenerTable = (eventName == "drawn" and tileDrawListeners) or (eventName == "erased" and tileEraseListeners) or verby_error("Invalid tile event '" .. eventName .. "'")
+		local listenerTable = (eventName == "drawn" and tileDrawListeners) or (eventName == "erased" and tileEraseListeners) or error("Invalid tile event '" .. eventName .. "'")
 		local l = listenerTable[gid]
-
-		if not l then verby_error("No tile listener on tile '" .. tileID .. "'.") end
 
 		if callback then
 			for i = 1, #l do
@@ -528,7 +530,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	function layer.tilesToPixels(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil then error("Missing argument(s).") end
 
 		x, y = (x - 0.5) * mapData.stats.tileWidth, (y - 0.5) * mapData.stats.tileHeight
 
@@ -541,7 +543,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	function layer.pixelsToTiles(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil then error("Missing argument(s).") end
 
 		return math_ceil(x / mapData.stats.tileWidth), math_ceil(y / mapData.stats.tileHeight)
 	end
@@ -580,7 +582,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	-- Tile Iterators
 	------------------------------------------------------------------------------
 	function layer.tilesInRange(x, y, w, h)
-		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil or w == nil or h == nil then error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x, y, w, h)
 
@@ -592,7 +594,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	end
 
 	function layer.tilesInRect(x, y, w, h)
-		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil or w == nil or h == nil then error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x - w, y - h, w * 2, h * 2)
 
@@ -604,7 +606,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	end
 
 	function layer.tilesInBlock(x1, y1, x2, y2)
-		if x1 == nil or y1 == nil or x2 == nil or y2 == nil then verby_error("Missing argument(s).") end
+		if x1 == nil or y1 == nil or x2 == nil or y2 == nil then error("Missing argument(s).") end
 	
 		local tiles = layer._getTilesInRange(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
 
