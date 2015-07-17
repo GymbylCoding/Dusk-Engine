@@ -94,6 +94,9 @@ local data = {
 	-- There's probably a better way to explain it, but that's the best I can do.
 	scaleCameraBoundsToScreen = true,
 
+	-- Round camera position to eliminate flickering
+	enableCameraRounding = true,
+
 	-- Allow Dusk to clip and draw tiles as needed
 	enableTileCulling = true,
 	enableObjectCulling = true,
