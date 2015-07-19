@@ -615,6 +615,26 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	-- Destroy Layer
 	------------------------------------------------------------------------------
 	function layer.destroy()
+		for obj in layer.objects() do
+			if objListeners.erased.name[obj._name] then
+				local l = objListeners.erased.name[obj._name]
+				for i = 1, #l do
+					l[i]({
+						object = obj,
+						name = "erased"
+					})
+				end
+			end
+			if objListeners.erased.type[obj._type] then
+				local l = objListeners.erased.type[obj._type]
+				for i = 1, #l do
+					l[i]({
+						object = obj,
+						name = "erased"
+					})
+				end
+			end
+		end
 		display_remove(layer)
 		layer = nil
 	end
