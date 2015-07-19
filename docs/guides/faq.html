@@ -21,6 +21,7 @@
 					<li><a href="#remove-a-map">How do I remove a map? When I use <code>map:removeSelf()</code>, all sorts of nasty errors appear.</a></li>
 					<li><a href="#camera-follow">How do I make the camera follow my game's main character?</a></li>
 					<li><a href="#camera-tracking-level">How do I make the camera less "rigid"?</a></li>
+					<li><a href="#camera-offset">How do I make the camera keep the main character somewhere other than the exact center?</a></li>
 					<li><a href="#catching-on-tile-boundaries">My physics objects are "catching" at the boundaries between physical tiles. How do I fix this?</a></li>
 				</ul>
 				<span class="hr"></span>
@@ -92,6 +93,13 @@ display.setDefault("magTextureFilter", "nearest")</code></pre>
 					<h3>How do I make the camera less "rigid"?</h3>
 					<p>Use the <code>map.setTrackingLevel(t)</code> function. It takes a number from 0 to 1, and makes the camera more or less "fluid" and slow to track. Numbers approaching 0 are more fluid. A tracking value of 0.3 or 0.4 is usually good for most games.</p>
 					<p>Alternatively, you can use the <code>map.setDamping(d)</code> function; it takes any number over zero and sets the tracking level inversely. For this, higher numbers make the camera slower, which can be more natural-feeling to some people.</p>
+				</div>
+				<span class="hr"></span>
+				<a name="camera-offset"></a>
+				<div class="outlined">
+					<h3>How do I make the camera keep the main character somewhere other than the exact center?</h3>
+					<p>You can offset the camera's focus from the center of the screen by setting each layer's camera offset. This is done via the <code>layer.setCameraOffset(x, y)</code> function.</p>
+					<pre><code type="lua">map.layer["layerName"].setCameraOffset(100, 50)</code></pre>
 				</div>
 				<span class="hr"></span>
 				<a name="catching-on-tile-boundaries"></a>
