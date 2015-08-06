@@ -34,9 +34,13 @@ function lib_tileculling.addCulling(map)
 	local cullingMargin = getSetting("cullingMargin")
 	local tileCullingEnabled = getSetting("enableTileCulling")
 	local objectCullingEnabled = getSetting("enableObjectCulling")
+	local multiCullingFieldsEnabled = getSetting("enableMultipleCullingFields")
 
 	local enableRotatedMapCulling = getSetting("enableRotatedMapCulling")
 
+	------------------------------------------------------------------------------
+	-- New Culling Field
+	------------------------------------------------------------------------------
 	function culling.newCullingField(w, h, x, y)
 		local tileField = {
 			layer = {},
@@ -46,6 +50,11 @@ function lib_tileculling.addCulling(map)
 			y = y or 0
 		}
 
+		tileField.hash = tostring(tileField)
+
+		----------------------------------------------------------------------------
+		-- Build Layer Culling
+		----------------------------------------------------------------------------
 		for layer, i in map.layers() do
 			if (layer._layerType == "tile" and tileCullingEnabled) or (layer._layerType == "object" and objectCullingEnabled) then
 				local layerCulling = {
@@ -58,17 +67,20 @@ function lib_tileculling.addCulling(map)
 
 				local layerEdits = newEditQueue()
 				layerEdits.setTarget(layer)
+
+				if multiCullingFieldsEnabled then
+					layerEdits.setSource(tileField)
+				end
 				
 				--------------------------------------------------------------------------
 				-- Update Culling
 				--------------------------------------------------------------------------
-				
 				layerCulling.update = function()
 					local edgeModeLeft, edgeModeRight, edgeModeTop, edgeModeBottom = layer.edgeModeLeft, layer.edgeModeRight, layer.edgeModeTop, layer.edgeModeBottom
 					local nl, nr, nt, nb = layerCulling.updatePositions()
 					local pl, pr, pt, pb = layerCulling.prev.l, layerCulling.prev.r, layerCulling.prev.t, layerCulling.prev.b
 
-					if nl == pl and nr == pr and nt == pt and nb == pb then return end
+					-- if nl == pl and nr == pr and nt == pt and nb == pb then return end
 
 					-- Difference between current positions and previous positions
 					-- This is used to tell which direction the layer has moved
@@ -81,7 +93,6 @@ function lib_tileculling.addCulling(map)
 					if lDiff > 0 then -- Moved left, so erase left
 						if edgeModeLeft ~= "stop" or pl <= layer._rightmostTile then
 							layerEdits.add(pl, nl, pt, pb, "e", "r")
-							-- print("culling right from " .. pl .. " to " .. nl)
 						end
 					elseif lDiff < 0 then -- Moved right, so draw left
 						if edgeModeLeft ~= "stop" or pl >= layer._leftmostTile then
@@ -161,7 +172,7 @@ function lib_tileculling.addCulling(map)
 						local t, b = math_min(tlY, blY, trY, brY), math_max(tlY, blY, trY, brY)
 
 						-- Calculate left/right/top/bottom to the nearest tile
-						-- We expand each position by one to hide the drawing and erasing
+						-- We expand each position by the culling margin to hide the drawing and erasing
 						l = math_ceil(l * divTileWidth) - cullingMargin
 						r = math_ceil(r * divTileWidth) + cullingMargin
 						t = math_ceil(t * divTileHeight) - cullingMargin
@@ -202,11 +213,51 @@ function lib_tileculling.addCulling(map)
 			end
 		end
 
+		----------------------------------------------------------------------------
+		-- Initialize Culling Field
+		----------------------------------------------------------------------------
+		function tileField.initialize()
+			for layer, i in map.layers() do
+				if tileField.layer[i] then
+					local l, r, t, b = tileField.layer[i].updatePositions()
+					tileField.layer[i].updatePositions()
+					if layer._layerType == "tile" then
+						layer._edit(l, r, t, b, "d", tileField)
+					else
+						layer.draw(l, r, t, b, tileField)
+					end
+				end
+			end
+		end
+
+		----------------------------------------------------------------------------
+		-- Update Layers
+		----------------------------------------------------------------------------
+		function tileField.updateLayers()
+			for layer, i in  map.layers() do
+				if tileField.layer[i] then
+					tileField.layer[i].update()
+				end
+			end
+		end
+
+		function tileField.updateLayerPositions()
+			for layer, i in map.layers() do
+				if tileField.layer[i] then
+					tileField.layer[i].updatePositions()
+				end
+			end
+		end
+
 		return tileField
 	end
 
 	culling.screenCullingField = culling.newCullingField()
-	
+
+	if multiCullingFieldsEnabled then
+		map.newCullingField = culling.newCullingField
+	end
+
 	return culling
 end
 

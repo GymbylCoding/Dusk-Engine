@@ -2,7 +2,7 @@
 --[[
 Dusk Engine Component: Edit Queue
 
-A small (and probably temporary) structure to queue edits for a later time, thereby allowing erase edits to go last.
+A small structure to queue edits for a later time, thereby allowing erase edits to go last.
 --]]
 --------------------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ local lib_editQueue = {}
 --------------------------------------------------------------------------------
 function lib_editQueue.new()
 	local editQueue = {}
-	local target
+	local target, source
 	local draw = {}
 	local erase = {}
 	local di = 0
@@ -46,21 +46,24 @@ function lib_editQueue.new()
 	-- Execute Edits
 	------------------------------------------------------------------------------
 	function editQueue.execute()
+		if di == 0 and ei == 0 then return end
 		if target._layerType == "tile" then
-			for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d") end
-			for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e") end
+			for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d", source) end
+			for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e", source) end
 		elseif target._layerType == "object" then
-			for i = 1, di do target.draw(draw[i][1], draw[i][2], draw[i][3], draw[i][4]) end
-			for i = 1, ei do target.erase(erase[i][1], erase[i][2], erase[i][3], erase[i][4], erase[i][5]) end
+			-- print("Drawing from edit queue")
+			for i = 1, di do target.draw(draw[i][1], draw[i][2], draw[i][3], draw[i][4], source) end
+			for i = 1, ei do target.erase(erase[i][1], erase[i][2], erase[i][3], erase[i][4], erase[i][5], source) end
 		end
 
 		di, ei = 0, 0
 	end
 
 	------------------------------------------------------------------------------
-	-- Set Queue Target
+	-- Set Queue Target/Source
 	------------------------------------------------------------------------------
 	function editQueue.setTarget(t) target = t end
+	function editQueue.setSource(s) source = s end
 
 	return editQueue
 end

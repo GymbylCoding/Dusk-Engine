@@ -220,10 +220,10 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	-- Draw a Single Tile to the Screen
 	------------------------------------------------------------------------------
-	function layer._drawTile(x, y)
+	function layer._drawTile(x, y, source)
 		if locked[x] and locked[x][y] == "e" then return false end
 		
-		if not layerTiles[x] or not layerTiles[x][y] then
+		if not (layerTiles[x] and layerTiles[x][y]) then
 			local idX, idY = x, y
 
 			if x < 1 or x > mapWidth then
@@ -308,6 +308,11 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			tile.tileX, tile.tileY = x, y
 			tile.hash = tostring(tile)
 			
+			if source then
+				tile._drawers = {[source.hash] = true}
+				tile._drawCount = 1
+			end
+
 			if flippedX then tile.xScale = -tile.xScale end
 			if flippedY then tile.yScale = -tile.yScale end
 
@@ -394,19 +399,51 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 					})
 				end
 			end
+		elseif source then
+			local tile = layerTiles[x][y]
+			if not tile._drawers[source.hash] then
+				tile._drawers[source.hash] = true
+				tile._drawCount = tile._drawCount + 1
+			end
 		end
 	end
 
 	------------------------------------------------------------------------------
 	-- Erase a Single Tile from the Screen
 	------------------------------------------------------------------------------
-	function layer._eraseTile(x, y)
+	function layer._eraseTile(x, y, source)
 		if locked[x] and locked[x][y] == "d" then return end
 
-		if layerTiles[x] and layerTiles[x][y] then
-			local tile = layerTiles[x][y]
+		local shouldErase = false
+		local tile
+		if layerTiles[x] and layerTiles[x][y] then tile = layerTiles[x][y] end
 
+		if not tile then return end
+
+		if source and tile then
+			if tile._drawCount == 1 and tile._drawers[source.hash] then
+				shouldErase = true
+			elseif tile._drawers[source.hash] then
+				tile._drawCount = tile._drawCount - 1
+				tile._drawers[source.hash] = nil
+			end
+		elseif tile and not source then
+			shouldErase = true
+		end
+		
+		if shouldErase then
 			if tile.isAnimated and map._animManager then map._animManager.animatedTileRemoved(tile) end
+			
+			if tileEraseListeners[tile.gid] then
+				for i = 1, #tileEraseListeners[tile.gid] do
+					tileEraseListeners[tile.gid][i]({
+						tile = tile,
+						name = "erased"
+					})
+				end
+			end
+
+
 			display_remove(tile)
 			layerTiles[x][y] = nil
 
@@ -473,7 +510,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	-- Edit Section
 	------------------------------------------------------------------------------
-	function layer._edit(x1, x2, y1, y2, mode)
+	function layer._edit(x1, x2, y1, y2, mode, source)
 		local mode = mode or "d"
 		local x1 = x1 or 0
 		local x2 = x2 or x1
@@ -492,7 +529,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 
 		for x = x1, x2 do
 			for y = y1, y2 do
-				layer[layerFunc](x, y)
+				layer[layerFunc](x, y, source)
 			end
 		end
 	end

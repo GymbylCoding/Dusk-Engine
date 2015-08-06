@@ -1,3 +1,17 @@
+### Release Notes for Dusk Dev Tag 0.4
+
+* Stability improvements
+* Re-added `enableCameraRounding` as a setting
+* Added initial culling field support
+	* Add a culling field via `map.newCullingField(w, h, x, y)`
+	* Modify culling field's `x` and `y` to move it around
+	* Currently, modifying a culling field's `w` and `h` doesn't seem to be working perfectly
+	* *Note: Multiple culling fields seem to be working correctly, however, they are very untested and should not be used in a published product currently.*
+* Data objects *should* call draw/erase listeners now when they move in and out of a culling field - this is useful to use them as sensors for when you're within range of something
+* Added iterator for all raw object datas. This is currently the only way to iterate through all (drawn and un-drawn) objects in an object layer
+
+**Notice: This dev tag marks the end of the recent Dusk dev branch "push development". I'm now planning on fixing the bugs and getting Dusk dev tag 0.4 or 0.3 perfectly stable for a stable release.**
+
 ### Release Notes for Dusk Dev Tag 0.3
 
 * Miscellaneous improvements to performance, bug-free-ness, and general awesomeness

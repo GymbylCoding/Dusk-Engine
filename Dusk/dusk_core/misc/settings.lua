@@ -94,7 +94,8 @@ local data = {
 	-- There's probably a better way to explain it, but that's the best I can do.
 	scaleCameraBoundsToScreen = true,
 
-	-- Round camera position to eliminate flickering
+	-- Round camera position to help eliminate flickering. This should be set to
+	-- true unless you notice issues with the camera during diagonal tracking.
 	enableCameraRounding = true,
 
 	-- Allow Dusk to clip and draw tiles as needed
@@ -125,6 +126,10 @@ local data = {
 	-- you're rotating your maps, all sorts of culling matrix corruption happens
 	-- unless this is enabled.
 	enableRotatedMapCulling = false,
+
+	-- Allow multiple culling fields. If unneeded, this adds a performance drop.
+	-- Otherwise, enable it.
+	enableMultipleCullingFields = true,
 
 	-- Math evaluation variables for use with !math! properties
 	mathVariables = {

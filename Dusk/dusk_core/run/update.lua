@@ -51,18 +51,13 @@ function lib_update.register(map)
 		end
 
 		culling = lib_culling.addCulling(map)
+		map._culling = culling
 		culling.screenCullingField.x, culling.screenCullingField.y = screen.centerX, screen.centerY
 
+		culling.screenCullingField.initialize()
+
 		for layer, i in map.layers() do
-			if culling.screenCullingField.layer[i] then
-				local l, r, t, b = culling.screenCullingField.layer[i].updatePositions()
-				if layer._layerType == "tile" then
-					layer._edit(l, r, t, b, "d")
-				else
-					layer.draw(l, r, t, b, true, true)
-				end
-				culling.screenCullingField.layer[i].updatePositions()
-			else
+			if not culling.screenCullingField.layer[i] then
 				if layer._layerType == "tile" then
 					if enableTileCulling then
 						layer._edit(l, r, t, b, "d")

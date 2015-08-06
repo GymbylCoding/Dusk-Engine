@@ -132,113 +132,149 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 		cullingGrid[r][b].rb[#cullingGrid[r][b].rb + 1] = objData
 	end
 
-	local cullObject = function(objData)
-		if objListeners.erased.name[objData.constructedObject._name] then
-			local l = objListeners.erased.name[objData.constructedObject._name]
-			for i = 1, #l do
-				l[i]({
-					object = objData.constructedObject,
-					name = "erased"
-				})
+	------------------------------------------------------------------------------
+	-- Cull Object
+	------------------------------------------------------------------------------
+	local cullObject = function(objData, source)
+		local shouldErase = false
+		local obj = objData.constructedObject
+
+		if source then
+			if obj._drawers[source.hash] and obj._drawCount == 1 then
+				obj._drawers[source.hash] = nil
+				shouldErase = true
+			elseif obj._drawers[source.hash] then
+				obj._drawers[source.hash] = nil
+				obj._drawCount = obj._drawCount - 1
+			end
+		elseif not source then
+			shouldErase = true
+		end
+
+		if shouldErase then
+			if objListeners.erased.name[obj._name] then
+				local l = objListeners.erased.name[obj._name]
+				for i = 1, #l do
+					l[i]({
+						object = obj,
+						name = "erased"
+					})
+				end
+			end
+			if objListeners.erased.type[obj._type] then
+				local l = objListeners.erased.type[obj._type]
+				for i = 1, #l do
+					l[i]({
+						object = obj,
+						name = "erased"
+					})
+				end
+			end
+
+			if not objData.isDataObject then
+				display.remove(obj)
+
+				layer.object[obj._name] = nil
+				layer.object[objData.objectIndex] = nil
+
+				objData.constructedObject = nil
 			end
 		end
-		if objListeners.erased.type[objData.constructedObject._type] then
-			local l = objListeners.erased.type[objData.constructedObject._type]
-			for i = 1, #l do
-				l[i]({
-					object = objData.constructedObject,
-					name = "erased"
-				})
-			end
-		end
-
-		display.remove(objData.constructedObject)
-
-		layer.object[objData.constructedObject._name] = nil
-		layer.object[objData.objectIndex] = nil
-
-		objData.constructedObject = nil
 	end
 
 	------------------------------------------------------------------------------
 	-- Construct Object (from processed object data)
 	------------------------------------------------------------------------------
-	local constructObject = function(objData)
-		local obj
+	local constructObject = function(objData, source)
+		if not objData.constructedObject then
+			local obj
 
-		if not objData.isDataObject then
-			if objData.type == "ellipse" then
-				obj = display_newCircle(0, 0, objData.radius)
+			if not objData.isDataObject then
+				if objData.type == "ellipse" then
+					obj = display_newCircle(0, 0, objData.radius)
+					
+					styleEllipse(obj)
+				elseif objData.type == "polywhatsit" then
+					local points = objData.points
+
+					obj = display_newLine(points[1].x, points[1].y, points[2].x, points[2].y)
+					for i = 3, #points do obj:append(points[i].x, points[i].y) end
+					if objData.closed then obj:append(points[1].x, points[1].y) end
 				
-				styleEllipse(obj)
-			elseif objData.type == "polywhatsit" then
-				local points = objData.points
+					obj.points = objData.points
+					stylePointBased(obj)
+				elseif objData.type == "image" then
+					local tileData = objData.tileData
+					local sheetIndex = tileData.tilesetIndex
+					local tileGID = tileData.gid
 
-				obj = display_newLine(points[1].x, points[1].y, points[2].x, points[2].y)
-				for i = 3, #points do obj:append(points[i].x, points[i].y) end
-				if objData.closed then obj:append(points[1].x, points[1].y) end
-			
-				obj.points = objData.points
-				stylePointBased(obj)
-			elseif objData.type == "image" then
-				local tileData = objData.tileData
-				local sheetIndex = tileData.tilesetIndex
-				local tileGID = tileData.gid
+					obj = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
+					obj:setFrame(tileGID)
 
-				obj = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
-				obj:setFrame(tileGID)
+					styleImageObj(obj)
+				elseif objData.type == "rect" then
+					obj = display_newRect(0, 0, objData.width, objData.height)
 
-				styleImageObj(obj)
-			elseif objData.type == "rect" then
-				obj = display_newRect(0, 0, objData.width, objData.height)
+					styleRect(obj)
+				end
 
-				styleRect(obj)
+				layer:insert(obj)
+			else
+				if objData.type == "ellipse" then
+					obj = {radius = objData.radius}
+				elseif objData.type == "polywhatsit" then
+					obj = {points = objData.points}
+				elseif objData.type == "image" then
+					obj = {tileData = objData.tileData}
+				else
+					obj = {width = objData.width, height = objData.height}
+				end
 			end
 
-			layer:insert(obj)
+			if objData.physicsExistent and not objData.isDataObject then
+				if #objData.physicsParameters == 1 then
+					physics_addBody(obj, objData.physicsParameters[1])
+				else
+					physics_addBody(obj, unpack(objData.physicsParameters))
+				end
+			end
+
+			for k, v in pairs(objData.transfer) do obj[k] = v end
+
+			objData.constructedObject = obj
+
+			layer.object[obj._name] = obj
+			layer.object[objData.objectIndex] = obj
+
+			if source then
+				obj._drawers = {[source.hash] = true}
+				obj._drawCount = 1
+			end
+
+			if objListeners.drawn.name[obj._name] then
+				local l = objListeners.drawn.name[obj._name]
+				for i = 1, #l do
+					l[i]({
+						object = objData.constructedObject,
+						name = "drawn"
+					})
+				end
+			end
+			if objListeners.drawn.type[obj._type] then
+				local l = objListeners.drawn.type[obj._type]
+				for i = 1, #l do
+					l[i]({
+						object = objData.constructedObject,
+						name = "drawn"
+					})
+				end
+			end
 		else
-			if objData.type == "ellipse" then
-				obj = {radius = objData.radius}
-			elseif objData.type == "polywhatsit" then
-				obj = {points = objData.points}
-			elseif objData.type == "image" then
-				obj = {tileData = objData.tileData}
-			else
-				obj = {width = objData.width, height = objData.height}
-			end
-		end
-
-		if objData.physicsExistent then
-			if #objData.physicsParameters == 1 then
-				physics_addBody(obj, objData.physicsParameters[1])
-			else
-				physics_addBody(obj, unpack(objData.physicsParameters))
-			end
-		end
-
-		for k, v in pairs(objData.transfer) do obj[k] = v end
-
-		objData.constructedObject = obj
-
-		layer.object[obj._name] = obj
-		layer.object[objData.objectIndex] = obj
-
-		if objListeners.drawn.name[obj._name] then
-			local l = objListeners.drawn.name[obj._name]
-			for i = 1, #l do
-				l[i]({
-					object = objData.constructedObject,
-					name = "drawn"
-				})
-			end
-		end
-		if objListeners.drawn.type[obj._type] then
-			local l = objListeners.drawn.type[obj._type]
-			for i = 1, #l do
-				l[i]({
-					object = objData.constructedObject,
-					name = "drawn"
-				})
+			if source then
+				if not objData.constructedObject._drawers[source.hash] then
+					objData.constructedObject._drawers[source.hash] = true
+					objData.constructedObject._drawCount = objData.constructedObject._drawCount + 1
+				end
 			end
 		end
 	end
@@ -427,7 +463,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	------------------------------------------------------------------------------
 	-- Draw
 	------------------------------------------------------------------------------
-	function layer.draw(x1, x2, y1, y2)
+	function layer.draw(x1, x2, y1, y2, source)
 		if x1 > x2 then x1, x2 = x2, x1 end
 		if y1 > y2 then y1, y2 = y2, y1 end
 
@@ -437,10 +473,10 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 					if cullingGrid[x][y] then
 						local c = cullingGrid[x][y]
 
-						for i = 1, #c.rt do if not c.rt[i].constructedObject then constructObject(c.rt[i]) end end
-						for i = 1, #c.lt do if not c.lt[i].constructedObject then constructObject(c.lt[i]) end end
-						for i = 1, #c.rb do if not c.rb[i].constructedObject then constructObject(c.rb[i]) end end
-						for i = 1, #c.lb do if not c.lb[i].constructedObject then constructObject(c.lb[i]) end end
+						for i = 1, #c.rt do constructObject(c.rt[i], source) end
+						for i = 1, #c.lt do constructObject(c.lt[i], source) end
+						for i = 1, #c.rb do constructObject(c.rb[i], source) end
+						for i = 1, #c.lb do constructObject(c.lb[i], source) end
 					end
 				end
 			end
@@ -450,7 +486,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	------------------------------------------------------------------------------
 	-- Erase
 	------------------------------------------------------------------------------
-	function layer.erase(x1, x2, y1, y2, dir)
+	function layer.erase(x1, x2, y1, y2, dir, source)
 		if x1 > x2 then x1, x2 = x2, x1 end
 		if y1 > y2 then y1, y2 = y2, y1 end
 
@@ -461,17 +497,17 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 						local c = cullingGrid[x][y]
 
 						if dir == "r" and (#c.rt > 0 or #c.rb > 0) then
-							for i = 1, #c.rt do if c.rt[i].constructedObject then cullObject(c.rt[i]) end end
-							for i = 1, #c.rb do if c.rb[i].constructedObject then cullObject(c.rb[i]) end end
+							for i = 1, #c.rt do if c.rt[i].constructedObject then cullObject(c.rt[i], source) end end
+							for i = 1, #c.rb do if c.rb[i].constructedObject then cullObject(c.rb[i], source) end end
 						elseif dir == "l" and (#c.lt > 0 or #c.lb > 0) then
-							for i = 1, #c.lt do if c.lt[i].constructedObject then cullObject(c.lt[i]) end end
-							for i = 1, #c.lb do if c.lb[i].constructedObject then cullObject(c.lb[i]) end end
+							for i = 1, #c.lt do if c.lt[i].constructedObject then cullObject(c.lt[i], source) end end
+							for i = 1, #c.lb do if c.lb[i].constructedObject then cullObject(c.lb[i], source) end end
 						elseif dir == "u" and (#c.rt > 0 or #c.lt > 0) then
-							for i = 1, #c.rt do if c.rt[i].constructedObject then cullObject(c.rt[i]) end end
-							for i = 1, #c.lt do if c.lt[i].constructedObject then cullObject(c.lt[i]) end end
+							for i = 1, #c.rt do if c.rt[i].constructedObject then cullObject(c.rt[i], source) end end
+							for i = 1, #c.lt do if c.lt[i].constructedObject then cullObject(c.lt[i], source) end end
 						elseif dir == "d" and (#c.rb > 0 or #c.lb > 0) then
-							for i = 1, #c.rb do if c.rb[i].constructedObject then cullObject(c.rb[i]) end end
-							for i = 1, #c.lb do if c.lb[i].constructedObject then cullObject(c.lb[i]) end end
+							for i = 1, #c.rb do if c.rb[i].constructedObject then cullObject(c.rb[i], source) end end
+							for i = 1, #c.lb do if c.lb[i].constructedObject then cullObject(c.lb[i], source) end end
 						end
 					end
 				end
@@ -563,7 +599,7 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 			for i = 1, table_maxn(layer.object) do
 				if layer.object[i] and condition(layer.object[i]) then
-					table_insert(objects, layer.object[i])
+					objects[#objects + 1] = layer.object[i]
 				end
 			end
 
@@ -610,6 +646,15 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	function layer.objTypeIs(n, inTable) return layer._literalIterator(n, "_objType", inTable) end
 	-- objects()
 	function layer.objects(inTable) return layer._newIterator(function() return true end, inTable) end
+	
+	-- objectDatas()
+	function layer.objectDatas()
+		local i = 0
+		return function()
+			i = i + 1
+			return objDatas[i]
+		end
+	end
 
 	------------------------------------------------------------------------------
 	-- Destroy Layer
