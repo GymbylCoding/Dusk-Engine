@@ -8,6 +8,7 @@ display.setStatusBar(display.HiddenStatusBar)
 
 display.setDefault("minTextureFilter", "nearest")
 display.setDefault("magTextureFilter", "nearest")
+display.setDefault("isShaderCompilerVerbose", true)
 
 -- This ain't needed now - Dusk auto-loads physics if needed
 -- require("physics")
@@ -19,13 +20,19 @@ local mapTouch
 local dusk = require("Dusk.Dusk")
 dusk.setPreference("enableRotatedMapCulling", true)
 
-local currMap = "grass_stone.json"
+local currMap = "test2.json"
+
+local fpsText = display.newText({
+	text = "FPS",
+	fontSize = 13
+})
 
 local map = dusk.buildMap("maps/" .. currMap)
 map.setTrackingLevel(0.3) -- "Fluidity" of the camera movement; numbers closer to 0 mean more fluidly and slowly (but 0 itself will disable the camera!)
 
 local mapX, mapY
 
+local prevFrame = system.getTimer()
 
 --------------------------------------------------------------------------------
 -- Set Map
@@ -49,17 +56,14 @@ end
 local function onTap(event)
 	if event.numTaps == 2 then
 		native.showAlert("Action", "What would you like to do?", {
-			"Load: grass_stone.json",
-			"Load: everything.json",
-			"Load: square_animated.json",
+			"Load: simple.json",
+			"Load: test2.json",
 			"Cancel"
 		}, function(event)
 			if event.index == 1 then
-				setMap("grass_stone.json")
+				setMap("simple.json")
 			elseif event.index == 2 then
-				setMap("everything.json")
-			elseif event.index == 3 then
-				setMap("square_animated.json")
+				setMap("test2.json")
 			end
 		end)
 	end
@@ -87,10 +91,23 @@ function mapTouch(event)
 end
 
 --------------------------------------------------------------------------------
+-- EnterFrame Listener
+--------------------------------------------------------------------------------
+local function onEnterFrame(event)
+	local frameDiff = event.time - prevFrame
+	prevFrame = event.time
+	local fps = 1000 / frameDiff
+	fpsText.text = "FPS: " .. math.round(fps) .. " (target " .. display.fps .. ")"
+	fpsText.x, fpsText.y = display.screenOriginX + fpsText.width * 0.5, display.screenOriginY + fpsText.height * 0.5
+	fpsText:toFront()
+	map.updateView()
+end
+
+--------------------------------------------------------------------------------
 -- Add Listeners
 --------------------------------------------------------------------------------
 map:addEventListener("touch", mapTouch)
-Runtime:addEventListener("enterFrame", map.updateView)
+Runtime:addEventListener("enterFrame", onEnterFrame)
 Runtime:addEventListener("tap", onTap)
 
-native.showAlert("Dusk", "Welcome to the Dusk Engine. Try double-tapping to load different example maps.", {"Got it!"})
+-- native.showAlert("Dusk", "Welcome to the Dusk Engine. Try double-tapping to load different example maps.", {"Got it!"})

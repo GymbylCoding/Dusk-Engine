@@ -59,7 +59,7 @@ function lib_update.register(map)
 		for layer, i in map.layers() do
 			if not culling.screenCullingField.layer[i] then
 				if layer._layerType == "tile" then
-					if enableTileCulling then
+					if enableTileCulling and layer.tileCullingEnabled then
 						layer._edit(l, r, t, b, "d")
 					else
 						layer._edit(1, map.data.mapWidth, 1, map.data.mapHeight, "d")

@@ -31,6 +31,7 @@ function lib_tilesets.get(data, dirTree)
 	local data = data
 	local dirTree = dirTree or {}
 
+	local tilesetData = {}          -- The raw tileset data for core use
 	local imageSheets = {}					-- The tileset image sheets themselves
 	local imageSheetConfig = {}			-- The image sheet configurations
 	local tileProperties = {}				-- Tile properties for each tileset
@@ -117,11 +118,12 @@ function lib_tilesets.get(data, dirTree)
 
 		imageSheetConfig[i] = options.config
 		tileProperties[i] = tilesetProperties
+		tilesetData[i] = options
 	end
 
 	data.highestGID = c
 
-	return imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs
+	return tilesetData, imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs
 end
 
 return lib_tilesets

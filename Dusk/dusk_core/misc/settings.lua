@@ -21,9 +21,26 @@ local type = type
 -- Data
 --------------------------------------------------------------------------------
 local data = {
+	-- Toggle Dusk development mode
+	-- Currently, this only makes Dusk generate Nightshade tile data images each
+	-- time the app is run.
+	developmentMode = true,
+	
+	-- The directory in which Dusk searches for Nightshade data images when
+	-- development mode is off
+	nightshadeProductionDataImageDirectory = "Dusk/nightshade_data_images",
+	
+	-- Do we save data images in production data image directory when in dev mode?
+	-- This is not a feature yet, it's just planned.
+	-- nightshadeSaveProductionImageInDevMode = true,
+	
+	-- Size of the bit-shift to perform for Nightshade's variables parameter.
+	-- Should not be changed.
+ 	nightshadeVariableShiftDistance = 16,
+	
 	-- Should we display a rectangle that's Tiled's background color
 	displayBackgroundRectangle = false,
-	
+		
 	-- Does a dot in a property name place a property in a separate table
 	-- (obj.x.y.z vs. obj["x.y.z"])
 	dotImpliesTable = true,

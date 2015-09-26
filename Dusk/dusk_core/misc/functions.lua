@@ -202,7 +202,7 @@ local function getProperties(data, objPrefix, isLayer)
 			k = key:sub(6)
 		else
 			if isLayer then
-				if key:match(objPrefixMatch) then
+				if objPrefix ~= "" and key:match(objPrefixMatch) then
 					insertionTable = p.object
 					k = key:sub(objPrefixLen)
 				else
@@ -241,6 +241,16 @@ local function getProperties(data, objPrefix, isLayer)
 end
 
 --------------------------------------------------------------------------------
+-- Get Nightshade Layer Filename
+--------------------------------------------------------------------------------
+local getNightshadeLayerDataImageFilename = function(mapFileName, data)
+	local mfName = mapFileName:gsub("%.[^%.]-$", ""):gsub("[%s%./]+", "-")
+	local name = data.name
+	name = name:gsub("[%s%./]+", "-")
+	return mfName .. "_" .. name .. ".png"
+end
+
+--------------------------------------------------------------------------------
 -- Add Functions to Public Library
 --------------------------------------------------------------------------------
 lib_functions.stringToValue = stringToValue
@@ -256,5 +266,6 @@ lib_functions.addProperties = addProperties
 lib_functions.getProperties = getProperties
 lib_functions.setProperty = setProperty
 lib_functions.getMapStats = getMapStats
+lib_functions.getNightshadeLayerDataImageFilename = getNightshadeLayerDataImageFilename
 
 return lib_functions

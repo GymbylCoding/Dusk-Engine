@@ -8,5 +8,10 @@ settings = {
 	orientation = {
 		default = "landscapeLeft",
 		supported = {"landscapeLeft", "landscapeRight"}
+	},
+	plugins = {
+		["plugin.bit"] = {
+      publisherId = "com.coronalabs"
+    }
 	}
 }

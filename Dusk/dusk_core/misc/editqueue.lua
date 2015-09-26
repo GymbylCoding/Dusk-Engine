@@ -51,7 +51,6 @@ function lib_editQueue.new()
 			for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d", source) end
 			for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e", source) end
 		elseif target._layerType == "object" then
-			-- print("Drawing from edit queue")
 			for i = 1, di do target.draw(draw[i][1], draw[i][2], draw[i][3], draw[i][4], source) end
 			for i = 1, ei do target.erase(erase[i][1], erase[i][2], erase[i][3], erase[i][4], erase[i][5], source) end
 		end

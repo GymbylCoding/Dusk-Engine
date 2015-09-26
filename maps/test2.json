@@ -1,0 +1,67 @@
+{ "height":24,
+ "layers":[
+        {
+         "compression":"zlib",
+         "data":"eJzl0LENAAAIhEBL95\/Y2h\/AmBwdJXRt+ti\/cN395YPanagf1O5E\/aB2J+oHtTtRP6jdifphANkOAwE=",
+         "encoding":"base64",
+         "height":24,
+         "name":"Tile Layer 2",
+         "opacity":1,
+         "properties":
+            {
+             "!nightshade!":"true",
+             "xParallax":"0.5",
+             "yParallax":"0.5"
+            },
+         "type":"tilelayer",
+         "visible":true,
+         "width":32,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "compression":"zlib",
+         "data":"eJxjYBgFo2AUjIJRQCrgIgJTEzACMRMSZqay+lEw9AEHFNMbsDCgpjUQZqej3axALIiG2Yh0AyceTK7dyG7AFyboYUZvjMvdo3hkYADAjQpt",
+         "encoding":"base64",
+         "height":24,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "properties":
+            {
+             "!nightshade!":"true"
+            },
+         "type":"tilelayer",
+         "visible":true,
+         "width":32,
+         "x":0,
+         "y":0
+        }],
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "properties":
+    {
+
+    },
+ "renderorder":"right-down",
+ "tileheight":32,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "image":"..\/tilesets\/tileset.png",
+         "imageheight":128,
+         "imagewidth":224,
+         "margin":0,
+         "name":"tileset",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tilecount":28,
+         "tileheight":32,
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "version":1,
+ "width":32
+}

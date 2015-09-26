@@ -20,8 +20,12 @@ local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_tilelayer = require("Dusk.dusk_core.layer.tilelayer")
 local lib_objectlayer = require("Dusk.dusk_core.layer.objectlayer")
 local lib_imagelayer = require("Dusk.dusk_core.layer.imagelayer")
+local lib_nightshadelayer = require("Dusk.dusk_core.layer.nightshadelayer")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 local lib_update = require("Dusk.dusk_core.run.update")
+
+local deflate = require("Dusk.dusk_core.external.deflatelua")
+local base64 = require("Dusk.dusk_core.external.base64")
 
 local type = type
 local tonumber = tonumber
@@ -120,18 +124,46 @@ function core.loadMap(filename, base)
 	local stats = lib_functions.getMapStats(data); data.stats = stats
 
 	data._dusk = {
+		fileName = filename,
+		actualFileName = actualFileName,
 		dirTree = dirTree,
 		layers = {}
 	}
 	
 	for i = 1, #data.layers do
 		data._dusk.layers[i] = {}
+		data.layers[i]._dusk = data._dusk.layers[i]
 		if data.layers[i].type == "tilelayer" then
+			-- Decode data
+      if data.layers[i].encoding == "base64" then
+        local decoded = {}
+        
+        if data.layers[i].compression == nil then
+          decoded = base64.decode("byte", data.layers[i].data)
+        elseif data.layers[i].compression == "zlib" then
+          deflate.inflateZlib({
+            input = base64.decode("string", data.layers[i].data),
+            output = function(b) decoded[#decoded + 1] = b end
+          })
+        elseif data.layers[i].compression == "gzip" then
+          error("Gzip compression not currently supported.")
+        end
+        
+        local newData = {}
+        for i = 1, #decoded, 4 do
+          newData[#newData + 1] = base64.glueInt(decoded[i], decoded[i + 1], decoded[i + 2], decoded[i + 3])
+        end
+        data.layers[i].data = newData
+      end
+      
 			local l, r, t, b = math.huge, -math.huge, math.huge, -math.huge
 			local w, h = data.layers[i].width, data.layers[i].height
 			for x = 1, w do
 				for y = 1, h do
 					local d = data.layers[i].data[(y - 1) * w + x]
+					if d ~= 0 and not data._dusk.layers[i].baseTilesetTestGID then
+						data._dusk.layers[i].baseTilesetTestGID = d
+					end
 					if d ~= 0 then
 						if x < l then l = x end
 						if x > r then r = x end
@@ -154,7 +186,7 @@ end
 -- Build Map
 --------------------------------------------------------------------------------
 function core.buildMap(data)
-	local imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
+	local tilesetData, imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
 	local escapedPrefixMethods = getSetting("escapedPrefixes")
 
 	setVariable("mapWidth", data.stats.mapWidth)
@@ -167,7 +199,7 @@ function core.buildMap(data)
 	setVariable("rawTileHeight", data.stats.rawTileHeight)
 	setVariable("scaledTileWidth", data.stats.tileWidth)
 	setVariable("scaledTileHeight", data.stats.tileHeight)
-
+	
 	------------------------------------------------------------------------------
 	-- Map Object
 	------------------------------------------------------------------------------
@@ -222,11 +254,19 @@ function core.buildMap(data)
 
 			-- Pass each layer type to that layer builder
 			if data.layers[i].type == "tilelayer" then
-				layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties, tileIDs)
-				layer._type = "tile"
+				if data._dusk.layers[i].baseTilesetTestGID then
+					data._dusk.layers[i].baseTileset = tilesetData[tileIndex[data._dusk.layers[i].baseTilesetTestGID].tilesetIndex]
+				end
+				if (data.layers[i].properties or {})["!nightshade!"] ~= "true" then
+					layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties, tileIDs)
+					layer._type = "tile"
 
-				-- Tile layer-specific code
-				if layer.tileCullingEnabled == nil then layer.tileCullingEnabled = true end
+					-- Tile layer-specific code
+					if layer.tileCullingEnabled == nil then layer.tileCullingEnabled = true end
+				else
+					layer = lib_nightshadelayer.createLayer(map, data, data.layers[i], tileIndex)
+					layer._type = "nightshadeTile"
+				end
 			elseif data.layers[i].type == "objectgroup" then
 				layer = lib_objectlayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig)
 				layer._type = "object"
