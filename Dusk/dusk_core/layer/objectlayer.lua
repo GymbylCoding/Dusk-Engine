@@ -646,7 +646,6 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	function layer.objTypeIs(n, inTable) return layer._literalIterator(n, "_objType", inTable) end
 	-- objects()
 	function layer.objects(inTable) return layer._newIterator(function() return true end, inTable) end
-	
 	-- objectDatas()
 	function layer.objectDatas()
 		local i = 0

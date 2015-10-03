@@ -272,6 +272,10 @@ function lib_camera.addControl(map)
 			camera.enableParallax = true
 		end
 	end
+	
+	function map.getCameraFocus()
+		return camera.focus
+	end
 
 	------------------------------------------------------------------------------
 	-- Set Camera Bounds
