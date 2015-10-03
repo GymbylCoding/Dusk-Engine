@@ -35,4 +35,4 @@ Dusk has a few new settings for Nightshade. The names for these aren't stable ye
 
 - `developmentMode` - If set to `true`, Nightshade will generate data images each time the app is run. If set to `false`, you'll need to transfer the data images from the app's sandbox to `Dusk/nightshade_data_images/` before Nightshade will work.
 - `nightshadeProductionDataImageDirectory` - The directory in which Nightshade will look for data images when dev mode is off. This defaults to `Dusk/nightshade_data_images/`.
-- `nightshadeVariableShiftDistance` - should not be changed; this is a core value
+- `nightshadeVariableShiftDistance` - should not be changed; this is a core value denoting how far to shift bits to store multiple variables in one vertex userdata field.
