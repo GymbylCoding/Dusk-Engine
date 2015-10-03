@@ -73,40 +73,6 @@ function core.registerPlugin(plugin)
 	end
 end
 
-function core.unregisterPlugin(plugin)
-	local found = 0
-	for i = 1, #core.plugins do
-		if core.plugins[i] == plugin then
-			found = i
-			break
-		end
-	end
-
-	if found == 0 then error("Cannot unregister plugin: plugin not found.") end
-
-	if plugin._dusk_onLoadMapIndex then
-		table_remove(core.pluginCallbacks.onLoadMap, plugin._dusk_onLoadMapIndex)
-		for i = found + 1, #core.plugins do
-			if core.plugins[i]._dusk_onLoadMapIndex then core.plugins[i]._dusk_onLoadMapIndex = core.plugins[i]._dusk_onLoadMapIndex - 1 end
-		end
-	end
-
-	if plugin._dusk_onBuildMapIndex then
-		table_remove(core.pluginCallbacks.onBuildMap, plugin._dusk_onBuildMapIndex)
-		for i = found + 1, #core.plugins do
-			if core.plugins[i]._dusk_onBuildMapIndex then core.plugins[i]._dusk_onBuildMapIndex = core.plugins[i]._dusk_onBuildMapIndex - 1 end
-		end
-	end
-
-	if plugin.escapedPrefixMethods then
-		for k, v in pairs(plugin.escapedPrefixMethods) do
-			escapedPrefixMethods[k] = nil
-		end
-	end
-
-	table_remove(core.plugins, found)
-end
-
 --------------------------------------------------------------------------------
 -- Load Map
 --------------------------------------------------------------------------------
@@ -145,6 +111,10 @@ function core.loadMap(filename, base)
 			data._dusk.layers[i].topTile = t
 			data._dusk.layers[i].bottomTile = b
 		end
+	end
+	
+	for i = 1, #core.pluginCallbacks.onLoadMap do
+		core.pluginCallbacks.onLoadMap[i].callback(data, stats)
 	end
 
 	return data, stats
@@ -392,6 +362,10 @@ function core.buildMap(data)
 	update = lib_update.register(map)
 	for layer in map.objectLayers() do
 		layer._buildAllObjects()
+	end
+	
+	for i = 1, #core.pluginCallbacks.onBuildMap do
+		core.pluginCallbacks.onBuildMap[i].callback(map)
 	end
 
 	return map
