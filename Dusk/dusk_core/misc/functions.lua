@@ -17,13 +17,11 @@ local json = require("json")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local bang = require("Dusk.dusk_core.external.bang")
 local syfer = require("Dusk.dusk_core.external.syfer")
-local verby = require("Dusk.dusk_core.external.verby")
 
 local tonumber = tonumber
 local type = type
 local pairs = pairs
 local table_concat = table.concat
-local table_insert = table.insert
 local string_gmatch = string.gmatch
 local string_len = string.len
 local math_sin = math.sin
@@ -31,12 +29,12 @@ local math_cos = math.cos
 local math_rad = math.rad
 local json_decode = json.decode
 local syfer_solve = syfer.solve
-local verby_error = verby.error
-local verby_alert = verby.alert
 local getSetting = lib_settings.get
 local keyPattern = "([%w_%-%+\"\'!@#$%^&*%(%)]+)%."
 
-local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp, reverseTable, addProperties, getDirectory, setProperty
+local storedPrefixes = getSetting("escapedPrefixMethods")
+
+local stringToValue, spliceTable, isPolyClockwise, reversePolygon, getXY, clamp, reverseTable, addProperties, getDirectory, rotatePoint, setProperty, getMapStats
 
 --------------------------------------------------------------------------------
 -- General Helper Functions
@@ -48,7 +46,7 @@ function isPolyClockwise(pointList) local area = 0 for i = 1, #pointList - 2, 2 
 -- Reverse polygon (in form of [x,y, x,y, x,y], not [[x,y], [x,y]])
 function reversePolygon(t) local nt = {} for i = 1, #t, 2 do nt[#nt + 1] = t[#t - i] nt[#nt + 1] = t[#t - i + 1] end return nt end
 -- Get X/Y
-function getXY(x, y) local x, y = x, y if type(x) == "table" then verby_alert("Warning: Table-based XY location is deprecated. Send coordinates as two numbers.") if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else verby_error("Missing X- or Y-argument.") end end
+function getXY(x, y) local x, y = x, y if type(x) == "table" then print("Warning: Table-based XY location is deprecated. Send coordinates as two numbers.") if x.x and x.y then x, y = x.x, x.y else x, y = x[1], x[2] end end if x and y then return x, y else error("Missing X- or Y-argument.") end end
 -- Clamp value to a range
 function clamp(v, l, h) return (v < l and l) or (v > h and h) or v end
 -- Reverse table ([1, 2, 3] -> [3, 2, 1])
@@ -56,7 +54,7 @@ function reverseTable(t) local new = {} for i = 1, #t do new[#t - (i - 1)] = t[i
 -- Get directory
 function getDirectory(dirTree, path) local path = path local numDirs = #dirTree local _i = 1 while path:sub(_i, _i + 2) == "../" do _i = _i + 3 numDirs = numDirs - 1 end local filename = path:sub(_i) local dirPath = table_concat(dirTree, "/", 1, numDirs) return dirPath, filename end
 -- Rotate point
-local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
+function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY local theta = math_rad(degrees) local cosTheta, sinTheta = math_cos(theta), math_sin(theta) local endX = x * cosTheta - y * sinTheta local endY = x * sinTheta + y * cosTheta return endX, endY end
 
 --------------------------------------------------------------------------------
 -- Engine Helper Functions
@@ -64,27 +62,31 @@ local function rotatePoint(pointX, pointY, degrees) local x, y = pointX, pointY 
 -- String to value
 function stringToValue(value)
 	local v
+	local t = tonumber(value)
+	local m = value:match("^!(.-)![^!]")
+
 	if value == "true" or value == "false" then
 		if value == "true" then
 			v = true
 		else
 			v = false
 		end
-	elseif value:match("%-?%d+%.?[%d]+") == value then
-		v = tonumber(value)
-	elseif value:match("^!json!") then
+	elseif t then
+		v = t
+	elseif m == "json" then
 		v = json_decode(value:sub(7))
-	elseif value:match("^!!!") then
+	elseif m == "!" then
 		v = bang.read(value:sub(4))
-	elseif value:match("^!math!") or value:match("^!eval!") then
-		if value:match("^!eval!") then verby_alert("Warning: `!eval!` prefix has been deprecated in favor of `!math!`") end
+	elseif m == "math" then
 		v = syfer_solve(value:sub(7), getSetting("evalVariables"))
-	elseif value:match("^!tags!") then
+	elseif m == "tags" then
 		value = value:sub(7)
 		local t = {}
 		for str in value:gmatch("%s*(.-)[,%z]") do t[str] = true end
 		local str = value:match("[^,%s]+$") if str then t[str] = true end
 		v = t
+	elseif storedPrefixes[m] then
+		v = storedPrefixes[m](value:sub(#m + 3))
 	else
 		if value:sub(1,1) == "\"" and value:sub(-1) == "\"" then
 			v = value:sub(2, -2)
@@ -109,16 +111,16 @@ end
 
 -- Set property
 function setProperty(t, str, value)
-	local write = t -- Table we edit
+	local write = t
 	local path = {}
 
 	for pathElement in string_gmatch(str, keyPattern) do
-		table_insert(path, stringToValue(pathElement))
+		path[#path + 1] = stringToValue(pathElement)
 	end
 
 	if #path == 0 then write[str] = value return end
 
-	table_insert(path, stringToValue(str:match("[%w_%-%+\"\'!@#$%^&*%(%)]+$")))
+	path[#path + 1] = stringToValue(str:match("[%w_%-%+\"\'!@#$%^&*%(%)]+$"))
 
 	for i = 1, #path - 1 do
 		if write[path[i] ] == nil then write[path[i] ] = {} end
@@ -126,7 +128,26 @@ function setProperty(t, str, value)
 	end
 
 	write[path[#path] ] = value
-	t = write -- Clean up
+	t = write
+end
+
+-- Get map statistics
+function getMapStats(data)
+	local stats = {}
+	stats.numTiledLayers = #data.layers
+	stats.tilesetCount = #(data.tilesets or {})
+	stats.orientation = data.orientation
+	stats.mapWidth = data.width
+	stats.mapHeight = data.height
+	stats.rawTileWidth = data.tilewidth
+	stats.rawTileHeight = data.tileheight
+	stats.tileWidth = data.tilewidth
+	stats.tileHeight = data.tileheight
+	stats.width = stats.mapWidth * stats.tileWidth
+	stats.height = stats.mapHeight * stats.tileHeight
+	stats.mapData = data
+
+	return stats
 end
 
 --------------------------------------------------------------------------------
@@ -149,12 +170,14 @@ local function getProperties(data, objPrefix, isLayer)
 	local objPrefixLen = objPrefix:len() + 2 -- +2 because +1 is required for the colon after the prefix, and +1 is required to start at the character after that
 	local objPrefixMatch = "^" .. objPrefix .. ":"
 
+	local prefixes = getSetting("escapedPrefixMethods")
+
 	for key, value in pairs(data) do
 		local k, v
 
 		local dotMode
 
-		if key:match("^!nodot!") then
+		if key:match("^!noDot!") then
 			key = key:sub((getSetting("spaceAfterEscapedPrefix") and 9) or 8)
 			dotMode = false
 		elseif key:match("^!dot!") then
@@ -192,7 +215,7 @@ local function getProperties(data, objPrefix, isLayer)
 			end
 		end
 
-		v = stringToValue(value)
+		v = stringToValue(value, prefixes)
 
 		if k == "enabled" and insertionTable == p.physics[1] then
 			if v == true then
@@ -232,5 +255,6 @@ lib_functions.getDirectory = getDirectory
 lib_functions.addProperties = addProperties
 lib_functions.getProperties = getProperties
 lib_functions.setProperty = setProperty
+lib_functions.getMapStats = getMapStats
 
 return lib_functions

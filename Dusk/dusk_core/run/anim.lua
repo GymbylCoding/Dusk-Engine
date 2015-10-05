@@ -15,7 +15,6 @@ local lib_anim = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local system_getTimer = system.getTimer

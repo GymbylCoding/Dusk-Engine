@@ -8,18 +8,7 @@ It's written on a powerful base, but interfaced with simple, intuitive commands 
 
 
 #### Quick Message ####
-I'm a 15-year-old software developer doing this in my spare time; if you don't mind, show your support of Dusk by [purchasing ($0.99) my first game!][game] It's really cool; if you like neon graphics, hexagons, light reflection, minimalist style, and puzzles, you'll love it.
-
-
-### Development ###
-You may notice that the `master` branch of this repository looks fairly dead. This is not the case! It's just that most of the development on Dusk happens in the `dev` branch. Switch to the dev branch for the most recent changes; the `master` branch is simply the stable (and often fairly old) version of Dusk.
-
-That said, I'm now working on stabilizing the dev version and pushing out Dusk version 0.2!
-
-
-### TOAD ###
-
-TOAD: Tileset Operations and Doodads is a command-line utility that makes it easy to extrude tilesets, pack them from a folder, and more, so you don't have to do tedious repetitive operations.
+I'm a 16-year-old software developer doing this in my spare time; if you don't mind, show your support of Dusk by [purchasing ($0.99) my first game!][game] It's really cool; if you like neon graphics, hexagons, light reflection, minimalist style, and puzzles, you'll love it.
 
 
 ### What's Here ###
@@ -35,7 +24,6 @@ This folder (download the ZIP and unpack) includes...
 - Copy of MIT license (`LICENSE.md`)
 - Plugins (`plugins/*`)
 - Lua files to run the sample (`main.lua`, `config.lua`, `build.settings`)
-- The TOAD system (`toad/*`)
 
 
 ### Install ###

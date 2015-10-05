@@ -2,7 +2,7 @@
 --[[
 Dusk Engine Component: Edit Queue
 
-A small (and probably temporary) structure to queue edits for a later time, thereby allowing erase edits to go last.
+A small structure to queue edits for a later time, thereby allowing erase edits to go last.
 --]]
 --------------------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ local lib_editQueue = {}
 --------------------------------------------------------------------------------
 function lib_editQueue.new()
 	local editQueue = {}
-	local target
+	local target, source
 	local draw = {}
 	local erase = {}
 	local di = 0
@@ -22,7 +22,7 @@ function lib_editQueue.new()
 	------------------------------------------------------------------------------
 	-- Add an Edit to the Queue
 	------------------------------------------------------------------------------
-	function editQueue.add(x1, x2, y1, y2, mode)
+	function editQueue.add(x1, x2, y1, y2, mode, dir)
 		if mode == "e" then
 			ei = ei + 1
 			if not erase[ei] then erase[ei] = {} end
@@ -30,6 +30,7 @@ function lib_editQueue.new()
 			erase[ei][2] = x2
 			erase[ei][3] = y1
 			erase[ei][4] = y2
+			erase[ei][5] = dir
 		elseif mode == "d" then
 			di = di + 1
 			if not draw[di] then draw[di] = {} end
@@ -37,6 +38,7 @@ function lib_editQueue.new()
 			draw[di][2] = x2
 			draw[di][3] = y1
 			draw[di][4] = y2
+			draw[di][5] = dir
 		end
 	end
 
@@ -44,16 +46,24 @@ function lib_editQueue.new()
 	-- Execute Edits
 	------------------------------------------------------------------------------
 	function editQueue.execute()
-		for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d") end
-		for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e") end
+		if di == 0 and ei == 0 then return end
+		if target._layerType == "tile" then
+			for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d", source) end
+			for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e", source) end
+		elseif target._layerType == "object" then
+			-- print("Drawing from edit queue")
+			for i = 1, di do target.draw(draw[i][1], draw[i][2], draw[i][3], draw[i][4], source) end
+			for i = 1, ei do target.erase(erase[i][1], erase[i][2], erase[i][3], erase[i][4], erase[i][5], source) end
+		end
 
 		di, ei = 0, 0
 	end
 
 	------------------------------------------------------------------------------
-	-- Set Queue Target
+	-- Set Queue Target/Source
 	------------------------------------------------------------------------------
 	function editQueue.setTarget(t) target = t end
+	function editQueue.setSource(s) source = s end
 
 	return editQueue
 end

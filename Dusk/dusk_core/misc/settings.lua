@@ -13,12 +13,9 @@ local lib_settings = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 
 local type = type
-local verby_assert = verby.assert
-local verby_error = verby.error
 
 --------------------------------------------------------------------------------
 -- Data
@@ -35,7 +32,7 @@ local data = {
 	-- that path
 	detectMapPath = true,
 
-	-- Should prefixes like !dot! or !nodot! have the rest of the property clipped
+	-- Should prefixes like !dot! or !noDot! have the rest of the property clipped
 	-- with a space after it for readability (`!dot! prop` vs. `!dot!prop`)
 	spaceAfterEscapedPrefix = false,
 
@@ -97,12 +94,17 @@ local data = {
 	-- There's probably a better way to explain it, but that's the best I can do.
 	scaleCameraBoundsToScreen = true,
 
+	-- Round camera position to help eliminate flickering. This should be set to
+	-- true unless you notice issues with the camera during diagonal tracking.
+	enableCameraRounding = false,
+
 	-- Allow Dusk to clip and draw tiles as needed
 	enableTileCulling = true,
-
+	enableObjectCulling = true,
+	
 	-- Tiles outside the screen to draw. If you're seeing tiles being drawn and
 	-- erased, set this as needed. Otherwise, a value of 1 should be fine.
-	tileCullingMargin = 1,
+	cullingMargin = 1,
 
 	-- Functions called to style objects
 	stylePointBasedObject = function(p) p.strokeWidth = 5 p:setStrokeColor(1, 1, 1, 0.5) end,
@@ -120,24 +122,39 @@ local data = {
 	redrawOnTileExistent = false,
 
 	-- Allow Dusk to cull rotated maps; if you're not rotating your maps, this
-	-- should be inactive. It adds a small performance drop. On the other hand, if
+	-- should be inactive. It adds a tiny performance drop. On the other hand, if
 	-- you're rotating your maps, all sorts of culling matrix corruption happens
 	-- unless this is enabled.
 	enableRotatedMapCulling = false,
+
+	-- Allow multiple culling fields. If unneeded, this adds a performance drop.
+	-- Otherwise, enable it.
+	enableMultipleCullingFields = true,
 
 	-- Math evaluation variables for use with !math! properties
 	mathVariables = {
 		screenWidth = screen.width,
 		screenHeight = screen.height
-	}
+	},
+
+	-- Escaped prefix methods
+	escapedPrefixMethods = {}
+}
+
+-- Settings that cannot be directly set
+local readOnly = {
+	escapedPrefixMethods = true,
+	mathVariables = true
 }
 
 --------------------------------------------------------------------------------
 -- Set Preference
 --------------------------------------------------------------------------------
 function lib_settings.set(preferenceName, value)
-	if not preferenceName or value == nil then verby_error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
-	if data[preferenceName] == nil then verby_error("Unrecognized setting \"" .. preferenceName .. "\".") end
+	if not preferenceName or value == nil then error("Missing one or more arguments to `settings.set()` (`dusk.setPreference()`)") end
+	if data[preferenceName] == nil then error("Unrecognized setting \"" .. preferenceName .. "\".") end
+
+	if readOnly[preferenceName] then print("Warning: Setting \"" .. preferenceName .. "\" cannot be set directly. There may be a dedicated setter for it.") end
 
 	data[preferenceName] = value
 end
@@ -146,8 +163,8 @@ end
 -- Get Preference
 --------------------------------------------------------------------------------
 function lib_settings.get(preferenceName)
-	if preferenceName == nil then verby_error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
-	return data[preferenceName] or nil
+	if preferenceName == nil then error("No argument passed to `settings.get()` (`dusk.getPreference()`)") end
+	return data[preferenceName]
 end
 
 --------------------------------------------------------------------------------

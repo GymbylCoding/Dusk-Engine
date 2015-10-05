@@ -13,14 +13,11 @@ local lib_camera = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local getSetting = lib_settings.get
-local verby_error = verby.error
-local verby_alert = verby.alert
 local getXY = lib_functions.getXY
 local clamp = lib_functions.clamp
 local display_contentWidth = display.contentWidth
@@ -37,11 +34,16 @@ local math_round = math.round
 function lib_camera.addControl(map)
 	local camera
 
+	local enableCameraRounding = getSetting("enableCameraRounding")
+
 	camera = {
+		enableParallax = true,
 		trackingLevel = getSetting("defaultCameraTrackingLevel"),
 		scaleBoundsToScreen = getSetting("scaleCameraBoundsToScreen"),
 		viewX = screen.centerX,
 		viewY = screen.centerY,
+		masterOffsetX = 0,
+		masterOffsetY = 0,
 		layer = {},
 
 		xScale = 1,
@@ -64,9 +66,17 @@ function lib_camera.addControl(map)
 			yMax = math_huge
 		},
 
+		focus = "point",
+		scaleBounds = nil,
 		trackFocus = false,
-		getFocusXY = function() return camera.viewX, camera.viewY end,
-		scaleBounds = function() end
+		
+		getFocusXY = function()
+			if camera.focus == "point" then
+				return camera.viewX, camera.viewY
+			elseif camera.focus then
+				return camera.focus.x, camera.focus.y
+			end
+		end
 	}
 
 	------------------------------------------------------------------------------
@@ -81,6 +91,8 @@ function lib_camera.addControl(map)
 				update = function() end, -- Placeholder to keep from rehashing
 				xOffset = 0,
 				yOffset = 0,
+				pxOffset = 0,
+				pyOffset = 0,
 				x = 0,
 				y = 0
 			}
@@ -90,10 +102,17 @@ function lib_camera.addControl(map)
 			--------------------------------------------------------------------------
 			camera.layer[i].update = function()
 				local layer = map.layer[i]
-				camera.layer[i].x = camera.layer[i].x + (-camera.viewX - camera.layer[i].x)
-				camera.layer[i].y = camera.layer[i].y + (-camera.viewY - camera.layer[i].y)
-				layer.x = math_round((layer.x - (layer.x - (camera.layer[i].x + camera.addX) * layer.xParallax) * camera.trackingLevel) + camera.layer[i].xOffset)
-				layer.y = math_round((layer.y - (layer.y - (camera.layer[i].y + camera.addY) * layer.yParallax) * camera.trackingLevel) + camera.layer[i].yOffset)
+				local cLayer = camera.layer[i]
+				cLayer.x = cLayer.x + (-camera.viewX - cLayer.x)
+				cLayer.y = cLayer.y + (-camera.viewY - cLayer.y)
+
+				if enableCameraRounding then
+					layer.x = math_round((layer.x - (layer.x - (cLayer.x + camera.addX) * layer.xParallax) * camera.trackingLevel) + cLayer.xOffset)
+					layer.y = math_round((layer.y - (layer.y - (cLayer.y + camera.addY) * layer.yParallax) * camera.trackingLevel) + cLayer.yOffset)
+				else
+					layer.x = (layer.x - (layer.x - (cLayer.x + camera.addX) * layer.xParallax) * camera.trackingLevel) + cLayer.xOffset
+					layer.y = (layer.y - (layer.y - (cLayer.y + camera.addY) * layer.yParallax) * camera.trackingLevel) + cLayer.yOffset
+				end
 			end
 
 			--------------------------------------------------------------------------
@@ -108,9 +127,6 @@ function lib_camera.addControl(map)
 
 			-- Get offset
 			map.layer[i].getCameraOffset = function() return camera.layer[i].xOffset, camera.layer[i].yOffset end
-
-			map.layer[i].setOffset = function(x, y) verby_alert("Warning: `layer.setOffset()` is deprecated in favor of `layer.setCameraOffset()`.") map.layer[i].setCameraOffset(x, y) end
-			map.layer[i].getOffset = function() verby_alert("Warning: `layer.getOffset()` is deprecated in favor of `layer.getCameraOffset()`.") return map.layer[i].getCameraOffset() end
 		end
 	end
 
@@ -195,10 +211,10 @@ function lib_camera.addControl(map)
 				camera.scaleBounds(false, true)
 			end
 
-			x = clamp(x, camera.scaledBounds.xMin, camera.scaledBounds.xMax)
-			y = clamp(y, camera.scaledBounds.yMin, camera.scaledBounds.yMax)
+			x = clamp(x, camera.scaledBounds.xMin, camera.scaledBounds.xMax) + camera.masterOffsetX
+			y = clamp(y, camera.scaledBounds.yMin, camera.scaledBounds.yMax) + camera.masterOffsetY
 
-			map.setViewpoint(x, y)
+			camera.viewX, camera.viewY = x, y
 		end
 	end
 
@@ -212,6 +228,7 @@ function lib_camera.addControl(map)
 	function map.setViewpoint(x, y)
 		local x, y = getXY(x, y)
 		camera.viewX, camera.viewY = math_round(x), math_round(y)
+		camera.focus = "point"
 	end
 
 	function map.getViewpoint()
@@ -242,19 +259,22 @@ function lib_camera.addControl(map)
 	-- Set Focus
 	------------------------------------------------------------------------------
 	function map.setCameraFocus(f, noSnapCamera)
-		if not (f ~= nil and f.x ~= nil and f.y ~= nil) then verby_error("Invalid focus object passed to `map.setCameraFocus()`") end
+		if not (f ~= nil and f.x ~= nil and f.y ~= nil) then error("Invalid focus object passed to `map.setCameraFocus()`") end
 
-		camera.getFocusXY = function()
-			return f.x, f.y
-		end
-
+		camera.focus = f
 		camera.trackFocus = true
 
 		if noSnapCamera then
 			-- Specified as do not snap camera to object, so do nothing
 		else
+			camera.enableParallax = false
 			map.snapCamera() -- Center on object to start out; this function is not defined in this library, but we know we'll get it when lib_update processes the map
+			camera.enableParallax = true
 		end
+	end
+	
+	function map.getCameraFocus()
+		return camera.focus
 	end
 
 	------------------------------------------------------------------------------
@@ -281,15 +301,15 @@ function lib_camera.addControl(map)
 	------------------------------------------------------------------------------
 	-- Set tracking level (in tracking level format)
 	function map.setTrackingLevel(t)
-		if not t then verby_error("Missing argument to `map.setTrackingLevel()`") end
-		if t <= 0 then verby_error("Invalid argument passed to `map.setTrackingLevel()`: expected t > 0 but got " .. t .. " instead") end
+		if not t then error("Missing argument to `map.setTrackingLevel()`") end
+		if t <= 0 then error("Invalid argument passed to `map.setTrackingLevel()`: expected t > 0 but got " .. t .. " instead") end
 		camera.trackingLevel = t
 	end
 
 	-- Set tracking level (in damping format)
 	function map.setDamping(d)
-		if not d then verby_error("Missing argument to `map.setDamping()`") end
-		if d == 0 then verby_error("Invalid argument passed to `map.setDamping()`: expected d > 0 but got 0 instead.") end
+		if not d then error("Missing argument to `map.setDamping()`") end
+		if d == 0 then error("Invalid argument passed to `map.setDamping()`: expected d > 0 but got 0 instead.") end
 		return map.setTrackingLevel(1 / d)
 	end
 

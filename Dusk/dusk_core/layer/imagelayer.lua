@@ -31,6 +31,7 @@ function lib_imagelayer.createLayer(map, data, dirTree)
 
 	local layer = display_newGroup()
 	layer.props = {}
+	layer._layerType = "image"
 
 	local imageDir, filename = getDirectory(dirTree, data.image)
 

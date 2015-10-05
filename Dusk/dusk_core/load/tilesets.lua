@@ -11,7 +11,6 @@ local lib_tilesets = {}
 --------------------------------------------------------------------------------
 -- Localize
 --------------------------------------------------------------------------------
-local verby = require("Dusk.dusk_core.external.verby")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
@@ -22,7 +21,6 @@ local table_insert = table.insert
 local table_concat = table.concat
 local tostring = tostring
 local string_len = string.len
-local verby_error = verby.error
 local getProperties = lib_functions.getProperties
 local getDirectory = lib_functions.getDirectory
 
@@ -38,6 +36,7 @@ function lib_tilesets.get(data, dirTree)
 	local tileProperties = {}				-- Tile properties for each tileset
 	local tileIndex = {}						-- Tile GID table - each number in the data corresponds to a tile
 	local c = 0											-- Total number of tiles from all tilesets
+	local tileIDs = {}              -- Tile ID list
 
 	------------------------------------------------------------------------------
 	-- Iterate Through Tilesets
@@ -100,6 +99,9 @@ function lib_tilesets.get(data, dirTree)
 			
 				if data.tilesets[i].tileproperties[strGID] then
 					tilesetProperties[gid] = getProperties(data.tilesets[i].tileproperties[strGID], "tile", false)
+					if tilesetProperties[gid].object["!tileID!"] then
+						tileIDs[tilesetProperties[gid].object["!tileID!"] ] = gid
+					end
 				end
 			end
 		end
@@ -111,7 +113,7 @@ function lib_tilesets.get(data, dirTree)
 
 		options.config.count = gid
 
-		if not imageSheets[i] then verby_error("Tileset image (\"" .. options.image .. "\") not found.") end
+		if not imageSheets[i] then error("Tileset image (\"" .. options.image .. "\") not found.") end
 
 		imageSheetConfig[i] = options.config
 		tileProperties[i] = tilesetProperties
@@ -119,7 +121,7 @@ function lib_tilesets.get(data, dirTree)
 
 	data.highestGID = c
 
-	return imageSheets, imageSheetConfig, tileProperties, tileIndex
+	return imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs
 end
 
 return lib_tilesets

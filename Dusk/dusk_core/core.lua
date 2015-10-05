@@ -13,10 +13,8 @@ local core = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_data = require("Dusk.dusk_core.load.data")
-local lib_stats = require("Dusk.dusk_core.load.stats")
 local lib_tilesets = require("Dusk.dusk_core.load.tilesets")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_tilelayer = require("Dusk.dusk_core.layer.tilelayer")
@@ -24,6 +22,9 @@ local lib_objectlayer = require("Dusk.dusk_core.layer.objectlayer")
 local lib_imagelayer = require("Dusk.dusk_core.layer.imagelayer")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 local lib_update = require("Dusk.dusk_core.run.update")
+
+local deflate = require("Dusk.dusk_core.external.deflatelua")
+local base64 = require("Dusk.dusk_core.external.base64")
 
 local type = type
 local tonumber = tonumber
@@ -34,9 +35,9 @@ local math_ceil = math.ceil
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setMathVariable
 local removeVariable = lib_settings.removeMathVariable
-local verby_error = verby.error
-local verby_alert = verby.alert
 local getXY = lib_functions.getXY
+
+local escapedPrefixMethods = getSetting("escapedPrefixMethods")
 
 --------------------------------------------------------------------------------
 -- Plugins
@@ -67,34 +68,12 @@ function core.registerPlugin(plugin)
 		}
 		plugin._dusk_onBuildMapIndex = #core.pluginCallbacks.onBuildMap
 	end
-end
 
-function core.unregisterPlugin(plugin)
-	local found = 0
-	for i = 1, #core.plugins do
-		if core.plugins[i] == plugin then
-			found = i
-			break
+	if plugin.escapedPrefixMethods then
+		for k, v in pairs(plugin.escapedPrefixMethods) do
+			escapedPrefixMethods[k] = v
 		end
 	end
-
-	if found == 0 then verby_error("Cannot unregister plugin: plugin not found.") end
-
-	if plugin._dusk_onLoadMapIndex then
-		table_remove(core.pluginCallbacks.onLoadMap, plugin._dusk_onLoadMapIndex)
-		for i = found + 1, #core.plugins do
-			if core.plugins[i]._dusk_onLoadMapIndex then core.plugins[i]._dusk_onLoadMapIndex = core.plugins[i]._dusk_onLoadMapIndex - 1 end
-		end
-	end
-
-	if plugin._dusk_onBuildMapIndex then
-		table_remove(core.pluginCallbacks.onBuildMap, plugin._dusk_onBuildMapIndex)
-		for i = found + 1, #core.plugins do
-			if core.plugins[i]._dusk_onBuildMapIndex then core.plugins[i]._dusk_onBuildMapIndex = core.plugins[i]._dusk_onBuildMapIndex - 1 end
-		end
-	end
-
-	table_remove(core.plugins, found)
 end
 
 --------------------------------------------------------------------------------
@@ -107,7 +86,7 @@ function core.loadMap(filename, base)
 
 	-- Load other things
 	local data = lib_data.get(filename, base)
-	local stats = lib_stats.get(data); data.stats = stats
+	local stats = lib_functions.getMapStats(data); data.stats = stats
 
 	data._dusk = {
 		dirTree = dirTree,
@@ -117,6 +96,27 @@ function core.loadMap(filename, base)
 	for i = 1, #data.layers do
 		data._dusk.layers[i] = {}
 		if data.layers[i].type == "tilelayer" then
+			if data.layers[i].encoding == "base64" then
+        local decoded = {}
+        
+        if data.layers[i].compression == nil then
+          decoded = base64.decode("byte", data.layers[i].data)
+        elseif data.layers[i].compression == "zlib" then
+          deflate.inflateZlib({
+            input = base64.decode("string", data.layers[i].data),
+            output = function(b) decoded[#decoded + 1] = b end
+          })
+        elseif data.layers[i].compression == "gzip" then
+          error("Gzip compression not currently supported.")
+        end
+        
+        local newData = {}
+        for i = 1, #decoded, 4 do
+          newData[#newData + 1] = base64.glueInt(decoded[i], decoded[i + 1], decoded[i + 2], decoded[i + 3])
+        end
+        data.layers[i].data = newData
+      end
+			
 			local l, r, t, b = math.huge, -math.huge, math.huge, -math.huge
 			local w, h = data.layers[i].width, data.layers[i].height
 			for x = 1, w do
@@ -137,6 +137,10 @@ function core.loadMap(filename, base)
 		end
 	end
 
+	for i = 1, #core.pluginCallbacks.onLoadMap do
+		core.pluginCallbacks.onLoadMap[i].callback(data, stats)
+	end
+
 	return data, stats
 end
 
@@ -144,7 +148,8 @@ end
 -- Build Map
 --------------------------------------------------------------------------------
 function core.buildMap(data)
-	local imageSheets, imageSheetConfig, tileProperties, tileIndex = lib_tilesets.get(data, data._dusk.dirTree)
+	local imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
+	local escapedPrefixMethods = getSetting("escapedPrefixes")
 
 	setVariable("mapWidth", data.stats.mapWidth)
 	setVariable("mapHeight", data.stats.mapHeight)
@@ -167,6 +172,7 @@ function core.buildMap(data)
 		local bkg = display.newRect(0, 0, display.contentWidth - display.screenOriginX * 2, display.contentHeight - display.screenOriginY * 2)
 		bkg.x, bkg.y = display.contentCenterX, display.contentCenterY
 		map:insert(bkg)
+		map.background = bkg
 		local r, g, b = tonumber(data.backgroundcolor:sub(2, 3), 16), tonumber(data.backgroundcolor:sub(4, 5), 16), tonumber(data.backgroundcolor:sub(6, 7), 16)
 		bkg:setFillColor(r / 255, g / 255, b / 255)
 	end
@@ -210,7 +216,7 @@ function core.buildMap(data)
 
 			-- Pass each layer type to that layer builder
 			if data.layers[i].type == "tilelayer" then
-				layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties)
+				layer = lib_tilelayer.createLayer(map, data, data.layers[i], i, tileIndex, imageSheets, imageSheetConfig, tileProperties, tileIDs)
 				layer._type = "tile"
 
 				-- Tile layer-specific code
@@ -248,11 +254,11 @@ function core.buildMap(data)
 	-- Now we add each layer to the layer list, for quick layer iteration of a specific type
 	for i = 1, #map.layer do
 		if map.layer[i]._type == "tile" then
-			table_insert(layerList.tile, i)
+			layerList.tile[#layerList.tile + 1] = i
 		elseif map.layer[i]._type == "object" then
-			table_insert(layerList.object, i)
+			layerList.object[#layerList.object + 1] = i
 		elseif map.layer[i]._type == "image" then
-			table_insert(layerList.image, i)
+			layerList.image[#layerList.image + 1] = i
 		end
 	end
 
@@ -266,7 +272,7 @@ function core.buildMap(data)
 	function map.tilesToPixels(x, y)
 		local x, y = getXY(x, y)
 
-		if not (x ~= nil and y ~= nil) then verby_error("Missing argument(s) to `map.tilesToPixels()`") end
+		if not (x ~= nil and y ~= nil) then error("Missing argument(s) to `map.tilesToPixels()`") end
 
 		x, y = x - 0.5, y - 0.5
 
@@ -286,7 +292,7 @@ function core.buildMap(data)
 	function map.pixelsToTiles(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s) to `map.pixelsToTiles()`") end
+		if x == nil or y == nil then error("Missing argument(s) to `map.pixelsToTiles()`") end
 
 		x, y = map:contentToLocal(x, y)
 		return math_ceil(x / map.data.tileWidth), math_ceil(y / map.data.tileHeight)
@@ -298,12 +304,10 @@ function core.buildMap(data)
 	function map.isTileWithinMap(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s) to `map.isTileWithinMap()`") end
+		if x == nil or y == nil then error("Missing argument(s) to `map.isTileWithinMap()`") end
 
 		return (x >= 1 and x <= map.data.mapWidth) and (y >= 1 and y <= map.data.mapHeight)
 	end
-
-	map.tileWithinMap = function(x, y) verby_alert("Warning: `map.tileWithinMap()` is deprecated in favor of `map.isTileWithinMap()`.") return map.isTileWithinMap(x, y) end
 
 	------------------------------------------------------------------------------
 	-- Iterators
@@ -343,6 +347,18 @@ function core.buildMap(data)
 			end
 		end
 	end
+
+	function map.layers()
+		local i = 0
+		return function()
+			i = i + 1
+			if map.layer[i] then
+				return map.layer[i], i
+			else
+				return nil
+			end
+		end
+	end
 	
 	function map._getTileLayers() return layerList.tile end
 	function map._getObjectLayers() return layerList.object end
@@ -368,6 +384,9 @@ function core.buildMap(data)
 	-- Finish Up
 	------------------------------------------------------------------------------
 	update = lib_update.register(map)
+	for layer in map.objectLayers() do
+		layer._buildAllObjects()
+	end
 
 	return map
 end

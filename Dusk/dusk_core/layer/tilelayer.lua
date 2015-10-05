@@ -13,7 +13,6 @@ local lib_tilelayer = {}
 --------------------------------------------------------------------------------
 local require = require
 
-local verby = require("Dusk.dusk_core.external.verby")
 local screen = require("Dusk.dusk_core.misc.screen")
 local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
@@ -36,13 +35,22 @@ local type = type
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setEvalVariable
 local removeVariable = lib_settings.removeEvalVariable
-local verby_error = verby.error
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
 local setProperty = lib_functions.setProperty
 local getXY = lib_functions.getXY
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
-local physics_addBody; if physics and type(physics) == "table" and physics.addBody then physics_addBody = physics.addBody else physics_addBody = function() verby_error("Physics library was not found on Dusk Engine startup") end end
+
+if physics and type(physics) == "table" and physics.addBody then
+	physics_addBody = physics.addBody
+else
+	physics_addBody = function(...)
+		require("physics")
+		physics.start()
+		physics_addBody = physics.addBody
+		return physics_addBody(...)
+	end
+end
 
 local flipX = tonumber("80000000", 16)
 local flipY = tonumber("40000000", 16)
@@ -51,7 +59,7 @@ local flipD = tonumber("20000000", 16)
 --------------------------------------------------------------------------------
 -- Create Layer
 --------------------------------------------------------------------------------
-function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties)
+function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties, tileIDs)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
 	local dotImpliesTable = getSetting("dotImpliesTable")
 
@@ -63,11 +71,13 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	layer._lowestTile = mapData._dusk.layers[dataIndex].bottomTile + 1
 
 	layer.props = {}
+	layer._layerType = "tile"
 
 	local mapWidth, mapHeight = mapData.width, mapData.height
 	
-	layer.edgeModeX, layer.edgeModeY = "stop", "stop"
-	
+	layer.edgeModeLeft, layer.edgeModeRight = "stop", "stop"
+	layer.edgeModeTop, layer.edgeModeBottom = "stop", "stop"
+
 	if layer._leftmostTile == math.huge then
 		layer._isBlank = true
 		-- If we want, we can overwrite the normal functions with blank ones; this
@@ -92,38 +102,153 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	local layerTiles = {}
 	local locked = {}
 
+	local tileDrawListeners = {}
+	local tileEraseListeners = {}
+
 	function layer.tile(x, y) if layerTiles[x] ~= nil and layerTiles[x][y] ~= nil then return layerTiles[x][y] else return nil end end
 
 	layer.tiles = layerTiles
 
 	------------------------------------------------------------------------------
-	-- Draw a Single Tile to the Screen
+	-- Construct Tile Data
 	------------------------------------------------------------------------------
-	function layer._drawTile(x, y)
-		if locked[x] and locked[x][y] == "e" then return false end
+	function layer._constructTileData(x, y)
+		local gid, tilesetGID, tileProps, isSprite, isAnimated, flippedX, flippedY, rotated, pixelX, pixelY
 		
-		if not layerTiles[x] or not layerTiles[x][y] then
+		if layerTiles[x] ~= nil and layerTiles[x][y] ~= nil then
+			local tile = layerTiles[x][y]
+
+			gid = tile.gid
+			tilesetGID = tile.tilesetGID
+
+			local sheetIndex = tile.tileset
+
+			if tileProperties[sheetIndex][tilesetGID] then
+				tileProps = tileProperties[sheetIndex][tilesetGID]
+			end
+
+			isSprite = tile.isSprite
+			isAnimated = tile.isAnimated
+
+			pixelX, pixelY = tile.x, tile.y
+		else
 			local idX, idY = x, y
 
 			if x < 1 or x > mapWidth then
-				local edgeModeX = layer.edgeModeX
-				if edgeModeX == "wrap" then
+				local edgeModeLeft, edgeModeRight = layer.edgeModeLeft, layer.edgeModeRight
+				local underX, overX = x < 1, x > mapWidth
+
+				if (underX and edgeModeLeft == "stop") or (overX and edgeModeRight == "stop") then
+					return {gid = -1, tileX = x, tileY = y}
+				elseif (underX and edgeModeLeft == "wrap") or (overX and edgeModeRight == "wrap") then
 					idX = (idX - 1) % mapWidth + 1
-				elseif edgeModeX == "clamp" then
-					idX = (idX < 1 and 1) or (idX > mapWidth and mapWidth)
-				elseif edgeModeX == "stop" then
-					return false
+				elseif (underX and edgeModeLeft == "clamp") or (overX and edgeModeRight == "clamp") then
+					idX = (underX and 1) or (overX and mapWidth)
 				end
 			end
 
 			if y < 1 or y > mapHeight then
-				local edgeModeY = layer.edgeModeY
-				if edgeModeY == "wrap" then
+				local edgeModeTop, edgeModeBottom = layer.edgeModeTop, layer.edgeModeBottom
+				local underY, overY = y < 1, y > mapHeight
+
+				if (underY and edgeModeTop == "stop") or (overY and edgeModeBottom == "stop") then
+					return {gid = -1, tileX = x, tileY = y}
+				elseif (underY and edgeModeTop == "wrap") or (overY and edgeModeBottom == "wrap") then
 					idY = (idY - 1) % mapHeight + 1
-				elseif edgeModeY == "clamp" then
-					idY = (idY < 1 and 1) or (idY > mapHeight and mapHeight)
-				elseif edgeModeY == "stop" then
+				elseif (underY and edgeModeTop == "clamp") or (overY and edgeModeBottom == "clamp") then
+					idY = (underY and 1) or (overY and mapHeight)
+				end
+			end
+
+			local id = ((idY - 1) * mapData.width) + idX
+			gid = data.data[id]
+
+			if gid == 0 then return {gid = 0, tileX = x, tileY = y} end
+			
+			if gid % (gid + flipX) >= flipX then flippedX = true gid = gid - flipX end
+			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
+			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
+
+			local tilesheetData = tileIndex[gid]
+			local sheetIndex = tilesheetData.tilesetIndex
+			local tileGID = tilesheetData.gid
+
+			local tile
+			local tileProps
+
+			if tileProperties[sheetIndex][tileGID] then
+				tileProps = tileProperties[sheetIndex][tileGID]
+			end
+
+			isSprite = tileProps and tileProps.object["!isSprite!"]
+			gid = gid
+			tilesetGID = tileGID
+			pixelX, pixelY = mapData.stats.tileWidth * (x - 0.5), mapData.stats.tileHeight * (y - 0.5)
+		end
+
+		local tileData = {
+			gid = gid,
+			tilesetGID = tilesetGID,
+			isSprite = isSprite,
+			isAnimated = isAnimated,
+			flippedX = flippedX,
+			flippedY = flippedY,
+			tileX = x,
+			tileY = y,
+			x = pixelX,
+			y = pixelY,
+			props = {}
+		}
+
+		for k, v in pairs(layerProps.object) do
+			if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData, k, v) else tile[k] = v end
+		end
+
+		if tileProps then
+			for k, v in pairs(tileProps.object) do
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData, k, v) else tile[k] = v end
+			end
+
+			for k, v in pairs(tileProps.props) do
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData.props, k, v) else tile.props[k] = v end
+			end
+		end
+
+		return tileData
+	end
+
+	------------------------------------------------------------------------------
+	-- Draw a Single Tile to the Screen
+	------------------------------------------------------------------------------
+	function layer._drawTile(x, y, source)
+		if locked[x] and locked[x][y] == "e" then return false end
+		
+		if not (layerTiles[x] and layerTiles[x][y]) then
+			local idX, idY = x, y
+
+			if x < 1 or x > mapWidth then
+				local edgeModeLeft, edgeModeRight = layer.edgeModeLeft, layer.edgeModeRight
+				local underX, overX = x < 1, x > mapWidth
+
+				if (underX and edgeModeLeft == "stop") or (overX and edgeModeRight == "stop") then
 					return false
+				elseif (underX and edgeModeLeft == "wrap") or (overX and edgeModeRight == "wrap") then
+					idX = (idX - 1) % mapWidth + 1
+				elseif (underX and edgeModeLeft == "clamp") or (overX and edgeModeRight == "clamp") then
+					idX = (underX and 1) or (overX and mapWidth)
+				end
+			end
+
+			if y < 1 or y > mapHeight then
+				local edgeModeTop, edgeModeBottom = layer.edgeModeTop, layer.edgeModeBottom
+				local underY, overY = y < 1, y > mapHeight
+
+				if (underY and edgeModeTop == "stop") or (overY and edgeModeBottom == "stop") then
+					return false
+				elseif (underY and edgeModeTop == "wrap") or (overY and edgeModeBottom == "wrap") then
+					idY = (idY - 1) % mapHeight + 1
+				elseif (underY and edgeModeTop == "clamp") or (overY and edgeModeBottom == "clamp") then
+					idY = (underY and 1) or (overY and mapHeight)
 				end
 			end
 
@@ -143,7 +268,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
 			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
 
-			if gid > mapData.highestGID or gid < 0 then verby_error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
+			if gid > mapData.highestGID or gid < 0 then error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
 
 			local tileData = tileIndex[gid]
 			local sheetIndex = tileData.tilesetIndex
@@ -162,6 +287,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			if tileProps and tileProps.object["!isSprite!"] then
 				tile = display_newSprite(imageSheets[sheetIndex], imageSheetConfig[sheetIndex])
 				tile:setFrame(tileGID)
+				tile.isSprite = true
 			elseif tileProps and tileProps.anim.enabled then
 				tile = display_newSprite(imageSheets[sheetIndex], tileProps.anim.options)
 				tile._animData = tileProps.anim
@@ -182,6 +308,11 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			tile.tileX, tile.tileY = x, y
 			tile.hash = tostring(tile)
 			
+			if source then
+				tile._drawers = {[source.hash] = true}
+				tile._drawCount = 1
+			end
+
 			if flippedX then tile.xScale = -tile.xScale end
 			if flippedY then tile.yScale = -tile.yScale end
 
@@ -259,18 +390,61 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			tile:toBack()
 			
 			if tile.isAnimated and map._animManager then map._animManager.animatedTileCreated(tile) end
+
+			if tileDrawListeners[gid] then
+				for i = 1, #tileDrawListeners[gid] do
+					tileDrawListeners[gid][i]({
+						tile = tile,
+						name = "drawn"
+					})
+				end
+			end
+		elseif source then
+			local tile = layerTiles[x][y]
+			if not tile._drawers[source.hash] then
+				tile._drawers[source.hash] = true
+				tile._drawCount = tile._drawCount + 1
+			end
 		end
 	end
 
 	------------------------------------------------------------------------------
 	-- Erase a Single Tile from the Screen
 	------------------------------------------------------------------------------
-	function layer._eraseTile(x, y)
+	function layer._eraseTile(x, y, source)
 		if locked[x] and locked[x][y] == "d" then return end
 
-		if layerTiles[x] and layerTiles[x][y] then
-			if layerTiles[x][y].isAnimated and map._animManager then map._animManager.animatedTileRemoved(layerTiles[x][y]) end
-			display_remove(layerTiles[x][y])
+		local shouldErase = false
+		local tile
+		if layerTiles[x] and layerTiles[x][y] then tile = layerTiles[x][y] end
+
+		if not tile then return end
+
+		if source and tile then
+			if tile._drawCount == 1 and tile._drawers[source.hash] then
+				shouldErase = true
+			elseif tile._drawers[source.hash] then
+				tile._drawCount = tile._drawCount - 1
+				tile._drawers[source.hash] = nil
+			end
+		elseif tile and not source then
+			shouldErase = true
+		end
+		
+		if shouldErase then
+			if tile.isAnimated and map._animManager then map._animManager.animatedTileRemoved(tile) end
+			
+			if tileEraseListeners[tile.gid] then
+				for i = 1, #tileEraseListeners[tile.gid] do
+					tileEraseListeners[tile.gid][i]({
+						tile = tile,
+						name = "erased"
+					})
+				end
+			end
+
+
+			display_remove(tile)
 			layerTiles[x][y] = nil
 
 			-- Need this for tile edge modes
@@ -291,18 +465,52 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	-- Lock/Unlock a Tile
 	------------------------------------------------------------------------------
-	function layer._lockTileDrawn(...) verby_alert("Warning: `layer._lockTileDrawn()` has been deprecated in favor of layer.lockTileDrawn().") layer.lockTileDrawn(...) end
-	function layer._lockTileErased(...) verby_alert("Warning: `layer._lockTileErased()` has been deprecated in favor of layer.lockTileErased().") layer.lockTileErased(...) end
-	function layer._unlockTile(...) verby_alert("Warning: `layer._unlockTile()` has been deprecated in favor of layer.unlockTile().") layer.unlockTile(...) end
-
 	function layer.lockTileDrawn(x, y) if not locked[x] then locked[x] = {} end locked[x][y] = "d" layer._drawTile(x, y) end
 	function layer.lockTileErased(x, y) if not locked[x] then locked[x] = {} end locked[x][y] = "e" layer._eraseTile(x, y) end
 	function layer.unlockTile(x, y) if locked[x] and locked[x][y] then locked[x][y] = nil if table_maxn(locked[x]) == 0 then locked[x] = nil end end end
 
 	------------------------------------------------------------------------------
+	-- Add Tile Listener
+	------------------------------------------------------------------------------
+	function layer.addTileListener(tileID, eventName, callback)
+		local gid = tileIDs[tileID]
+		if not gid then error("No tile with ID '" .. tileID .. "' found.") end
+		local listenerTable = (eventName == "drawn" and tileDrawListeners) or (eventName == "erased" and tileEraseListeners) or error("Invalid tile event '" .. eventName .. "'")
+
+		local l = listenerTable[gid] or {}
+		l[#l + 1] = callback
+		listenerTable[gid] = l
+	end
+
+	function layer.removeTileListener(tileID, eventName, callback)
+		local gid
+		if type(tileID) == "number" then
+			gid = tileID
+		else
+			gid = tileIDs[tileID]
+			if not gid then error("No tile with ID '" .. tileID .. "' found.") end
+		end
+
+		local listenerTable = (eventName == "drawn" and tileDrawListeners) or (eventName == "erased" and tileEraseListeners) or error("Invalid tile event '" .. eventName .. "'")
+		local l = listenerTable[gid]
+
+		if callback then
+			for i = 1, #l do
+				if l[i] == callback then
+					table_remove(l, i)
+					break
+				end
+			end
+		else
+			l = nil
+		end
+		listenerTable[gid] = l
+	end
+
+	------------------------------------------------------------------------------
 	-- Edit Section
 	------------------------------------------------------------------------------
-	function layer._edit(x1, x2, y1, y2, mode)
+	function layer._edit(x1, x2, y1, y2, mode, source)
 		local mode = mode or "d"
 		local x1 = x1 or 0
 		local x2 = x2 or x1
@@ -321,7 +529,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 
 		for x = x1, x2 do
 			for y = y1, y2 do
-				layer[layerFunc](x, y)
+				layer[layerFunc](x, y, source)
 			end
 		end
 	end
@@ -359,7 +567,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	function layer.tilesToPixels(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil then error("Missing argument(s).") end
 
 		x, y = (x - 0.5) * mapData.stats.tileWidth, (y - 0.5) * mapData.stats.tileHeight
 
@@ -372,7 +580,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	function layer.pixelsToTiles(x, y)
 		local x, y = getXY(x, y)
 
-		if x == nil or y == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil then error("Missing argument(s).") end
 
 		return math_ceil(x / mapData.stats.tileWidth), math_ceil(y / mapData.stats.tileHeight)
 	end
@@ -394,12 +602,13 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	------------------------------------------------------------------------------
 	function layer._getTilesInRange(x, y, w, h)
 		local t = {}
-		for xPos = x, x + w - 1 do
-			for yPos = y, y + h - 1 do
+		local incrX, incrY = 1, 1
+		if w < 0 then incrX = -1 end
+		if h < 0 then incrY = -1 end
+		for xPos = x, x + w - 1, incrX do
+			for yPos = y, y + h - 1, incrY do
 				local tile = layer.tile(xPos, yPos)
-				if tile then
-					table_insert(t, tile)
-				end
+				if tile then t[#t + 1] = tile end
 			end
 		end
 
@@ -410,7 +619,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	-- Tile Iterators
 	------------------------------------------------------------------------------
 	function layer.tilesInRange(x, y, w, h)
-		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil or w == nil or h == nil then error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x, y, w, h)
 
@@ -422,9 +631,21 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	end
 
 	function layer.tilesInRect(x, y, w, h)
-		if x == nil or y == nil or w == nil or h == nil then verby_error("Missing argument(s).") end
+		if x == nil or y == nil or w == nil or h == nil then error("Missing argument(s).") end
 
 		local tiles = layer._getTilesInRange(x - w, y - h, w * 2, h * 2)
+
+		local i = 0
+		return function()
+			i = i + 1
+			if tiles[i] then return tiles[i] else return nil end
+		end
+	end
+
+	function layer.tilesInBlock(x1, y1, x2, y2)
+		if x1 == nil or y1 == nil or x2 == nil or y2 == nil then error("Missing argument(s).") end
+	
+		local tiles = layer._getTilesInRange(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
 
 		local i = 0
 		return function()
