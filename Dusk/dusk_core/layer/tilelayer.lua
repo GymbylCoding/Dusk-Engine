@@ -38,7 +38,7 @@ local removeVariable = lib_settings.removeEvalVariable
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
 local setProperty = lib_functions.setProperty
-local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
+local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true, filter == true}
 
 if physics and type(physics) == "table" and physics.addBody then
 	physics_addBody = physics.addBody

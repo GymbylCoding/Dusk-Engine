@@ -41,7 +41,7 @@ local reversePolygon = lib_functions.reversePolygon
 local getProperties = lib_functions.getProperties
 local setProperty = lib_functions.setProperty
 local rotatePoint = lib_functions.rotatePoint
-local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
+local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true, filter = true}
 
 if physics and type(physics) == "table" and physics.addBody then
 	physics_addBody = physics.addBody
