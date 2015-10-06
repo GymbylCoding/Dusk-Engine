@@ -26,6 +26,11 @@ This folder (download the ZIP and unpack) includes...
 - Lua files to run the sample (`main.lua`, `config.lua`, `build.settings`)
 
 
+### Documentation
+
+Documentation is coming along slowly but surely. You can either browse it from your local repository or [read online from `rawgit.com`][rawgitdocs].
+
+
 ### Install ###
 
 The engine itself is found in the folder named "Dusk". It's what you'll actually use. To use Dusk in your project, copy the folder into your project's **root** directory (where `main.lua` is) and `require` it like so:
@@ -73,3 +78,4 @@ THE SOFTWARE.
 [tiled]: http://www.mapeditor.org
 [game]: http://bit.ly/1mpG2wD
 [contact]: http://www.gymbyl.com/contact
+[rawgitdocs]: http://cdn.rawgit.com/GymbylCoding/Dusk-Engine/v0.2/docs/index.html
