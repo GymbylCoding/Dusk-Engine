@@ -88,22 +88,22 @@ Code
 code {
 	font-family: "Consolas", "Droid Sans Mono", monospace;
 	padding: 2px;
-	font-size: 0.9em;
+	font-size: 0.85em;
 	letter-spacing: normal;
-	border: 1px solid #aaa;
+	border: 1px solid #ccc;
 	border-radius: 6px;
-	background-color: #dde;
+	background-color: #eef;
 }
 
 pre {
 	font-family: "Consolas", "Droid Sans Mono", monospace;
 	width: 100%;
-	padding: 2px;
+	padding: 2px 4px;
 	font-size: 0.9em;
 	letter-spacing: normal;
 	border: 1px solid #aaa;
 	border-radius: 6px;
-	background-color: #dde;
+	background-color: #eef;
 	overflow: auto;
 }
 

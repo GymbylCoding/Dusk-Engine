@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dusk Documentation</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+	</head>
+	<body>
+		<div id="all">
+			<a id="contents-link" href="../index.html">Contents</a>
+			<h1 id="page-title">Map Structure</h1>
+			<div id="text">
+				<h3>Introduction</h3>
+				<p>I say a lot in this guide that's said elsewhere in the docs, so you may yell out "Nasty Mr. Repeat-yourself!" if you want. Still, it's good to have a basic structure guide somewhere to bring other information together, and to provide a simple overview you can read through.</p>
+				<h3>Maps</h3>
+				<p>Dusk's primary purpose is loading maps. It follows that the map object is Dusk's primary class. Map objects are the "root" from which everything else in Dusk comes: layers, camera tracking, culling, and anything else you can think of.</p>
+				<p>To build a map, use the aptly-named <a href="../reference/dusk-buildMap.html"><code>dusk.buildMap()</code> function</a>. This function can either take a file path pointing to the map file or a table of map data previously loaded with the once again aptly-named <a href="../reference/dusk-loadMap.html"><code>dusk.loadMap()</code></a>. The former case will probably be what you use most. The only time you'll need <code>dusk.loadMap()</code> is if you need access to the map's data in your code.</p>
+				<pre><code type="lua">local dusk = require("Dusk.Dusk")
+
+local map = dusk.buildMap("map.json")</code></pre>
+				<h3>Layer Access</h3>
+				<p>Possibly the most accessed field in a map is the <code>layer</code> table. It stores the map's layers by both index and name. Simply put, this means you can access a layer by either its number or the name you specified in Tiled. By number, the top layer in the map is layer #1, and the bottom layer is layer #(however many layers you have).</p>
+				<pre><code type="lua">local topLayer = map.layer[1]
+local bottomLayer = map.layer[#map.layer]</code></pre>
+				<p>To access a layer by name, you... er... access it by name. Sorry, but there's not really another way to say it. The name corresponds to what you set in Tiled, either in the layer properties menu or the layer list.</p>
+				<pre><code type="lua">local layer = map.layer["myTileLayer"]</code></pre>
+				<p>Due to Lua's happy dot notation, you can omit the brackets and quotes if the layer name allows it.</p>
+				<pre><code type="lua">local layer = map.layer.myTileLayer</code></pre>
+				<h3>Layer Iteration</h3>
+				<p>The section above raises a question just begging to be answered. <em>Viz.</em>, if each layer is stored twice in <code>map.layer</code>, how do you keep from "hitting" each one twice when you iterate through them?</p>
+				<pre><code type="lua">for layerName, layer in pairs(map.layer) do
+  print(layerName)
+end</code></pre>
+				<p>If you run the code above, you'll get each index from 1 to the number of layers, then each layer's name printed out to the terminal. That means we can't iterate with a simple <code>pairs()</code> iterator. Have no fear, however! Dusk comes with a set of iterators just for you.</p>
+				<pre><code type="lua">for layer in map.layers() do
+end
+
+for layer in map.tileLayers() do
+end
+
+for layer in map.objectLayers() do
+end
+
+for layer in map.imageLayers() do
+end</code></pre>
+				<p>Each of these iterators does exactly what it seems. Using them, you can iterate through each layer or each layer of a certain type easily.</p>
+				<p><em>Even though you can technically iterate through each layer of a certain type by using a <code>map.layers()</code> loop and a simple layer type check, it's clearer (and a tad faster) to use the dedicated iterators.</em></p>
+				<h3>Unit Conversion</h3>
+				<p>If you're making any sort of normal game, chances are that you'll need to convert between tiles and pixels somewhere. Dusk has a number of ways, covering each use case, to accomplish that.</p>
+				<pre><code type="lua">local x, y = map.tilesToPixels(16, 16)
+local x, y = map.tilesToContentPixels(16, 16)</code></pre>
+				<p>The above functions convert tile coordinates to pixel coordinates. Surprised? You shouldn't be; I would have thought the names to be pretty clear. The difference between the two functions is that the first function (and its alias, <code>map.tilesToLocalPixels()</code>) returns local pixels and the second returns content pixels. You'll use <code>map.tilesToPixels()</code> when, for example, you need to place an object at a tile location in the map - say, spawn and enemy or build a sign - and <code>map.tilesToContentPixels()</code> when you need the position of a tile globally, say to display an overlay on the map.</p>
+				<p><em>You may have noticed my mention that the first function has an alias of <code>map.tilesToLocalPixels()</code>. You can use either function, and <code>map.tilesToPixels()</code> is probably simpler, it's just that having <code>map.tilesToLocalPixels()</code> and <code>map.tilesToContentPixels()</code> keeps the API "symmetrical."</em></p>
+				<p>Besides the tile-to-pixel functions, Dusk also has pixel-to-tile functions to convert back from pixels.</p>
+				<pre><code type="lua">local x, y = map.pixelsToTiles(512, 512)
+local x, y = map.contentPixelsToTiles(512, 512)</code></pre>
+				<p>Again, there are two different methods here. The first function uses local coordinates, and the second uses content coordinates. Use the first function when you need the tile location of a point local to the map - e.g. "what tile is the player on" - and the second when you need the tile location of a content point - e.g. "what tile is the touch event inside."</p>
+				<p><em>Just like the tile-to-pixel conversion functions, <code>map.pixelsToTiles()</code> has an alias of <code>map.localPixelsToTiles()</code>.</em></p>
+				<h3>Destroying the Map</h3>
+				<p>So you've almost completed your game, and you're ready to add the "wrapper screens" for file selection, credits, achievements, et al. You're ready to change scenes. There's just one more thing to do before changing scenes: destroy the map. In true clear Dusk API style, telling the map to destroy itself is quite simple:</p>
+				<pre><code type="lua">map.destroy()</code></pre>
+				<p>This function is like Corona's <code>display.remove()</code> or <code>object:removeSelf()</code>. You need to call it when you're done with the map to let Dusk clean things up, delete the layers, clear out everything, and generally finish things up.</p>
+				<p>And speaking of finishing things up, you've reached the end of this guide.</p>
+			</div>
+		</div>
+	</body>
+</html>
