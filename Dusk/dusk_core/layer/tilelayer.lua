@@ -38,7 +38,6 @@ local removeVariable = lib_settings.removeEvalVariable
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
 local setProperty = lib_functions.setProperty
-local getXY = lib_functions.getXY
 local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true}
 
 if physics and type(physics) == "table" and physics.addBody then
@@ -565,12 +564,8 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	-- Tiles to Pixels Conversion
 	------------------------------------------------------------------------------
 	function layer.tilesToPixels(x, y)
-		local x, y = getXY(x, y)
-
 		if x == nil or y == nil then error("Missing argument(s).") end
-
 		x, y = (x - 0.5) * mapData.stats.tileWidth, (y - 0.5) * mapData.stats.tileHeight
-
 		return x, y
 	end
 
@@ -578,10 +573,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	-- Pixels to Tiles Conversion
 	------------------------------------------------------------------------------
 	function layer.pixelsToTiles(x, y)
-		local x, y = getXY(x, y)
-
 		if x == nil or y == nil then error("Missing argument(s).") end
-
 		return math_ceil(x / mapData.stats.tileWidth), math_ceil(y / mapData.stats.tileHeight)
 	end
 

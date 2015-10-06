@@ -18,7 +18,6 @@ local lib_settings = require("Dusk.dusk_core.misc.settings")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 
 local getSetting = lib_settings.get
-local getXY = lib_functions.getXY
 local clamp = lib_functions.clamp
 local display_contentWidth = display.contentWidth
 local display_contentHeight = display.contentHeight
@@ -120,7 +119,6 @@ function lib_camera.addControl(map)
 			--------------------------------------------------------------------------
 			-- Set offset
 			map.layer[i].setCameraOffset = function(x, y)
-				local x, y = getXY(x, y)
 				camera.layer[i].xOffset = x or camera.layer[i].xOffset
 				camera.layer[i].yOffset = y or camera.layer[i].yOffset
 			end
@@ -226,7 +224,6 @@ function lib_camera.addControl(map)
 	-- Set/Get Viewpoint
 	------------------------------------------------------------------------------
 	function map.setViewpoint(x, y)
-		local x, y = getXY(x, y)
 		camera.viewX, camera.viewY = math_round(x), math_round(y)
 		camera.focus = "point"
 	end
@@ -239,7 +236,6 @@ function lib_camera.addControl(map)
 	-- Position Camera
 	------------------------------------------------------------------------------
 	function map.positionCamera(x, y)
-		local x, y = getXY(x, y)
 		map.setViewpoint(x, y)
 		map.snapCamera() -- This isn't defined here, but we'll have it if control ever reaches here
 	end

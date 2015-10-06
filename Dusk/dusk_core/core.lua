@@ -35,7 +35,6 @@ local math_ceil = math.ceil
 local getSetting = lib_settings.get
 local setVariable = lib_settings.setMathVariable
 local removeVariable = lib_settings.removeMathVariable
-local getXY = lib_functions.getXY
 
 local escapedPrefixMethods = getSetting("escapedPrefixMethods")
 
@@ -270,12 +269,8 @@ function core.buildMap(data)
 	-- Tiles/Pixel Conversion
 	------------------------------------------------------------------------------
 	function map.tilesToPixels(x, y)
-		local x, y = getXY(x, y)
-
 		if not (x ~= nil and y ~= nil) then error("Missing argument(s) to `map.tilesToPixels()`") end
-
 		x, y = x - 0.5, y - 0.5
-
 		return (x * map.data.tileWidth), (y * map.data.tileHeight)
 	end
 
@@ -290,10 +285,14 @@ function core.buildMap(data)
 	-- Pixels/Tiles Conversion
 	------------------------------------------------------------------------------
 	function map.pixelsToTiles(x, y)
-		local x, y = getXY(x, y)
-
 		if x == nil or y == nil then error("Missing argument(s) to `map.pixelsToTiles()`") end
-
+		return math_ceil(x / map.data.tileWidth), math_ceil(y / map.data.tileHeight)
+	end
+	
+	map.localPixelsToTiles = map.pixelsToTiles
+	
+	function map.contentPixelsToTiles(x, y)
+		if x == nil or y == nil then error("Missing argument(s) to `map.pixelsToTiles()`") end
 		x, y = map:contentToLocal(x, y)
 		return math_ceil(x / map.data.tileWidth), math_ceil(y / map.data.tileHeight)
 	end
@@ -302,10 +301,7 @@ function core.buildMap(data)
 	-- Is Tile in Map
 	------------------------------------------------------------------------------
 	function map.isTileWithinMap(x, y)
-		local x, y = getXY(x, y)
-
 		if x == nil or y == nil then error("Missing argument(s) to `map.isTileWithinMap()`") end
-
 		return (x >= 1 and x <= map.data.mapWidth) and (y >= 1 and y <= map.data.mapHeight)
 	end
 
