@@ -38,7 +38,7 @@ local removeVariable = lib_settings.removeEvalVariable
 local getProperties = lib_functions.getProperties
 local addProperties = lib_functions.addProperties
 local setProperty = lib_functions.setProperty
-local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true, filter == true}
+local physicsKeys = {radius = true, isSensor = true, bounce = true, friction = true, density = true, shape = true, filter = true}
 
 if physics and type(physics) == "table" and physics.addBody then
 	physics_addBody = physics.addBody
@@ -119,6 +119,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			local tile = layerTiles[x][y]
 
 			gid = tile.gid
+			
 			tilesetGID = tile.tilesetGID
 
 			local sheetIndex = tile.tileset
@@ -131,6 +132,8 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			isAnimated = tile.isAnimated
 
 			pixelX, pixelY = tile.x, tile.y
+			flippedX = tile.flippedX
+			flippedY = tile.flippedY
 		else
 			local idX, idY = x, y
 
@@ -139,7 +142,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 				local underX, overX = x < 1, x > mapWidth
 
 				if (underX and edgeModeLeft == "stop") or (overX and edgeModeRight == "stop") then
-					return {gid = -1, tileX = x, tileY = y}
+					return false
 				elseif (underX and edgeModeLeft == "wrap") or (overX and edgeModeRight == "wrap") then
 					idX = (idX - 1) % mapWidth + 1
 				elseif (underX and edgeModeLeft == "clamp") or (overX and edgeModeRight == "clamp") then
@@ -152,7 +155,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 				local underY, overY = y < 1, y > mapHeight
 
 				if (underY and edgeModeTop == "stop") or (overY and edgeModeBottom == "stop") then
-					return {gid = -1, tileX = x, tileY = y}
+					return false
 				elseif (underY and edgeModeTop == "wrap") or (overY and edgeModeBottom == "wrap") then
 					idY = (idY - 1) % mapHeight + 1
 				elseif (underY and edgeModeTop == "clamp") or (overY and edgeModeBottom == "clamp") then
@@ -163,7 +166,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			local id = ((idY - 1) * mapData.width) + idX
 			gid = data.data[id]
 
-			if gid == 0 then return {gid = 0, tileX = x, tileY = y} end
+			if gid == 0 then return false end
 			
 			if gid % (gid + flipX) >= flipX then flippedX = true gid = gid - flipX end
 			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
@@ -172,9 +175,6 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			local tilesheetData = tileIndex[gid]
 			local sheetIndex = tilesheetData.tilesetIndex
 			local tileGID = tilesheetData.gid
-
-			local tile
-			local tileProps
 
 			if tileProperties[sheetIndex][tileGID] then
 				tileProps = tileProperties[sheetIndex][tileGID]
@@ -193,6 +193,10 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			isAnimated = isAnimated,
 			flippedX = flippedX,
 			flippedY = flippedY,
+			width = mapData.stats.tileWidth,
+			height = mapData.stats.tileHeight,
+			xScale = flippedX and -1 or 1,
+			yScale = flippedY and -1 or 1,
 			tileX = x,
 			tileY = y,
 			x = pixelX,
@@ -201,16 +205,16 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 		}
 
 		for k, v in pairs(layerProps.object) do
-			if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData, k, v) else tile[k] = v end
+			if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData, k, v) else tileData[k] = v end
 		end
 
 		if tileProps then
 			for k, v in pairs(tileProps.object) do
-				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData, k, v) else tile[k] = v end
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData, k, v) else tileData[k] = v end
 			end
 
 			for k, v in pairs(tileProps.props) do
-				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData.props, k, v) else tile.props[k] = v end
+				if (dotImpliesTable or layerProps.options.usedot[k]) and not layerProps.options.nodot[k] then setProperty(tileData.props, k, v) else tileData.props[k] = v end
 			end
 		end
 
@@ -256,7 +260,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			local gid = data.data[id]
 
 			-- Skip blank tiles
-			if gid == 0 then return true end
+			if gid == 0 then return false end
 
 			--------------------------------------------------------------------------
 			-- Tile Data/Preparation
@@ -319,7 +323,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			--------------------------------------------------------------------------
 			-- Tile Properties
 			--------------------------------------------------------------------------
-			if tileProps then				
+			if tileProps then
 				------------------------------------------------------------------------
 				-- Add Physics to Tile
 				------------------------------------------------------------------------
