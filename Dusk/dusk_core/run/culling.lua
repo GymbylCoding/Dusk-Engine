@@ -79,7 +79,12 @@ function lib_tileculling.addCulling(map)
 					local edgeModeLeft, edgeModeRight, edgeModeTop, edgeModeBottom = layer.edgeModeLeft, layer.edgeModeRight, layer.edgeModeTop, layer.edgeModeBottom
 					local nl, nr, nt, nb = layerCulling.updatePositions()
 					local pl, pr, pt, pb = layerCulling.prev.l, layerCulling.prev.r, layerCulling.prev.t, layerCulling.prev.b
-
+					
+					layer._drawnLeft = nl
+					layer._drawnRight = nr
+					layer._drawnTop = nt
+					layer._drawnBottom = nb
+					
 					-- if nl == pl and nr == pr and nt == pt and nb == pb then return end
 
 					-- Difference between current positions and previous positions
@@ -221,6 +226,12 @@ function lib_tileculling.addCulling(map)
 				if tileField.layer[i] then
 					local l, r, t, b = tileField.layer[i].updatePositions()
 					tileField.layer[i].updatePositions()
+					
+					layer._drawnLeft = tileField.layer[i].now.l
+					layer._drawnRight = tileField.layer[i].now.r
+					layer._drawnTop = tileField.layer[i].now.t
+					layer._drawnBottom = tileField.layer[i].now.b
+					
 					if layer._layerType == "tile" then
 						layer._edit(l, r, t, b, "d", tileField)
 					else

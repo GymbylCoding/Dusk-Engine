@@ -105,6 +105,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	local tileEraseListeners = {}
 
 	function layer.tile(x, y) if layerTiles[x] ~= nil and layerTiles[x][y] ~= nil then return layerTiles[x][y] else return nil end end
+	function layer.isTileWithinCullingRange(x, y) return x >= layer._drawnLeft and x <= layer._drawnRight and y >= layer._drawnTop and y <= layer._drawnBottom end
 
 	layer.tiles = layerTiles
 
