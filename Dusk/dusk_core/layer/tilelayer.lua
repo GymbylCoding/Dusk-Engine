@@ -270,7 +270,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			local rotated = false
 			if gid % (gid + flipX) >= flipX then flippedX = true gid = gid - flipX end
 			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
-			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
+			if gid % (gid + flipD) >= flipD then rotated = true gid = gid - flipD end
 
 			if gid > mapData.highestGID or gid < 0 then error("Invalid GID at position [" .. x .. "," .. y .."] (index #" .. id ..") - expected [0 <= GID <= " .. mapData.highestGID .. "] but got " .. gid .. " instead.") end
 
