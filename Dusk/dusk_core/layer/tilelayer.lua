@@ -170,7 +170,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			
 			if gid % (gid + flipX) >= flipX then flippedX = true gid = gid - flipX end
 			if gid % (gid + flipY) >= flipY then flippedY = true gid = gid - flipY end
-			if gid % (gid + flipD) >= flipX then rotated = true gid = gid - flipD end
+			if gid % (gid + flipD) >= flipD then rotated = true gid = gid - flipD end
 
 			local tilesheetData = tileIndex[gid]
 			local sheetIndex = tilesheetData.tilesetIndex
