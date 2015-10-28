@@ -23,7 +23,7 @@ local lib_imagelayer = require("Dusk.dusk_core.layer.imagelayer")
 local lib_functions = require("Dusk.dusk_core.misc.functions")
 local lib_update = require("Dusk.dusk_core.run.update")
 
-local deflate = require("Dusk.dusk_core.external.deflatelua")
+local hasDeflate, deflate = pcall(require, "Dusk.dusk_core.external.deflatelua")
 local base64 = require("Dusk.dusk_core.external.base64")
 
 local type = type
@@ -101,7 +101,10 @@ function core.loadMap(filename, base)
         if data.layers[i].compression == nil then
           decoded = base64.decode("byte", data.layers[i].data)
         elseif data.layers[i].compression == "zlib" then
-          deflate.inflateZlib({
+          if not hasDeflate then
+						error("Compression library not loaded; include the 'bit' plugin to add support for compressed maps. See https://docs.coronalabs.com/plugin/bit/index.html for more information.")
+					end
+					deflate.inflateZlib({
             input = base64.decode("string", data.layers[i].data),
             output = function(b) decoded[#decoded + 1] = b end
           })
