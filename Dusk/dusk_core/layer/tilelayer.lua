@@ -110,6 +110,48 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	layer.tiles = layerTiles
 
 	------------------------------------------------------------------------------
+	-- Get Tile GID
+	------------------------------------------------------------------------------
+	function layer._getTileGID(x, y)
+		local idX, idY = x, y
+
+		if x < 1 or x > mapWidth then
+			local edgeModeLeft, edgeModeRight = layer.edgeModeLeft, layer.edgeModeRight
+			local underX, overX = x < 1, x > mapWidth
+
+			if (underX and edgeModeLeft == "stop") or (overX and edgeModeRight == "stop") then
+				return false
+			elseif (underX and edgeModeLeft == "wrap") or (overX and edgeModeRight == "wrap") then
+				idX = (idX - 1) % mapWidth + 1
+			elseif (underX and edgeModeLeft == "clamp") or (overX and edgeModeRight == "clamp") then
+				idX = (underX and 1) or (overX and mapWidth)
+			end
+		end
+
+		if y < 1 or y > mapHeight then
+			local edgeModeTop, edgeModeBottom = layer.edgeModeTop, layer.edgeModeBottom
+			local underY, overY = y < 1, y > mapHeight
+
+			if (underY and edgeModeTop == "stop") or (overY and edgeModeBottom == "stop") then
+				return false
+			elseif (underY and edgeModeTop == "wrap") or (overY and edgeModeBottom == "wrap") then
+				idY = (idY - 1) % mapHeight + 1
+			elseif (underY and edgeModeTop == "clamp") or (overY and edgeModeBottom == "clamp") then
+				idY = (underY and 1) or (overY and mapHeight)
+			end
+		end
+
+		local id = ((idY - 1) * mapData.width) + idX
+		gid = data.data[id]
+
+		if gid == 0 then return false end
+		
+		if gid % (gid + flipX) >= flipX then gid = gid - flipX end
+		if gid % (gid + flipY) >= flipY then gid = gid - flipY end
+		if gid % (gid + flipD) >= flipD then gid = gid - flipD end
+	end
+
+	------------------------------------------------------------------------------
 	-- Construct Tile Data
 	------------------------------------------------------------------------------
 	function layer._constructTileData(x, y)
