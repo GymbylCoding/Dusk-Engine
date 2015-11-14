@@ -398,8 +398,8 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 			data.type = "image"
 			data.transfer._objType = "image"
 			data.tileData = tileIndex[o.gid]
-			data.transfer.x, data.transfer.y = o.x + mapData.stats.tileWidth * 0.5, o.y - mapData.stats.tileHeight * 0.5
-			data.width, data.height = tileWidth, tileHeight
+			data.transfer.x, data.transfer.y = o.x + o.width * 0.5, o.y - o.height * 0.5
+			data.width, data.height = o.width, o.height
 		-- Rectangle
 		else
 			data.type = "rect"
