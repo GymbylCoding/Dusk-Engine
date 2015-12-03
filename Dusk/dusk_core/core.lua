@@ -383,9 +383,6 @@ function core.buildMap(data)
 	-- Finish Up
 	------------------------------------------------------------------------------
 	update = lib_update.register(map)
-	for layer in map.objectLayers() do
-		layer._buildAllObjects()
-	end
 
 	return map
 end

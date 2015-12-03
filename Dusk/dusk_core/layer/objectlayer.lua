@@ -559,15 +559,23 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 	end
 
 	------------------------------------------------------------------------------
-	-- Build All Objects
+	-- Build All Object Datas
 	------------------------------------------------------------------------------
-	function layer._buildAllObjects()
+	function layer._buildAllObjectDatas()
 		prepareCulling()
 		for i = 1, #data.objects do
 			local o = data.objects[i]
 			if o == nil then error("Object data missing at index " .. i) end
 			o.objectIndex = i
 			objDatas[i] = constructObjectData(o)
+		end
+	end
+	
+	-- ***** --
+	
+	function layer._buildAllObjects()
+		for i = 1, #objDatas do
+			constructObject(objDatas[i])
 		end
 	end
 
