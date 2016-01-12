@@ -44,6 +44,9 @@ function lib_tileculling.addCulling(map)
 	function culling.newCullingField(w, h, x, y)
 		local tileField = {
 			layer = {},
+			onTileEnter = nil,
+			onTileExit = nil,
+			mode = "cull",
 			width = w or screen.right - screen.left,
 			height = h or screen.bottom - screen.top,
 			x = x or 0,
@@ -68,9 +71,9 @@ function lib_tileculling.addCulling(map)
 				local layerEdits = newEditQueue()
 				layerEdits.setTarget(layer)
 
-				if multiCullingFieldsEnabled then
+				-- if multiCullingFieldsEnabled then
 					layerEdits.setSource(tileField)
-				end
+				-- end
 				
 				--------------------------------------------------------------------------
 				-- Update Culling
@@ -232,10 +235,12 @@ function lib_tileculling.addCulling(map)
 					layer._drawnTop = tileField.layer[i].now.t
 					layer._drawnBottom = tileField.layer[i].now.b
 					
-					if layer._layerType == "tile" then
-						layer._edit(l, r, t, b, "d", tileField)
-					else
-						layer.draw(l, r, t, b, tileField)
+					if tileField.mode == "cull" then
+						if layer._layerType == "tile" then
+							layer._edit(l, r, t, b, "d", tileField)
+						else
+							layer.draw(l, r, t, b, tileField)
+						end
 					end
 				end
 			end

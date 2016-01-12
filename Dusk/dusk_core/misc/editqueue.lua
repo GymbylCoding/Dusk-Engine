@@ -48,10 +48,37 @@ function lib_editQueue.new()
 	function editQueue.execute()
 		if di == 0 and ei == 0 then return end
 		if target._layerType == "tile" then
-			for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d", source) end
-			for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e", source) end
+			if source.mode == "cull" then
+				for i = 1, di do target._edit(draw[i][1], draw[i][2], draw[i][3], draw[i][4], "d", source) end
+				for i = 1, ei do target._edit(erase[i][1], erase[i][2], erase[i][3], erase[i][4], "e", source) end
+			elseif source.mode == "callback" then
+				for i = 1, di do
+					for tile in target.tilesInBlock(draw[i][1], draw[i][3], draw[i][2], draw[i][4]) do
+						tile._editQueueCallback = tile._editQueueCallback or {}
+						if tile._editQueueCallback[source.hash] then
+							tile._editQueueCallback[source.hash] = tile._editQueueCallback[source.hash] + 1
+						else
+							tile._editQueueCallback[source.hash] = 1
+						end
+						
+						if tile._editQueueCallback[source.hash] == 1 then
+							source.onTileEnter(tile)
+						end
+					end
+				end
+				for i = 1, ei do
+					for tile in target.tilesInBlock(erase[i][1], erase[i][3], erase[i][2], erase[i][4]) do
+						tile._editQueueCallback = tile._editQueueCallback or {}
+						if tile._editQueueCallback[source.hash] then
+							if tile._editQueueCallback[source.hash] == 1 then
+								source.onTileExit(tile)
+							end
+							tile._editQueueCallback[source.hash] = tile._editQueueCallback[source.hash] - 1
+						end
+					end
+				end
+			end
 		elseif target._layerType == "object" then
-			-- print("Drawing from edit queue")
 			for i = 1, di do target.draw(draw[i][1], draw[i][2], draw[i][3], draw[i][4], source) end
 			for i = 1, ei do target.erase(erase[i][1], erase[i][2], erase[i][3], erase[i][4], erase[i][5], source) end
 		end

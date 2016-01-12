@@ -150,7 +150,7 @@ end
 -- Build Map
 --------------------------------------------------------------------------------
 function core.buildMap(data)
-	local imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
+	local tilesetOptions, imageSheets, imageSheetConfig, tileProperties, tileIndex, tileIDs = lib_tilesets.get(data, data._dusk.dirTree)
 	local escapedPrefixMethods = getSetting("escapedPrefixes")
 
 	setVariable("mapWidth", data.stats.mapWidth)
@@ -186,6 +186,7 @@ function core.buildMap(data)
 	map.layer = {}
 	map.props = {}
 	map.data = data.stats
+	map.data.tilesetImageSheetOptions = tilesetOptions
 
 	local mapProperties = lib_functions.getProperties(data.properties or {}, "map")
 	lib_functions.addProperties(mapProperties, "object", map)

@@ -61,6 +61,7 @@ local flipD = tonumber("20000000", 16)
 function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, imageSheets, imageSheetConfig, tileProperties, tileIDs)
 	local layerProps = getProperties(data.properties or {}, "tiles", true)
 	local dotImpliesTable = getSetting("dotImpliesTable")
+	local useTileImageSheetFill = getSetting("useTileImageSheetFill")
 
 	local layer = display_newGroup()
 	
@@ -339,7 +340,17 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 				tile._animData = tileProps.anim
 				tile.isAnimated = true
 			else
-				tile = display_newImageRect(imageSheets[sheetIndex], tileGID, mapData.stats.tileWidth, mapData.stats.tileHeight)
+				if useTileImageSheetFill then
+					tile = display.newRect(0, 0, mapData.stats.tileWidth, mapData.stats.tileHeight)
+					tile.imageSheetFill = {
+						type = "image",
+						sheet = imageSheets[sheetIndex],
+						frame = tileGID
+					}
+					tile.fill = tile.imageSheetFill
+				else
+					tile = display_newImageRect(imageSheets[sheetIndex], tileGID, mapData.stats.tileWidth, mapData.stats.tileHeight)
+				end
 			end
 			
 			tile.props = {}
@@ -353,7 +364,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 			tile.layerIndex = dataIndex
 			tile.tileX, tile.tileY = x, y
 			tile.hash = tostring(tile)
-			
+						
 			if source then
 				tile._drawers = {[source.hash] = true}
 				tile._drawCount = 1
@@ -683,8 +694,21 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 
 	function layer.tilesInBlock(x1, y1, x2, y2)
 		if x1 == nil or y1 == nil or x2 == nil or y2 == nil then error("Missing argument(s).") end
+		
+		if x1 > x2 then x1, x2 = x2, x1 end
+		if y1 > y2 then y1, y2 = y2, y1 end
 	
-		local tiles = layer._getTilesInRange(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
+		local w = x2 - x1
+		local h = y2 - y1
+		
+		if w == 0 then
+			w = 1
+		end
+		if h == 0 then
+			h = 1
+		end
+	
+		local tiles = layer._getTilesInRange(x1, y1, w, h)
 
 		local i = 0
 		return function()

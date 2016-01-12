@@ -121,6 +121,10 @@ local data = {
 	-- performance by a huge amount. Only here for me to debug Dusk with.
 	redrawOnTileExistent = false,
 
+	-- Draw tiles as rectangles with an image sheet fill instead of as image
+	-- rectangles. Could be a bit faster, I don't know. Needs testing.
+	useTileImageSheetFill = true,
+
 	-- Allow Dusk to cull rotated maps; if you're not rotating your maps, this
 	-- should be inactive. It adds a tiny performance drop. On the other hand, if
 	-- you're rotating your maps, all sorts of culling matrix corruption happens
