@@ -75,9 +75,11 @@ function lib_tilesets.get(data, dirTree)
 		-- Remove opening slash, if existent
 		if options.image:sub(1,1) == "/" or options.image:sub(1,1) == "\\" then options.image = options.image:sub(2) end
 		
+		data.tilesets[i].columns = data.tilesets[i].columns or math.floor((data.tilesets[i].imagewidth - data.tilesets[i].margin * 2 + data.tilesets[i].spacing) / (data.tilesets[i].tilewidth + data.tilesets[i].spacing))
+		
 		-- Tileset width/height in tiles
-		options.tilesetWidth  = math_ceil(((options.config.sheetContentWidth - options.margin * 2) - options.spacing) / (options.tilewidth + options.spacing)) 		
-		options.tilesetHeight = math_ceil(((options.config.sheetContentHeight - options.margin * 2) - options.spacing) / (options.tileheight + options.spacing))
+		options.tilesetWidth  = data.tilesets[i].columns
+		options.tilesetHeight = data.tilesets[i].tilecount / data.tilesets[i].columns
 		
 		-- Iterate throught the tileset
 		for y = 1, options.tilesetHeight do
