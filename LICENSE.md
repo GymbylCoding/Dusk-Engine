@@ -1,3 +1,13 @@
+Dusk is licensed under the MIT license. Basically, that means you can do
+anything--absolutely anything--with the code: reproduce it, modify it, sell
+it, put it in a soup, paste it up on your wall, you name it. For you legal
+types, here's the actual license (sans the part about soup) for your reading
+enjoyment:
+
+
+Ah-ah-ah-hem. Henceforth, and forthwith, we of the licensing committee hereby
+affirm, declare, and whatever else legal people do:
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
